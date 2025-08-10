@@ -1,0 +1,110 @@
+<div class="home-container">
+    <header class="home-header">
+        <h1>소이의 공부방 🎨</h1>
+        <p>오늘도 재미있게 공부해볼까?</p>
+    </header>
+    <div class="menu-grid">
+        <a href="#" class="menu-item sketchbook" data-menu="quiz" data-subject="국어">
+            <div class="menu-icon">📝</div>
+            <span class="menu-text">국어/수학 퀴즈</span>
+        </a>
+        <a href="#" class="menu-item storybook" data-menu="quiz" data-subject="영어">
+            <div class="menu-icon">🔤</div>
+            <span class="menu-text">영어/상식 퀴즈</span>
+        </a>
+        <a href="#" class="menu-item pencil-case" data-menu="number-game">
+            <div class="menu-icon">🔢</div>
+            <span class="menu-text">숫자세기 놀이</span>
+        </a>
+        <a href="#" class="menu-item pencil-case" data-menu="drawing-pad">
+            <div class="menu-icon">🖍️</div>
+            <span class="menu-text">그림판</span>
+        </a>
+    </div>
+</div>
+
+<style>
+    .home-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px;
+        text-align: center;
+        height: 100%;
+    }
+    .home-header h1 {
+        font-size: 3rem;
+        color: var(--point-color-1);
+        text-shadow: 2px 2px 0px #fff;
+    }
+    .home-header p {
+        font-size: 1.5rem;
+        margin-top: -10px;
+    }
+    .menu-grid {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+        flex: 1;
+    }
+    .menu-item {
+        width: 220px;
+        height: 160px;
+        border-radius: 15px;
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.08);
+        text-decoration: none;
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        position: relative;
+    }
+    .menu-item:hover {
+        transform: translateY(-8px) rotate(2deg);
+        box-shadow: 8px 12px 25px rgba(0,0,0,0.12);
+    }
+    .menu-icon {
+        font-size: 3rem;
+        margin-bottom: 5px;
+    }
+    .menu-text {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* 스케치북 스타일 */
+    .sketchbook {
+        background-color: #fff;
+        border: 1px solid #eee;
+    }
+    /* 스케치북 스프링 효과 */
+    .sketchbook::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: -10px;
+        width: 15px;
+        height: calc(100% - 30px);
+        background-image: 
+            radial-gradient(#ccc 2px, transparent 2px),
+            radial-gradient(#ccc 2px, transparent 2px);
+        background-size: 8px 8px;
+        background-position: 0 0, 4px 4px;
+        background-repeat: round;
+    }
+
+    /* 동화책 스타일 */
+    .storybook {
+        background-color: var(--point-color-4);
+        border: 5px solid #fff;
+        border-left: 15px solid var(--point-color-1);
+    }
+
+    /* 색연필통 스타일 */
+    .pencil-case {
+        background: linear-gradient(160deg, var(--point-color-2), #ffdca8);
+    }
+</style>
