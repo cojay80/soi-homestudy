@@ -4,13 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>소이의 공부방</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="background-texture"></div>
-    <main id="app-container">
-        <!-- 내용은 JavaScript가 채워줍니다 -->
-    </main>
-    <script src="js/main.js" type="module"></script>
+    <header class="main-header">
+        <div class="logo">
+            <a href="#">소이의 공부방 🎨</a>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html">오늘의 학습</a></li>
+                <li><a href="#">학습 기록</a></li>
+                <li><a href="notes.html">오답 노트</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="today-study-section">
+            <div class="study-card">
+                <div class="card-header">
+                    <h2>오늘의 학습 ✏️</h2>
+                </div>
+                <div class="card-content">
+                    <p class="subject">과목: <span>수학</span></p>
+                    <p class="count">풀어야 할 문제: <span>10개</span></p>
+                </div>
+                <div class="card-footer">
+                    <a href="quiz.html" class="start-button">학습 시작하기!</a>
+                </div>
+            </div>
+        </section>
+        </main>
+       
+    <footer class="main-footer">
+        <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+    </footer>
+
+    <script src="js/script.js"></script>
 </body>
 </html>

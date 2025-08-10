@@ -1,52 +1,309 @@
-@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap');
-
-:root {
-    --font-main: 'Gaegu', cursive;
-    --bg-color: #fdfaf6;
-    --text-color: #4a4a4a;
-    --point-color-1: #ffacac; /* 핑크 */
-    --point-color-2: #ffce89; /* 주황 */
-    --point-color-3: #b5eaea; /* 민트 */
-    --point-color-4: #d7e5f0; /* 하늘 */
+/* ======== 전체 스타일 초기화 및 기본 설정 ======== */
+body {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    /* 은은한 도트 패턴 배경 추가 */
+    background-color: #fdfaf6;
+    background-image: radial-gradient(#d7d7d7 1px, transparent 0);
+    background-size: 20px 20px;
+    color: #4a4a4a;
 }
 
-* {
-    box-sizing: border-box;
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ======== 헤더 & 내비게이션 메뉴 ======== */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: rgba(255, 255, 255, 0.8); /* 살짝 투명한 배경 */
+    backdrop-filter: blur(10px); /* 배경 블러 효과 */
+    border-bottom: 2px solid #ffdeeb;
+    position: sticky; /* 스크롤しても 상단에 고정 */
+    top: 0;
+    z-index: 100;
+}
+
+.logo a {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff8fab;
+}
+
+.main-nav ul {
+    list-style: none;
     margin: 0;
     padding: 0;
+    display: flex;
 }
 
-body {
-    font-family: var(--font-main);
-    background-color: var(--bg-color);
-    color: var(--text-color);
+.main-nav li {
+    margin-left: 25px;
+}
+
+.main-nav a {
+    font-size: 16px;
+    font-weight: 700;
+    color: #5d5d5d;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.main-nav a:hover {
+    background-color: #ffdeeb;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.main-nav a.active {
+    color: #ff8fab;
+    font-weight: 700;
+}
+
+/* ======== 푸터 (바닥글) ======== */
+.main-footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
+    font-size: 14px;
+    color: #888888;
+}
+
+/* ======== 메인 페이지: 오늘의 학습 카드 ======== */
+main {
+    padding: 40px 30px;
+}
+
+.today-study-section {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    overflow: hidden;
 }
 
-.background-texture {
-    position: fixed;
-    top: 0;
-    left: 0;
+.study-card {
     width: 100%;
-    height: 100%;
-    background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
-    opacity: 0.5;
-    z-index: -1;
-}
-
-#app-container {
-    width: 100%;
-    max-width: 900px;
-    height: 95vh;
-    max-height: 600px;
-    background-color: white;
+    max-width: 450px;
+    background-color: #ffffff;
     border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    position: relative;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     overflow: hidden;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.study-card:hover {
+    transform: translateY(-10px) rotate(1deg); /* 마우스를 올리면 살짝 기울어지며 이동 */
+}
+
+.card-header {
+    background-color: #fce38a; /* 따뜻한 노란색 */
+    padding: 25px;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 24px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.card-content {
+    padding: 30px 20px;
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+.card-content .subject span,
+.card-content .count span {
+    font-weight: 700;
+    color: #e97171; /* 차분한 코랄색 */
+}
+
+.card-footer {
+    padding: 0px 30px 30px 30px;
+}
+
+.start-button {
+    display: inline-block;
+    width: 100%;
+    padding: 18px 0;
+    background-image: linear-gradient(45deg, #fce38a, #f38181); /* 노랑-코랄 그라데이션 */
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(243, 129, 129, 0.4);
+    transition: all 0.3s ease;
+}
+
+.start-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(243, 129, 129, 0.5);
+}
+
+
+/* ======== 퀴즈 페이지 ======== */
+.quiz-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+.quiz-header h1 {
+    text-align: center;
+    color: #95e1d3; /* 소프트 민트색 */
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background-color: #e9e9e9;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress {
+    width: 10%;
+    height: 100%;
+    background-image: linear-gradient(45deg, #fce38a, #95e1d3); /* 노랑-민트 그라데이션 */
+    border-radius: 6px;
+    transition: width 0.5s ease; /* 너비 변경 시 부드러운 효과 */
+}
+
+.question-number {
+    text-align: right;
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.question-box {
+    background-color: #fdfaf6;
+    padding: 25px;
+    border-radius: 15px;
+    border: 2px dashed #fce38a;
+    margin-bottom: 30px;
+}
+
+.question-text {
+    font-size: 20px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.answer-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.option {
+    width: 100%;
+    padding: 20px;
+    font-size: 18px;
+    color: #5d5d5d;
+    background-color: #f7f7f7;
+    border: 2px solid #e9e9e9;
+    /* 손으로 그린 듯한 느낌을 위한 border-radius */
+    border-radius: 10px 12px 11px 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.option:hover {
+    transform: translateY(-3px);
+    border-color: #95e1d3;
+}
+
+.option.selected {
+    background-color: #95e1d3;
+    border-color: #95e1d3;
+    color: white;
+    font-weight: 700;
+}
+
+.quiz-footer {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.submit-button {
+    width: 100%;
+    max-width: 300px;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    background-image: linear-gradient(45deg, #f38181, #fce38a);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(243, 129, 129, 0.4);
+    transition: all 0.3s;
+}
+
+.submit-button:hover {
+    transform: scale(1.05);
+}
+
+
+/* ======== 오답 노트 페이지 ======== */
+.notes-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.notes-container h1 {
+    text-align: center;
+    color: #e97171; /* 코랄색 */
+    margin-bottom: 30px;
+}
+
+.note-item {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+
+.note-item:hover {
+    transform: scale(1.02);
+}
+
+.note-question {
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 0 0 15px 0;
+}
+
+.note-answer {
+    font-size: 16px;
+    margin: 0;
+    color: #95e1d3;
+    font-weight: bold;
+}
+
+.no-notes {
+    text-align: center;
+    font-size: 18px;
+    color: #888;
+    padding: 50px 0;
+    background-color: #fff;
+    border-radius: 10px;
 }
