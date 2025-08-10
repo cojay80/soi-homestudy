@@ -1,57 +1,133 @@
-// ======== ▼▼ 1. 문제 데이터 꾸러미 ▼▼ ========
-const quizData = [
-    {
-        question: "철수는 사과 🍎 2개와 오렌지 🍊 2개를 가지고 있습니다. 철수가 가진 과일은 모두 몇 개일까요?",
-        options: ["1) 2개", "2) 3개", "3) 4개", "4) 5개"],
-        answer: "3) 4개"
-    },
-    {
-        question: "가게에 아이스크림 🍦 5개가 있었습니다. 소이가 2개를 사 먹었다면, 가게에 남은 아이스크림은 몇 개일까요?",
-        options: ["1) 1개", "2) 2개", "3) 3개", "4) 4개"],
-        answer: "3) 3개"
-    },
-    {
-        question: "토끼 🐇 한 마리의 귀는 2개입니다. 토끼 세 마리의 귀는 모두 몇 개일까요?",
-        options: ["1) 2개", "2) 4개", "3) 6개", "4) 8개"],
-        answer: "3) 6개"
-    }
-];
+// js/quiz.js (수정된 버전)
 
-// ======== ▼▼ 2. 필요한 HTML 요소 가져오기 ▼▼ ========
+// ======== 1. 필요한 HTML 요소 및 설정값 가져오기 ========
 const questionText = document.querySelector('.question-text');
 const answerOptions = document.querySelectorAll('.option');
 const submitButton = document.querySelector('.submit-button');
 const progress = document.querySelector('.progress');
 const questionNumber = document.querySelector('.question-number');
+const toastMessage = document.getElementById('toast-message');
 
-let currentQuestionIndex = 0; // 현재 몇 번째 문제를 풀고 있는지 기록
-let selectedAnswer = null;    // 사용자가 선택한 답변
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 
-// ======== ▼▼ 3. 화면에 문제를 표시하는 함수 ▼▼ ========
+// localStorage에서 사용자가 선택한 학년/과목 가져오기
+const selectedGrade = localStorage.getItem('selectedGrade');
+const selectedSubject = localStorage.getItem('selectedSubject');
+
+let currentQuestionIndex = 0;
+let selectedAnswer = null;
+let problems = [];
+
+// ======== 2. 구글 시트에서 문제를 가져와 선택된 조건으로 필터링하는 함수 ========
+async function fetchAndFilterProblems() {
+    // 만약 학년/과목 선택 없이 페이지에 들어왔다면, 메인으로 돌려보냄
+    if (!selectedGrade || !selectedSubject) {
+        alert("먼저 학년과 과목을 선택해주세요!");
+        window.location.href = 'index.html';
+        return;
+    }
+
+    try {
+        const response = await fetch(GOOGLE_SHEET_URL);
+        const tsvText = await response.text();
+        const allProblems = parseTsv(tsvText);
+
+        // 선택된 학년과 과목으로 문제 필터링
+        problems = allProblems.filter(p => p.학년 === selectedGrade && p.과목 === selectedSubject);
+
+        if (problems.length === 0) {
+            questionText.textContent = `선택하신 '${selectedGrade} ${selectedSubject}'에 해당하는 문제가 없습니다.`;
+            return;
+        }
+
+        problems = problems.sort(() => Math.random() - 0.5);
+        loadQuestion();
+    } catch (error) {
+        console.error('문제를 가져오는 데 실패했습니다:', error);
+        questionText.textContent = "문제를 불러올 수 없어요. 인터넷 연결이나 구글 시트 주소를 확인해주세요! 😥";
+    }
+}
+
+// ======== 3. TSV 파싱 함수 (main.js의 것과 동일) ========
+function parseTsv(text) {
+    const lines = text.split(/\r\n|\n/).slice(1);
+    const headers = ['학년', '과목', '질문', '보기1', '보기2', '보기3', '보기4', '정답'];
+    const data = [];
+    for (const line of lines) {
+        if (!line) continue;
+        const values = line.split('\t');
+        const entry = {};
+        for (let i = 0; i < headers.length; i++) {
+            entry[headers[i]] = values[i];
+        }
+        data.push(entry);
+    }
+    return data;
+}
+
+// ======== 4, 5, 6 단계는 이전과 동일합니다 ... ========
+// (loadQuestion, 이벤트 리스너, 퀴즈 시작 함수 등은 이전 코드와 동일하게 붙여넣으시면 됩니다)
 function loadQuestion() {
-    // 선택했던 답변 초기화
     selectedAnswer = null;
     const currentSelected = document.querySelector('.option.selected');
     if (currentSelected) {
         currentSelected.classList.remove('selected');
     }
 
-    // 현재 문제 데이터 가져오기
-    const currentQuestion = quizData[currentQuestionIndex];
+    const currentQuestion = problems[currentQuestionIndex];
+    const options = [
+        currentQuestion.보기1,
+        currentQuestion.보기2,
+        currentQuestion.보기3,
+        currentQuestion.보기4
+    ].sort(() => Math.random() - 0.5);
 
-    // HTML에 문제와 선택지 표시
-    questionText.textContent = currentQuestion.question;
-    for (let i = 0; i < answerOptions.length; i++) {
-        answerOptions[i].textContent = currentQuestion.options[i];
+    questionText.textContent = `[${currentQuestion.과목}] ${currentQuestion.질문}`;
+    for(let i = 0; i < answerOptions.length; i++){
+        answerOptions[i].textContent = options[i];
     }
     
-    // 진행도 업데이트
-    questionNumber.textContent = `${currentQuestionIndex + 1} / ${quizData.length}`;
-    progress.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+    questionNumber.textContent = `${currentQuestionIndex + 1} / ${problems.length}`;
+    progress.style.width = `${((currentQuestionIndex + 1) / problems.length) * 100}%`;
 }
 
-// ======== ▼▼ 4. 이벤트 리스너 설정 ▼▼ ========
-// 답변 버튼 클릭 시
+submitButton.addEventListener('click', () => {
+    if (!selectedAnswer) {
+        showToast("정답을 선택해주세요!", false);
+        return;
+    }
+
+    const currentQuestion = problems[currentQuestionIndex];
+    const isCorrect = selectedAnswer.textContent === currentQuestion.정답;
+
+    showToast(isCorrect ? "정답입니다! 🎉" : "아쉬워요, 다시 한번 생각해볼까요? 🤔", isCorrect);
+
+    if (isCorrect) {
+        // 정답일 경우, 1.5초 후에 다음 문제로 넘어갑니다.
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < problems.length) {
+                loadQuestion();
+            } else {
+                alert('모든 문제를 다 풀었어요! 대단해요! 🥳'); // 마지막 문제는 alert 유지
+                window.location.href = 'index.html';
+            }
+        }, 1500); // 1.5초
+    }
+});
+
+// 토스트 메시지를 보여주는 새로운 함수
+function showToast(message, isCorrect) {
+    toastMessage.textContent = message;
+    toastMessage.className = isCorrect ? 'correct' : 'incorrect';
+    toastMessage.classList.add('show');
+
+    // 1.5초 후에 메시지 상자를 다시 숨깁니다.
+    setTimeout(() => {
+        toastMessage.classList.remove('show');
+    }, 1500); // 1.5초
+}
+
 answerOptions.forEach(button => {
     button.addEventListener('click', () => {
         const currentSelected = document.querySelector('.option.selected');
@@ -63,44 +139,4 @@ answerOptions.forEach(button => {
     });
 });
 
-// 정답 제출 버튼 클릭 시
-submitButton.addEventListener('click', () => {
-    if (!selectedAnswer) {
-        alert('정답을 선택해주세요!');
-        return; // 함수 종료
-    }
-
-    const currentQuestion = quizData[currentQuestionIndex];
-    if (selectedAnswer.textContent === currentQuestion.answer) {
-        alert('정답입니다! 참 잘했어요! 🎉');
-        currentQuestionIndex++; // 다음 문제로 인덱스 증가
-
-        if (currentQuestionIndex < quizData.length) {
-            loadQuestion(); // 다음 문제 불러오기
-        } else {
-            // 모든 문제를 다 풀었을 때
-            alert('모든 문제를 다 풀었어요! 대단해요! 🥳');
-            // 첫 화면으로 돌아가기
-            window.location.href = 'index.html';
-        }
-    } else {
-        alert('아쉬워요, 다시 한번 생각해볼까요? 🤔');
-        // 1. localStorage에서 기존 오답 노트를 불러옵니다.
-        const incorrectNotes = JSON.parse(localStorage.getItem('incorrectNotes')) || [];
-        
-        // 2. 현재 틀린 문제를 오답 노트에 추가합니다. (단, 이미 없는 경우에만)
-        const isAlreadyInNotes = incorrectNotes.some(note => note.question === currentQuestion.question);
-        if (!isAlreadyInNotes) {
-            incorrectNotes.push(currentQuestion);
-        }
-
-        // 3. 새로운 오답 노트 목록을 localStorage에 저장합니다.
-        localStorage.setItem('incorrectNotes', JSON.stringify(incorrectNotes));
-        
-
-    }
-});
-
-
-// ======== ▼▼ 5. 첫 번째 문제 불러오기 ▼▼ ========
-loadQuestion();
+fetchAndFilterProblems();
