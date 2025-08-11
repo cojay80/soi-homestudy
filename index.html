@@ -27,6 +27,7 @@
 	        <ul>
 	            <li><a href="index.html">오늘의 학습</a></li>
 	            <li><a href="report.html">학습 보고서</a></li>
+                    <li><a href="goal.html">나의 목표</a></li>
 	            <li><a href="record.html">상세 기록</a></li>
 	            <li><a href="notes.html">오답 노트</a></li>
 	        </ul>
@@ -37,6 +38,23 @@
 	    </div>
 	</header>
         <main>
+	    <section class="goal-setting-section">
+	        <h2>이번 주 학습 목표 설정하기 🎯</h2>
+	        <div class="goal-box">
+	            <div id="current-goal-display" style="display: none;">
+	                <p><strong>현재 목표:</strong> <span id="current-goal-text"></span></p>
+	                <button id="delete-goal-button">목표 삭제</button>
+	            </div>
+	            <div id="new-goal-form">
+	                <select id="goal-subject-select">
+	                    <option value="">-- 과목 선택 --</option>
+	                </select>
+	                <input type="number" id="goal-count-input" placeholder="문제 수" min="1">
+	                <button id="set-goal-button">목표 설정</button>
+	            </div>
+	        </div>
+	    </section>
+
             <section class="today-study-section">
                 <div class="study-card">
                     <div class="card-header">
