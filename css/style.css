@@ -365,3 +365,13 @@ main {
 #toast-message.incorrect {
     background-color: #dc3545;
 }
+
+/* 퀴즈 페이지 타이머 */
+#timer-display {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff8fab;
+    margin-top: 10px;
+    text-align: center;
+    height: 30px; /* 공간 확보 */
+}
