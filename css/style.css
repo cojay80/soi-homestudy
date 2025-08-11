@@ -565,3 +565,33 @@ main {
     display: flex;
     justify-content: center;
 }
+/* style.css 에 이어서 추가 */
+.record-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+.record-container h1 {
+    text-align: center;
+    color: #a0e7e5;
+    margin-bottom: 30px;
+}
+.record-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.record-table th, .record-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+.record-table th {
+    background-color: #f7f7f7;
+    font-weight: 700;
+}
+.no-records {
+    padding: 50px 0;
+    text-align: center;
+    color: #888;
+}

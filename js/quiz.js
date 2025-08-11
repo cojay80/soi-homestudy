@@ -117,29 +117,54 @@ function showResults() {
     const messageText = document.getElementById('message-text');
     const reviewButton = document.getElementById('review-button');
     
-    // ▼▼ 틀린 문제를 '누적'하여 저장하는 로직 ▼▼
-    if (!isReviewMode && incorrectProblems.length > 0) {
-        const currentUser = localStorage.getItem('currentUser');
-        // 1. 기존 학습 데이터 불러오기 (없으면 새로 만들기)
+    const currentUser = localStorage.getItem('currentUser');
+    const totalQuestions = problemSets.reduce((sum, set) => sum + set.questions.length, 0);
+
+    // ▼▼ 학습 기록 저장 로직 추가 ▼▼
+    if (!isReviewMode && totalQuestions > 0) {
+        // 1. 오늘 날짜를 YYYY-MM-DD 형식으로 만듭니다.
+        const today = new Date();
+        const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        
+        // 2. 새로운 기록 생성
+        const newRecord = {
+            date: dateString,
+            grade: selectedGrade,
+            subject: selectedSubject,
+            score: `${score}/${totalQuestions}`
+        };
+
+        // 3. 기존 학습 데이터에 새로운 기록 추가
         let studyData = JSON.parse(localStorage.getItem('studyData')) || {};
-        // 2. 현재 사용자의 데이터 공간 확인 (없으면 새로 만들기)
         if (!studyData[currentUser]) {
-            studyData[currentUser] = { incorrect: [] };
+            studyData[currentUser] = { incorrect: [], records: [] };
         }
-        // 3. 기존 오답 노트에 새로운 오답 문제 추가 (중복 제거)
+        if (!studyData[currentUser].records) {
+            studyData[currentUser].records = [];
+        }
+        studyData[currentUser].records.push(newRecord);
+        localStorage.setItem('studyData', JSON.stringify(studyData));
+    }
+
+    // ▼▼ 틀린 문제를 '누적'하여 저장하는 로직 (기존과 동일) ▼▼
+    if (!isReviewMode && incorrectProblems.length > 0) {
+        let studyData = JSON.parse(localStorage.getItem('studyData')) || {};
+        if (!studyData[currentUser]) {
+            studyData[currentUser] = { incorrect: [], records: [] };
+        }
+        if (!studyData[currentUser].incorrect) {
+            studyData[currentUser].incorrect = [];
+        }
         const existingIncorrect = new Map(studyData[currentUser].incorrect.map(p => [p.질문, p]));
         incorrectProblems.forEach(p => {
-            existingIncorrect.set(p.질문, p); // 중복된 질문은 덮어쓰기
+            existingIncorrect.set(p.질문, p);
         });
         studyData[currentUser].incorrect = Array.from(existingIncorrect.values());
-        
-        // 4. 최종 데이터를 localStorage에 저장
         localStorage.setItem('studyData', JSON.stringify(studyData));
     }
     
-    const totalQuestions = problemSets.reduce((sum, set) => sum + set.questions.length, 0);
+    // 점수 및 메시지 표시 (기존과 동일)
     scoreText.textContent = `총 ${totalQuestions}문제 중 ${score}개를 맞혔어요!`;
-    
     const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 100;
     if (percentage >= 80) {
         messageText.textContent = "정말 대단해요! 훌륭한 실력이에요. 🏆";
@@ -149,7 +174,9 @@ function showResults() {
         messageText.textContent = "아쉬워요, 다시 한번 도전해볼까요? 💪";
     }
 
-    if (incorrectProblems.length === 0) {
+    // 버튼 표시 로직 (기존과 동일)
+    const savedIncorrect = JSON.parse(localStorage.getItem('studyData'))?.[currentUser]?.incorrect || [];
+    if (savedIncorrect.length === 0) {
         reviewButton.style.display = 'none';
     } else {
         reviewButton.style.display = 'inline-block';
@@ -158,6 +185,7 @@ function showResults() {
     if (isReviewMode) {
         reviewButton.style.display = 'none';
         localStorage.removeItem('isReviewMode');
+        localStorage.removeItem('reviewProblems');
     }
 }
 
