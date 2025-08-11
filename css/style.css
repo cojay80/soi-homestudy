@@ -439,3 +439,50 @@ main {
     border-radius: 10px;
     display: none; /* ▼▼ 평소에는 숨겨둠 ▼▼ */
 }
+/* 지문 영역 스타일 */
+.passage-container {
+    background-color: #fdfaf6;
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px dashed #ffdeeb;
+    margin-bottom: 20px;
+}
+.passage-container h3 {
+    margin: 0 0 10px 0;
+    color: #ff8fab;
+}
+.passage-container p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.8;
+}
+/* 퀴즈 페이지 2단 레이아웃 */
+.quiz-layout {
+    display: flex;
+    gap: 20px;
+}
+
+.passage-area {
+    width: 40%;
+    background-color: #fdfaf6;
+    border: 2px dashed #ffdeeb;
+    border-radius: 15px;
+    padding: 20px;
+    display: none; /* ▼▼ 지문이 있을 때만 보이도록 평소엔 숨김 ▼▼ */
+}
+
+.passage-area h2 {
+    margin-top: 0;
+    text-align: center;
+    color: #ff8fab;
+}
+
+#passage-content {
+    font-size: 16px;
+    line-height: 1.8;
+    white-space: pre-wrap; /* 줄바꿈 인식 */
+}
+
+.problem-area {
+    width: 60%;
+}

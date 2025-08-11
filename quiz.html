@@ -8,41 +8,49 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="quiz-container">
-    <header class="quiz-header">
-        <h1>문제 쑥쑥! 🧠</h1>
-        <div id="timer-display"></div>
-    </header>
-    
-    <main class="quiz-main">
-        <div class="progress-bar">
-            <div class="progress"></div>
-        </div>
-        <p class="question-number">1 / 10</p>
+    <div class="quiz-container">
+        <header class="quiz-header">
+            <h1>문제 쑥쑥! 🧠</h1>
+            <div id="timer-display"></div>
+        </header>
         
-        <div class="question-box">
-            	<img id="question-image" src="" alt="문제 이미지">
-		<p class="question-text">문제를 불러오는 중입니다...</p>
+        <div class="quiz-layout">
+            <div class="passage-area">
+                <h2>📜 지문</h2>
+                <div id="passage-content">
+                    </div>
+            </div>
+            <div class="problem-area">
+                <main class="quiz-main">
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                    <p class="question-number">1 / 10</p>
+                    
+                    <div class="question-box">
+                        <img id="question-image" src="" alt="문제 이미지">
+                        <p class="question-text">문제를 불러오는 중입니다...</p>
+                    </div>
+                    
+                    <div class="answer-options">
+                        <button class="option">1)</button>
+                        <button class="option">2)</button>
+                        <button class="option">3)</button>
+                        <button class="option">4)</button>
+                    </div>
+                </main>
+            </div>
         </div>
-        
-        <div class="answer-options">
-            <button class="option">1)</button>
-            <button class="option">2)</button>
-            <button class="option">3)</button>
-            <button class="option">4)</button>
+
+        <div id="results-container" style="display: none;">
+            <h2>✨ 퀴즈 결과 ✨</h2>
+            <p id="score-text"></p>
+            <p id="message-text"></p>
+            <a href="index.html" class="retry-button">메인으로 돌아가기</a>
         </div>
-    </main>
-    
-    <div id="results-container" style="display: none;">
-        <h2>✨ 퀴즈 결과 ✨</h2>
-        <p id="score-text"></p>
-        <p id="message-text"></p>
-        <a href="index.html" class="retry-button">메인으로 돌아가기</a>
+        <div id="toast-message"></div>
     </div>
 
-    <div id="toast-message"></div>
-
-</div>
-   <script src="js/quiz.js"></script>
+    <script src="js/quiz.js"></script>
 </body>
 </html>
