@@ -486,3 +486,8 @@ main {
 .problem-area {
     width: 60%;
 }
+.result-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
