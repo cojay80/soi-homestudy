@@ -13,7 +13,7 @@ const quizMain = document.querySelector('.quiz-main');
 const resultsContainer = document.getElementById('results-container');
 
 // localStorage에서 사용자의 선택 정보 가져오기
-const GOOGLE_SHEET_URL = '여기에_사용하시던_TSV_주소를_붙여넣으세요';
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 const selectedGrade = localStorage.getItem('selectedGrade');
 const selectedSubject = localStorage.getItem('selectedSubject');
 const selectedCount = parseInt(localStorage.getItem('selectedCount'));
@@ -182,4 +182,5 @@ function showToast(message, isCorrect) {
 }
 
 // ======== 퀴즈 시작! ========
+
 setupQuiz();
