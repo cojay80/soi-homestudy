@@ -55,11 +55,10 @@ async function setupQuiz() {
 
 // ======== 3. 문제 불러오기 및 타이머 시작 ========
 function loadQuestion() {
-    isAnswered = false; // 새 문제가 로드되면 다시 답변 가능
+    isAnswered = false;
     clearTimeout(timerInterval);
     timerDisplay.textContent = '';
 
-    // 이전 문제의 정답/오답 스타일 제거
     answerOptions.forEach(button => {
         button.classList.remove('correct-answer', 'incorrect-answer', 'selected');
     });
@@ -68,11 +67,20 @@ function loadQuestion() {
     const options = [currentQuestion.보기1, currentQuestion.보기2, currentQuestion.보기3, currentQuestion.보기4]
                     .sort(() => Math.random() - 0.5);
 
+    // ▼▼ 이미지 처리 로직 추가 ▼▼
+    const questionImage = document.getElementById('question-image');
+    if (currentQuestion.이미지 && currentQuestion.이미지.trim() !== '') {
+        questionImage.src = currentQuestion.이미지;
+        questionImage.style.display = 'block'; // 이미지가 있으면 보여주기
+    } else {
+        questionImage.style.display = 'none'; // 이미지가 없으면 숨기기
+    }
+
     questionText.textContent = `[${currentQuestion.과목}] ${currentQuestion.질문}`;
     for (let i = 0; i < answerOptions.length; i++) {
         answerOptions[i].textContent = options[i];
     }
-    
+
     questionNumber.textContent = `${currentQuestionIndex + 1} / ${problems.length}`;
     progress.style.width = `${((currentQuestionIndex + 1) / problems.length) * 100}%`;
 
@@ -160,13 +168,17 @@ function startTimer(seconds) {
 
 function parseTsv(text) {
     const lines = text.split(/\r\n|\n/).slice(1);
-    const headers = ['학년', '과목', '질문', '보기1', '보기2', '보기3', '보기4', '정답'];
+    // ▼▼ '이미지' 헤더 추가 ▼▼
+    const headers = ['학년', '과목', '질문', '보기1', '보기2', '보기3', '보기4', '정답', '이미지'];
     const data = [];
     for (const line of lines) {
         if (!line) continue;
         const values = line.split('\t');
         const entry = {};
-        for (let i = 0; i < headers.length; i++) entry[headers[i]] = values[i];
+        // 헤더 길이에 맞춰 데이터 할당
+        for (let i = 0; i < headers.length; i++) {
+            entry[headers[i]] = values[i];
+        }
         data.push(entry);
     }
     return data;
@@ -182,5 +194,4 @@ function showToast(message, isCorrect) {
 }
 
 // ======== 퀴즈 시작! ========
-
 setupQuiz();

@@ -431,3 +431,11 @@ main {
     color: white !important;
     border-color: #dc3545 !important;
 }
+/* 퀴즈 이미지 스타일 */
+#question-image {
+    max-width: 100%; /* 상자 너비에 맞게 조절 */
+    max-height: 250px; /* 최대 높이 제한 */
+    margin-bottom: 15px;
+    border-radius: 10px;
+    display: none; /* ▼▼ 평소에는 숨겨둠 ▼▼ */
+}
