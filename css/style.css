@@ -337,8 +337,8 @@ main {
     border-color: #95e1d3;
 }
 #toast-message {
-    position: fixed; /* 화면에 고정 */
-    bottom: -100px; /* 처음엔 화면 아래에 숨겨둠 */
+    position: fixed;
+    bottom: -100px;
     left: 50%;
     transform: translateX(-50%);
     padding: 15px 30px;
@@ -347,15 +347,15 @@ main {
     font-weight: 700;
     color: white;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    transition: bottom 0.5s ease; /* 부드럽게 올라오는 효과 */
+    transition: bottom 0.5s ease;
     z-index: 200;
+    pointer-events: none; /* ▼▼ 이 줄 추가! (클릭 통과) ▼▼ */
 }
 
-/* 토스트 메시지 보이기 */
 #toast-message.show {
-    bottom: 50px; /* 화면 아래에서 50px 위치로 이동 */
+    bottom: 50px;
+    pointer-events: auto; /* ▼▼ 이 줄 추가! (보일 때만 클릭 가능) ▼▼ */
 }
-
 /* 정답일 때 초록색 배경 */
 #toast-message.correct {
     background-color: #28a745;
