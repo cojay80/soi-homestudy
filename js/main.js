@@ -33,10 +33,24 @@ function showLoginScreen() {
     mainContainer.style.display = 'none';
 }
 
+// js/main.js 파일의 showMainScreen 함수를 아래 코드로 교체
+
 function showMainScreen(username) {
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
-    welcomeMessage.textContent = `${username}님, 환영합니다!`;
+    
+    // 헤더가 항상 존재하므로, 내부의 요소만 찾아서 수정
+    const welcomeMsgElement = document.getElementById('welcome-message');
+    const logoutBtnElement = document.getElementById('logout-button');
+    
+    if (welcomeMsgElement) welcomeMsgElement.textContent = `${username}님, 환영합니다!`;
+    if (logoutBtnElement) {
+        logoutBtnElement.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            showLoginScreen();
+        });
+    }
+    
     initializeSelectors(); // 로그인 후에 문제 선택창 초기화
 }
 
