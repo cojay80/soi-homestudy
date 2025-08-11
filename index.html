@@ -8,70 +8,77 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header class="main-header">
-        <div class="logo">
-            <a href="#">소이의 공부방 🎨</a>
+
+    <div id="login-container">
+        <div class="login-box">
+            <h1>소이의 공부방</h1>
+            <p>사용자 이름을 입력해주세요.</p>
+            <input type="text" id="username-input" placeholder="예) 소이">
+            <button id="login-button">시작하기</button>
         </div>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="index.html">오늘의 학습</a></li>
-                <li><a href="#">학습 기록</a></li>
-                <li><a href="notes.html">오답 노트</a></li>
-            </ul>
-        </nav>
-    </header>
+    </div>
 
-    <main>
-        <section class="today-study-section">
-         <div class="study-card">
-    <div class="card-header">
-        <h2>오늘의 학습 ✏️</h2>
-    </div>
-<div class="card-content">
-    <div class="selection-box">
-        <label for="grade-select">학년 선택:</label>
-        <select name="grades" id="grade-select">
-            <option value="">-- 학년을 선택하세요 --</option>
-        </select>
-    </div>
-    <div class="selection-box">
-        <label for="subject-select">과목 선택:</label>
-        <select name="subjects" id="subject-select">
-            <option value="">-- 과목을 선택하세요 --</option>
-        </select>
-    </div>
-    <div class="selection-box">
-        <label for="count-select">문제 수 선택:</label>
-        <select name="counts" id="count-select">
-            <option value="10">10 문제</option>
-            <option value="20">20 문제</option>
-            <option value="30">30 문제</option>
-        </select>
-    </div>
-    <div class="selection-box">
-        <label for="timer-select">시간제한 (문제당):</label>
-        <select name="timers" id="timer-select">
-            <option value="0">무제한</option>
-            <option value="10">10초</option>
-            <option value="20">20초</option>
-            <option value="30">30초</option>
-            <option value="60">60초</option>
-        </select>
-    </div>
-</div>
-    <div class="card-footer">
-        <a href="#" class="start-button">학습 시작하기!</a>
-    </div>
-</div>
+    <div id="main-container" style="display: none;">
+        <header class="main-header">
+            <div class="logo">
+                <a href="#">소이의 공부방 🎨</a>
+            </div>
+            <div class="user-info">
+                <span id="welcome-message"></span>
+                <a href="#" id="logout-button">(로그아웃)</a>
+            </div>
+        </header>
 
-<script src="js/main.js"></script>   
-        </section>
+        <main>
+            <section class="today-study-section">
+                <div class="study-card">
+                    <div class="card-header">
+                        <h2>오늘의 학습 ✏️</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="selection-box">
+                            <label for="grade-select">학년 선택:</label>
+                            <select name="grades" id="grade-select">
+                                <option value="">-- 학년을 선택하세요 --</option>
+                            </select>
+                        </div>
+                        <div class="selection-box">
+                            <label for="subject-select">과목 선택:</label>
+                            <select name="subjects" id="subject-select">
+                                <option value="">-- 과목을 선택하세요 --</option>
+                            </select>
+                        </div>
+                        <div class="selection-box">
+                            <label for="count-select">문제 수 선택:</label>
+                            <select name="counts" id="count-select">
+                                <option value="10">10 문제</option>
+                                <option value="20">20 문제</option>
+                                <option value="30">30 문제</option>
+                            </select>
+                        </div>
+                        <div class="selection-box">
+                            <label for="timer-select">시간제한 (문제당):</label>
+                            <select name="timers" id="timer-select">
+                                <option value="0">무제한</option>
+                                <option value="10">10초</option>
+                                <option value="20">20초</option>
+                                <option value="30">30초</option>
+                                <option value="60">60초</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="start-button">학습 시작하기!</a>
+                    </div>
+                </div>
+            </section>
         </main>
-       
-    <footer class="main-footer">
-        <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-    </footer>
 
-    <script src="js/script.js"></script>
+        <footer class="main-footer">
+            <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

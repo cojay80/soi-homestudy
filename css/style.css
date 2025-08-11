@@ -491,3 +491,58 @@ main {
     justify-content: center;
     gap: 15px;
 }
+/* 로그인 화면 스타일 */
+#login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.login-box {
+    padding: 40px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.login-box h1 {
+    color: #ff8fab;
+    margin-bottom: 10px;
+}
+
+#username-input {
+    width: 200px;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+#login-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background-color: #ff8fab;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+/* 헤더 사용자 정보 스타일 */
+.user-info {
+    font-weight: 700;
+}
+
+#welcome-message {
+    margin-right: 10px;
+}
+
+#logout-button {
+    font-size: 14px;
+    color: #888;
+}
