@@ -371,7 +371,6 @@ main {
 #toast-message.incorrect {
     background-color: #dc3545;
 }
-
 /* 퀴즈 페이지 타이머 */
 #timer-display {
     font-size: 24px;
@@ -380,5 +379,55 @@ main {
     margin-top: 10px;
     text-align: center;
     height: 30px; /* 공간 확보 */
+}
+/* 결과 화면 스타일 */
+#results-container {
+    text-align: center;
+    padding: 20px;
+}
 
+#results-container h2 {
+    color: #a0e7e5;
+    margin-bottom: 20px;
+}
+
+#score-text {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+#message-text {
+    font-size: 18px;
+    color: #5d5d5d;
+    margin-bottom: 30px;
+}
+
+.retry-button {
+    display: inline-block;
+    padding: 15px 30px;
+    background-image: linear-gradient(45deg, #ff8fab, #ffc3a0);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(255, 143, 171, 0.4);
+    transition: all 0.3s;
+}
+
+.retry-button:hover {
+    transform: scale(1.05);
+}
+
+/* 정답/오답 시 버튼 피드백 스타일 */
+.option.correct-answer {
+    background-color: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+.option.incorrect-answer {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
 }

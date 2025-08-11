@@ -8,41 +8,40 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="quiz-container">
-        <header class="quiz-header">
-            <h1>수학 문제 쑥쑥! 🧠</h1>
-       	    <div id="timer-display"></div>	
- </header>
+<div class="quiz-container">
+    <header class="quiz-header">
+        <h1>문제 쑥쑥! 🧠</h1>
+        <div id="timer-display"></div>
+    </header>
+    
+    <main class="quiz-main">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+        <p class="question-number">1 / 10</p>
         
-        <main class="quiz-main">
-            <div class="progress-bar">
-                <div class="progress"></div>
-            </div>
-            <p class="question-number">1 / 10</p>
-            
-            <div class="question-box">
-                <p class="question-text">
-                    철수는 사과 🍎 2개와 오렌지 🍊 2개를 가지고 있습니다. 
-                    철수가 가진 과일은 모두 몇 개일까요?
-                </p>
-            </div>
-            
-            <div class="answer-options">
-                <button class="option">1) 2개</button>
-                <button class="option">2) 3개</button>
-                <button class="option">3) 4개</button>
-                <button class="option">4) 5개</button>
-            </div>
-        </main>
+        <div class="question-box">
+            <p class="question-text">문제를 불러오는 중입니다...</p>
+        </div>
         
-        <footer class="quiz-footer">
-            <button class="submit-button">정답 제출하기</button>
-        </footer>
-
-	<div id="toast-message"></div>
-
+        <div class="answer-options">
+            <button class="option">1)</button>
+            <button class="option">2)</button>
+            <button class="option">3)</button>
+            <button class="option">4)</button>
+        </div>
+    </main>
+    
+    <div id="results-container" style="display: none;">
+        <h2>✨ 퀴즈 결과 ✨</h2>
+        <p id="score-text"></p>
+        <p id="message-text"></p>
+        <a href="index.html" class="retry-button">메인으로 돌아가기</a>
     </div>
 
+    <div id="toast-message"></div>
+
+</div>
    <script src="js/quiz.js"></script>
 </body>
 </html>

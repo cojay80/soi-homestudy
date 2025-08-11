@@ -3,24 +3,29 @@
 // ======== 1. HTML 요소 및 설정값 가져오기 ========
 const questionText = document.querySelector('.question-text');
 const answerOptions = document.querySelectorAll('.option');
-const submitButton = document.querySelector('.submit-button');
 const progress = document.querySelector('.progress');
 const questionNumber = document.querySelector('.question-number');
 const toastMessage = document.getElementById('toast-message');
-const timerDisplay = document.getElementById('timer-display'); // 타이머 표시 요소
+const timerDisplay = document.getElementById('timer-display');
+
+// 퀴즈/결과 화면 요소
+const quizMain = document.querySelector('.quiz-main');
+const resultsContainer = document.getElementById('results-container');
 
 // localStorage에서 사용자의 선택 정보 가져오기
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
+const GOOGLE_SHEET_URL = '여기에_사용하시던_TSV_주소를_붙여넣으세요';
 const selectedGrade = localStorage.getItem('selectedGrade');
 const selectedSubject = localStorage.getItem('selectedSubject');
-const selectedCount = parseInt(localStorage.getItem('selectedCount')); // 숫자로 변환
-const selectedTimer = parseInt(localStorage.getItem('selectedTimer')); // 숫자로 변환
+const selectedCount = parseInt(localStorage.getItem('selectedCount'));
+const selectedTimer = parseInt(localStorage.getItem('selectedTimer'));
 
 let currentQuestionIndex = 0;
-let problems = []; // 최종적으로 풀 문제들을 저장할 배열
-let timerInterval; // 타이머를 제어하기 위한 변수
+let problems = [];
+let score = 0; // 점수 기록 변수
+let isAnswered = false; // 답변 선택 여부 (중복 클릭 방지)
+let timerInterval;
 
-// ======== 2. 문제 데이터 가져와서 퀴즈 준비하기 ========
+// ======== 2. 퀴즈 준비 ========
 async function setupQuiz() {
     if (!selectedGrade || !selectedSubject) {
         alert("먼저 학년과 과목을 선택해주세요!");
@@ -32,11 +37,8 @@ async function setupQuiz() {
         const response = await fetch(GOOGLE_SHEET_URL);
         const tsvText = await response.text();
         const allProblems = parseTsv(tsvText);
-
-        // 선택된 학년/과목으로 문제 필터링
         const filteredProblems = allProblems.filter(p => p.학년 === selectedGrade && p.과목 === selectedSubject);
         
-        // 문제 섞고, 선택한 개수만큼 자르기
         problems = filteredProblems.sort(() => Math.random() - 0.5).slice(0, selectedCount);
 
         if (problems.length === 0) {
@@ -44,21 +46,23 @@ async function setupQuiz() {
             return;
         }
 
-        loadQuestion(); // 첫 문제 로딩
+        loadQuestion();
     } catch (error) {
         console.error('문제를 가져오는 데 실패했습니다:', error);
         questionText.textContent = "문제를 불러올 수 없어요. 인터넷 연결이나 구글 시트 주소를 확인해주세요!";
     }
 }
 
-// ======== 3. 문제 화면에 표시하고 타이머 시작하기 ========
+// ======== 3. 문제 불러오기 및 타이머 시작 ========
 function loadQuestion() {
-    clearTimeout(timerInterval); // 이전 타이머 중지
-    timerDisplay.textContent = ''; // 타이머 표시 초기화
+    isAnswered = false; // 새 문제가 로드되면 다시 답변 가능
+    clearTimeout(timerInterval);
+    timerDisplay.textContent = '';
 
-    selectedAnswer = null;
-    const currentSelected = document.querySelector('.option.selected');
-    if (currentSelected) currentSelected.classList.remove('selected');
+    // 이전 문제의 정답/오답 스타일 제거
+    answerOptions.forEach(button => {
+        button.classList.remove('correct-answer', 'incorrect-answer', 'selected');
+    });
 
     const currentQuestion = problems[currentQuestionIndex];
     const options = [currentQuestion.보기1, currentQuestion.보기2, currentQuestion.보기3, currentQuestion.보기4]
@@ -73,56 +77,87 @@ function loadQuestion() {
     progress.style.width = `${((currentQuestionIndex + 1) / problems.length) * 100}%`;
 
     if (selectedTimer > 0) {
-        startTimer(selectedTimer); // 시간제한이 있으면 타이머 시작
+        startTimer(selectedTimer);
     }
 }
 
-// ======== 4. 타이머 기능 ========
-function startTimer(seconds) {
-    let timeLeft = seconds;
-    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+// ======== 4. 답변 클릭 이벤트 처리 ========
+answerOptions.forEach(button => {
+    button.addEventListener('click', (event) => {
+        if (isAnswered) return; // 이미 답변했으면 더 이상 클릭 안됨
+        isAnswered = true;
+        clearInterval(timerInterval); // 답변 클릭 시 타이머 중지
 
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            showToast("시간 초과!", false);
-            // 1.5초 후 다음 문제로 자동 이동
-            setTimeout(goToNextQuestion, 1500);
+        const selectedButton = event.target;
+        const currentQuestion = problems[currentQuestionIndex];
+        const isCorrect = selectedButton.textContent === currentQuestion.정답;
+
+        if (isCorrect) {
+            score++; // 점수 증가
+            selectedButton.classList.add('correct-answer');
+            showToast("정답입니다! 🎉", true);
+        } else {
+            selectedButton.classList.add('incorrect-answer');
+            // 실제 정답 버튼도 초록색으로 표시
+            answerOptions.forEach(btn => {
+                if (btn.textContent === currentQuestion.정답) {
+                    btn.classList.add('correct-answer');
+                }
+            });
+            showToast("아쉬워요, 다음 문제로 넘어갑니다.", false);
         }
-    }, 1000);
-}
 
-// ======== 5. 정답 제출 및 다음 문제로 이동 로직 ========
-submitButton.addEventListener('click', () => {
-    clearInterval(timerInterval); // 정답 제출 시 타이머 중지
-
-    if (!selectedAnswer) {
-        showToast("정답을 선택해주세요!", false);
-        if (selectedTimer > 0) startTimer(selectedTimer); // 타이머 다시 시작
-        return;
-    }
-
-    const currentQuestion = problems[currentQuestionIndex];
-    const isCorrect = selectedAnswer.textContent === currentQuestion.정답;
-
-    showToast(isCorrect ? "정답입니다! 🎉" : "아쉬워요, 정답은 '" + currentQuestion.정답 + "' 입니다.", isCorrect);
-
-    setTimeout(goToNextQuestion, 1500); // 1.5초 후 다음 문제로
+        setTimeout(goToNextQuestion, 1500); // 1.5초 후 다음 문제로
+    });
 });
 
+// ======== 5. 다음 문제 또는 결과 화면으로 이동 ========
 function goToNextQuestion() {
     currentQuestionIndex++;
     if (currentQuestionIndex < problems.length) {
         loadQuestion();
     } else {
-        alert(`모든 문제를 다 풀었어요! 총 ${problems.length} 문제를 푸셨습니다.`);
-        window.location.href = 'index.html';
+        showResults(); // 모든 문제를 다 풀면 결과 표시
     }
 }
 
-// ======== 6. 기타 함수들 ========
+// ======== 6. 결과 화면 표시 ========
+function showResults() {
+    quizMain.style.display = 'none'; // 퀴즈 영역 숨기기
+    resultsContainer.style.display = 'block'; // 결과 영역 보이기
+
+    const scoreText = document.getElementById('score-text');
+    const messageText = document.getElementById('message-text');
+    
+    scoreText.textContent = `총 ${problems.length}문제 중 ${score}개를 맞혔어요!`;
+    
+    const percentage = (score / problems.length) * 100;
+    if (percentage >= 80) {
+        messageText.textContent = "정말 대단해요! 훌륭한 실력이에요. 🏆";
+    } else if (percentage >= 50) {
+        messageText.textContent = "잘했어요! 조금만 더 노력해봐요. 😊";
+    } else {
+        messageText.textContent = "아쉬워요, 다시 한번 도전해볼까요? 💪";
+    }
+}
+
+
+// ======== 타이머 및 기타 유틸리티 함수 (기존과 거의 동일) ========
+function startTimer(seconds) {
+    let timeLeft = seconds;
+    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            isAnswered = true; // 시간 초과 시 답변 불가능
+            showToast("시간 초과!", false);
+            setTimeout(goToNextQuestion, 1500);
+        }
+    }, 1000);
+}
+
 function parseTsv(text) {
     const lines = text.split(/\r\n|\n/).slice(1);
     const headers = ['학년', '과목', '질문', '보기1', '보기2', '보기3', '보기4', '정답'];
@@ -146,5 +181,5 @@ function showToast(message, isCorrect) {
     }, 1500);
 }
 
-// ======== 7. 퀴즈 시작! ========
+// ======== 퀴즈 시작! ========
 setupQuiz();
