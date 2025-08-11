@@ -33,21 +33,23 @@ let incorrectProblems = []; // 틀린 문제들을 저장할 배열
 let isAnswered = false;
 let timerInterval;
 
-// ======== 2. 퀴즈 준비 ========
+// js/quiz.js 파일의 setupQuiz 함수를 아래 코드로 교체
+
 async function setupQuiz() {
     if (isReviewMode) {
         // 오답 퀴즈 모드일 경우
-        const savedIncorrect = JSON.parse(localStorage.getItem('incorrectProblems'));
-        if (!savedIncorrect || savedIncorrect.length === 0) {
+        const reviewProblems = JSON.parse(localStorage.getItem('reviewProblems')); // reviewProblems 키 사용
+        if (!reviewProblems || reviewProblems.length === 0) {
             alert("복습할 오답 문제가 없습니다. 메인 화면으로 돌아갑니다.");
             localStorage.removeItem('isReviewMode');
+            localStorage.removeItem('reviewProblems');
             window.location.href = 'index.html';
             return;
         }
-        problemSets = groupProblems(savedIncorrect);
+        problemSets = groupProblems(reviewProblems);
         loadProblem();
     } else {
-        // 일반 퀴즈 모드일 경우
+    // ... (기존 일반 퀴즈 모드 코드는 그대로) ...
         if (!selectedGrade || !selectedSubject) {
             alert("먼저 학년과 과목을 선택해주세요!");
             window.location.href = 'index.html';
@@ -105,7 +107,8 @@ answerOptions.forEach(button => {
     });
 });
 
-// ======== 4. 결과 화면 표시 (버튼 로직 추가) ========
+// js/quiz.js 파일의 showResults 함수를 아래 코드로 교체
+
 function showResults() {
     quizLayout.style.display = 'none';
     resultsContainer.style.display = 'block';
@@ -114,15 +117,29 @@ function showResults() {
     const messageText = document.getElementById('message-text');
     const reviewButton = document.getElementById('review-button');
     
-    // 틀린 문제들을 localStorage에 저장 (오답 퀴즈가 아닌 경우에만)
-    if (!isReviewMode) {
-        localStorage.setItem('incorrectProblems', JSON.stringify(incorrectProblems));
+    // ▼▼ 틀린 문제를 '누적'하여 저장하는 로직 ▼▼
+    if (!isReviewMode && incorrectProblems.length > 0) {
+        const currentUser = localStorage.getItem('currentUser');
+        // 1. 기존 학습 데이터 불러오기 (없으면 새로 만들기)
+        let studyData = JSON.parse(localStorage.getItem('studyData')) || {};
+        // 2. 현재 사용자의 데이터 공간 확인 (없으면 새로 만들기)
+        if (!studyData[currentUser]) {
+            studyData[currentUser] = { incorrect: [] };
+        }
+        // 3. 기존 오답 노트에 새로운 오답 문제 추가 (중복 제거)
+        const existingIncorrect = new Map(studyData[currentUser].incorrect.map(p => [p.질문, p]));
+        incorrectProblems.forEach(p => {
+            existingIncorrect.set(p.질문, p); // 중복된 질문은 덮어쓰기
+        });
+        studyData[currentUser].incorrect = Array.from(existingIncorrect.values());
+        
+        // 4. 최종 데이터를 localStorage에 저장
+        localStorage.setItem('studyData', JSON.stringify(studyData));
     }
-
+    
     const totalQuestions = problemSets.reduce((sum, set) => sum + set.questions.length, 0);
     scoreText.textContent = `총 ${totalQuestions}문제 중 ${score}개를 맞혔어요!`;
     
-    // 메시지 설정
     const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 100;
     if (percentage >= 80) {
         messageText.textContent = "정말 대단해요! 훌륭한 실력이에요. 🏆";
@@ -132,18 +149,14 @@ function showResults() {
         messageText.textContent = "아쉬워요, 다시 한번 도전해볼까요? 💪";
     }
 
-    // 틀린 문제가 없으면 '다시 풀기' 버튼 숨기기
-    const savedIncorrect = JSON.parse(localStorage.getItem('incorrectProblems'));
-    if (!savedIncorrect || savedIncorrect.length === 0) {
+    if (incorrectProblems.length === 0) {
         reviewButton.style.display = 'none';
     } else {
         reviewButton.style.display = 'inline-block';
     }
 
-    // 오답 퀴즈 모드였을 경우, 끝나면 기록 삭제
     if (isReviewMode) {
-        reviewButton.style.display = 'none'; // 오답 퀴즈 후에는 다시풀기 버튼 숨김
-        localStorage.removeItem('incorrectProblems');
+        reviewButton.style.display = 'none';
         localStorage.removeItem('isReviewMode');
     }
 }
