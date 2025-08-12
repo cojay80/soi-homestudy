@@ -472,21 +472,44 @@ main {
 }
 
 
-/* ======== 반응형 웹 디자인 (모바일 최적화) ======== */
+/* style.css 파일의 @media 블록 전체를 아래 코드로 교체 */
+
+/* ======== 반응형 웹 디자인 (모바일 최적화) - 최종 수정 버전 ======== */
 @media (max-width: 768px) {
+    
     /* 헤더 */
     .main-header {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: 15px;
+        padding: 10px 15px;
     }
+
+    /* ▼▼ 수정 1: 로고 글자 줄바꿈 방지 ▼▼ */
+    .logo a {
+        white-space: nowrap; /* 글자가 한 줄로 나오도록 강제 */
+    }
+
+    /* ▼▼ 수정 2: 사용자 정보 글자 크기 줄이기 ▼▼ */
+    .user-info {
+        font-size: 14px; /* 글자 크기 축소 */
+        white-space: nowrap;
+    }
+    #welcome-message {
+        margin-right: 5px; /* 간격 축소 */
+    }
+
+    /* 기존 메뉴 숨기고, 햄버거 버튼 보여주기 */
     .main-nav {
         display: none; 
     }
     .mobile-menu-button {
         display: block;
+        padding: 0; /* 불필요한 여백 제거 */
+        margin-left: 10px; /* 사용자 정보와 간격 확보 */
     }
+
+    /* ▼▼ 수정 3: 햄버거 메뉴 스타일 조정 (잘림 방지) ▼▼ */
     .main-nav.active {
         display: flex;
         position: fixed;
@@ -498,15 +521,16 @@ main {
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        overflow-y: auto; /* 내용이 길어지면 스크롤 가능 */
     }
     .main-nav.active ul {
         flex-direction: column;
     }
     .main-nav.active li {
-        margin: 20px 0;
+        margin: 15px 0; /* 위아래 간격 축소 */
     }
     .main-nav.active a {
-        font-size: 24px;
+        font-size: 22px; /* 글자 크기 살짝 축소 */
         color: white;
     }
 
@@ -514,7 +538,7 @@ main {
     main {
         padding: 20px 15px;
     }
-    .login-box, .study-card {
+    .login-box, .study-card, .goal-box {
         width: 90%;
         padding: 20px;
     }
@@ -529,9 +553,6 @@ main {
     }
     .passage-area, .problem-area {
         width: 100%;
-    }
-    .problem-area {
-        width: 100%; /* 지문 있을 때도 100% */
     }
 
     /* 결과 버튼 */
