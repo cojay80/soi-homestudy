@@ -609,11 +609,11 @@ main {
         white-space: nowrap;
     }
     .user-info {
-        font-size: 12px;
+        font-size: 8px;
         white-space: nowrap;
     }
     #logout-button {
-        font-size: 12px;
+        font-size: 8px;
     }
     #welcome-message {
         margin-right: 5px;
