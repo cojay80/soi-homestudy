@@ -15,7 +15,7 @@ const passageArea = document.querySelector('.passage-area');
 const passageContent = document.getElementById('passage-content');
 const problemArea = document.querySelector('.problem-area');
 
-const GOOGLE_SHEET_URL = 'https.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?gid=0&single=true&output=tsv';
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 const selectedGrade = localStorage.getItem('selectedGrade');
 const selectedSubject = localStorage.getItem('selectedSubject');
 const selectedCount = parseInt(localStorage.getItem('selectedCount'));

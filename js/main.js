@@ -1,7 +1,7 @@
 // js/main.js (최종 수정 버전)
 
 // ======== 1. 공통 기능 및 요소 ========
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?gid=0&single=true&output=tsv';
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 let allProblems = [];
 
 // 공통: 헤더의 사용자 정보와 로그아웃 버튼 설정
