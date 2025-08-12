@@ -749,3 +749,57 @@ main {
     text-align: right;
     transition: width 1s ease;
 }
+/* style.css 파일 맨 아래에 추가 */
+
+/* ======== 반응형 웹 디자인 (모바일 최적화) ======== */
+/* 화면 너비가 768px 이하일 때 적용될 스타일 */
+@media (max-width: 768px) {
+
+    /* 헤더 스타일 조정 */
+    .main-header {
+        flex-direction: column; /* 세로로 쌓이도록 변경 */
+        padding: 10px;
+    }
+    .main-header .main-nav {
+        order: 1; /* 순서를 맨 아래로 */
+        width: 100%;
+        margin-top: 10px;
+    }
+    .main-nav ul {
+        justify-content: space-around;
+        width: 100%;
+    }
+    .main-nav li {
+        margin-left: 0;
+    }
+
+    /* 메인 콘텐츠 패딩 조정 */
+    main {
+        padding: 20px 15px;
+    }
+
+    /* 로그인 상자 조정 */
+    .login-box {
+        width: 90%;
+        padding: 20px;
+    }
+
+    /* 퀴즈 페이지 레이아웃 조정 (가장 중요!) */
+    .quiz-layout {
+        flex-direction: column; /* 세로로 쌓이도록 변경 */
+    }
+    .passage-area, .problem-area {
+        width: 100%; /* 너비를 100%로 설정 */
+        box-sizing: border-box; /* 패딩이 너비를 넘지 않도록 */
+    }
+
+    /* 퀴즈 선택지 버튼 2x2 격자 유지 */
+    .answer-options {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    /* 결과 화면 버튼 세로로 쌓기 */
+    .result-buttons {
+        flex-direction: column;
+    }
+}

@@ -1,21 +1,32 @@
-// js/report.js (새 파일)
-
+// js/report.js (수정 버전)
 document.addEventListener('DOMContentLoaded', () => {
+    // ▼▼ 공통 헤더 기능 ▼▼
     const currentUser = localStorage.getItem('currentUser');
+    const welcomeMsgElement = document.getElementById('welcome-message');
+    const logoutBtnElement = document.getElementById('logout-button');
 
     if (!currentUser) {
         alert("사용자 정보가 없습니다. 메인 화면에서 사용자를 선택해주세요.");
         window.location.href = 'index.html';
         return;
     }
+    if (welcomeMsgElement) welcomeMsgElement.textContent = `${currentUser}님, 환영합니다!`;
+    if (logoutBtnElement) {
+        logoutBtnElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+    }
+    // ▲▲ 공통 헤더 기능 끝 ▲▲
 
+
+    // ▼▼ 기존 report.js의 고유 기능 ▼▼
     const studyData = JSON.parse(localStorage.getItem('studyData')) || {};
     const records = studyData[currentUser]?.records || [];
 
-    // 1. 최근 7일간의 데이터만 필터링
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
     const recentRecords = records.filter(record => new Date(record.date) >= sevenDaysAgo);
 
     if (recentRecords.length === 0) {
@@ -26,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. 요약 정보 계산
     let totalProblems = 0;
     let totalCorrect = 0;
     const subjectStats = {};
@@ -35,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const [correct, total] = record.score.split('/').map(Number);
         totalProblems += total;
         totalCorrect += correct;
-
         if (!subjectStats[record.subject]) {
             subjectStats[record.subject] = { correct: 0, total: 0 };
         }
@@ -44,13 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const averageScore = totalProblems > 0 ? ((totalCorrect / totalProblems) * 100).toFixed(1) : 0;
-
-    // 3. 화면에 요약 정보 표시
     document.getElementById('total-problems').textContent = `${totalProblems}개`;
     document.getElementById('total-correct').textContent = `${totalCorrect}개`;
     document.getElementById('average-score').textContent = `${averageScore}점`;
 
-    // 4. 과목별 분석 정보 표시
     const subjectBarsContainer = document.getElementById('subject-bars');
     for (const subject in subjectStats) {
         const stats = subjectStats[subject];

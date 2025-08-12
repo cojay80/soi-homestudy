@@ -1,17 +1,23 @@
-// js/main.js (목표 설정 기능이 추가된 최종 버전)
+// js/main.js (최종 수정 버전)
 
-// ======== 1. HTML 요소 가져오기 ========
-const loginContainer = document.getElementById('login-container');
-const mainContainer = document.getElementById('main-container');
-const usernameInput = document.getElementById('username-input');
-const loginButton = document.getElementById('login-button');
-
-const gradeSelect = document.getElementById('grade-select');
-const subjectSelect = document.getElementById('subject-select');
-const startButton = document.querySelector('.start-button');
-
+// ======== 1. 공통 기능 및 요소 ========
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 let allProblems = [];
+
+// 공통: 헤더의 사용자 정보와 로그아웃 버튼 설정
+function setupHeader(currentUser) {
+    const welcomeMsgElement = document.getElementById('welcome-message');
+    const logoutBtnElement = document.getElementById('logout-button');
+
+    if (welcomeMsgElement) welcomeMsgElement.textContent = `${currentUser}님, 환영합니다!`;
+    if (logoutBtnElement) {
+        logoutBtnElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+    }
+}
 
 // ======== 2. 페이지 로드 시 실행되는 메인 함수 ========
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ======== 3. 화면 표시 함수들 ========
+const loginContainer = document.getElementById('login-container');
+const mainContainer = document.getElementById('main-container');
+
 function showLoginScreen() {
     loginContainer.style.display = 'flex';
     mainContainer.style.display = 'none';
@@ -32,30 +41,26 @@ function showLoginScreen() {
 function showMainScreen(username) {
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
-    
-    const welcomeMsgElement = document.getElementById('welcome-message');
-    const logoutBtnElement = document.getElementById('logout-button');
-    
-    if (welcomeMsgElement) welcomeMsgElement.textContent = `${username}님, 환영합니다!`;
-    if (logoutBtnElement) {
-        logoutBtnElement.addEventListener('click', () => {
-            localStorage.removeItem('currentUser');
-            window.location.reload();
-        });
-    }
-    
-    initializePage(); // 페이지 초기화 함수 호출
+    setupHeader(username); // 공통 헤더 기능 호출
+    initializePage();
 }
 
-// ======== 4. 페이지 초기화 (학년 선택창 + 목표) ========
+// 이하 코드는 기존과 동일합니다.
+// (initializePage, updateSubjectSelector, 이벤트 리스너, 목표 설정 기능 등)
+const usernameInput = document.getElementById('username-input');
+const loginButton = document.getElementById('login-button');
+const gradeSelect = document.getElementById('grade-select');
+const subjectSelect = document.getElementById('subject-select');
+const startButton = document.querySelector('.start-button');
+
 async function initializePage() {
     try {
         const response = await fetch(GOOGLE_SHEET_URL);
         const tsvText = await response.text();
         allProblems = parseTsv(tsvText);
 
-        const grades = [...new Set(allProblems.map(p => p.학년))];
-        gradeSelect.innerHTML = '<option value="">-- 학년을 선택하세요 --</option>'; // 초기화
+        const grades = [...new Set(allProblems.map(p => p.학년))].sort();
+        gradeSelect.innerHTML = '<option value="">-- 학년을 선택하세요 --</option>';
         grades.forEach(grade => {
             const option = document.createElement('option');
             option.value = grade;
@@ -72,7 +77,6 @@ async function initializePage() {
     }
 }
 
-// ======== 5. 이벤트 리스너 설정 ========
 loginButton.addEventListener('click', () => {
     const username = usernameInput.value;
     if (!username) {
@@ -103,7 +107,6 @@ startButton.addEventListener('click', (event) => {
 
 gradeSelect.addEventListener('change', updateSubjectSelector);
 
-// ======== 6. 목표 설정 기능 관련 ========
 const goalSubjectSelect = document.getElementById('goal-subject-select');
 const goalCountInput = document.getElementById('goal-count-input');
 const setGoalButton = document.getElementById('set-goal-button');
@@ -113,7 +116,7 @@ const newGoalForm = document.getElementById('new-goal-form');
 const deleteGoalButton = document.getElementById('delete-goal-button');
 
 function populateGoalSubjects() {
-    const subjects = [...new Set(allProblems.map(p => p.과목))];
+    const subjects = [...new Set(allProblems.map(p => p.과목))].sort();
     goalSubjectSelect.innerHTML = '<option value="">-- 과목 선택 --</option>';
     subjects.forEach(subject => {
         const option = document.createElement('option');
@@ -168,14 +171,12 @@ deleteGoalButton.addEventListener('click', () => {
     }
 });
 
-
-// ======== 7. 기타 함수들 ========
 function updateSubjectSelector() {
     const selectedGrade = gradeSelect.value;
     subjectSelect.innerHTML = '<option value="">-- 과목을 선택하세요 --</option>';
     if (selectedGrade) {
         const problemsInGrade = allProblems.filter(p => p.학년 === selectedGrade);
-        const subjects = [...new Set(problemsInGrade.map(p => p.과목))];
+        const subjects = [...new Set(problemsInGrade.map(p => p.과목))].sort();
         subjects.forEach(subject => {
             const option = document.createElement('option');
             option.value = subject;

@@ -1,13 +1,28 @@
-// js/goal.js (새 파일)
+// js/goal.js (수정 버전)
 document.addEventListener('DOMContentLoaded', () => {
+    // ▼▼ 공통 헤더 기능 ▼▼
     const currentUser = localStorage.getItem('currentUser');
-    const goalProgressBox = document.getElementById('goal-progress-box');
+    const welcomeMsgElement = document.getElementById('welcome-message');
+    const logoutBtnElement = document.getElementById('logout-button');
 
     if (!currentUser) {
+        alert("사용자 정보가 없습니다. 메인 화면에서 사용자를 선택해주세요.");
         window.location.href = 'index.html';
         return;
     }
+    if (welcomeMsgElement) welcomeMsgElement.textContent = `${currentUser}님, 환영합니다!`;
+    if (logoutBtnElement) {
+        logoutBtnElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+    }
+    // ▲▲ 공통 헤더 기능 끝 ▲▲
 
+
+    // ▼▼ 기존 goal.js의 고유 기능 ▼▼
+    const goalProgressBox = document.getElementById('goal-progress-box');
     const studyData = JSON.parse(localStorage.getItem('studyData')) || {};
     const userData = studyData[currentUser] || {};
     const goal = userData.goal;
@@ -18,12 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 최근 7일간의 기록 필터링
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentRecords = records.filter(record => new Date(record.date) >= sevenDaysAgo);
 
-    // 목표 과목에 대한 달성량 계산
     let solvedCount = 0;
     recentRecords.forEach(record => {
         if (record.subject === goal.subject) {
@@ -34,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const achievementRate = Math.min(100, (solvedCount / goal.count) * 100).toFixed(1);
 
-    // 화면에 표시
     goalProgressBox.innerHTML = `
         <div class="goal-summary">
             <p><strong>이번 주 목표:</strong> ${goal.subject} ${goal.count}문제 풀기</p>
