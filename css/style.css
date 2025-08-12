@@ -492,7 +492,7 @@ main {
 
     /* ▼▼ 수정 2: 사용자 정보 글자 크기 줄이기 ▼▼ */
     .user-info {
-        font-size: 14px; /* 글자 크기 축소 */
+        font-size: 8px; /* 글자 크기 축소 */
         white-space: nowrap;
     }
     #welcome-message {
