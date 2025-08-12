@@ -626,31 +626,42 @@ main {
         padding: 0;
         margin-left: 10px;
     }
-    .main-nav.active {
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
-        flex-direction: column;
-        padding-top: 80px;
-        align-items: center;
-        overflow-y: auto;
-        box-sizing: border-box;
-    }
-    .main-nav.active ul {
-        flex-direction: column;
-    }
-    .main-nav.active li {
-        margin: 15px 0;
-    }
-    .main-nav.active a {
-        font-size: 22px;
-        color: white;
-    }
+/* ▼▼ 햄버거 메뉴 스타일 (드롭다운 방식으로 최종 수정) ▼▼ */
+.main-nav.active {
+    display: block; /* flex 대신 block으로 변경 */
+    position: absolute; /* 헤더를 기준으로 위치 설정 */
+    top: 100%; /* 헤더 바로 아래에 붙임 */
+    right: 5px; /* 오른쪽에서 5px 떨어진 위치 */
+    width: 200px; /* 적절한 너비 지정 */
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 10px 0;
+    z-index: 1000;
+}
 
+.main-nav.active ul {
+    flex-direction: column; /* 세로로 쌓기 */
+    width: 100%;
+}
+
+.main-nav.active li {
+    margin: 0; /* 기존 마진 제거 */
+    width: 100%;
+}
+
+.main-nav.active a {
+    display: block; /* 링크 영역을 전체 너비로 */
+    padding: 12px 20px; /* 충분한 여백 */
+    font-size: 16px; /* 모바일에 적합한 글자 크기 */
+    color: #4a4a4a; /* 검은 바탕이 아니므로 다시 어두운 색으로 */
+    text-align: left; /* 왼쪽 정렬 */
+    white-space: nowrap; /* 메뉴 글자 줄바꿈 방지 */
+}
+
+.main-nav.active a:hover {
+    background-color: #f7f7f7; /* 마우스 올렸을 때 효과 */
+}
     /* 메인 콘텐츠 */
     main {
         padding: 20px 15px;
