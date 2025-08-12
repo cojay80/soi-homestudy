@@ -1,4 +1,4 @@
-// js/quiz.js (음향 효과 없는 안정 버전)
+// js/quiz.js (구조를 수정한 최종 안정 버전)
 
 // ======== 1. HTML 요소 및 설정값 가져오기 ========
 const questionText = document.querySelector('.question-text');
@@ -15,7 +15,7 @@ const passageArea = document.querySelector('.passage-area');
 const passageContent = document.getElementById('passage-content');
 const problemArea = document.querySelector('.problem-area');
 
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?gid=0&single=true&output=tsv';
 const selectedGrade = localStorage.getItem('selectedGrade');
 const selectedSubject = localStorage.getItem('selectedSubject');
 const selectedCount = parseInt(localStorage.getItem('selectedCount'));
@@ -163,7 +163,7 @@ function goToNextQuestion() {
     }
 }
 
-// ======== 6. 결과 화면 표시 ========
+// ======== 6. 결과 화면 표시 (버튼 기능 연결 포함) ========
 function showResults() {
     quizLayout.style.display = 'none';
     resultsContainer.style.display = 'block';
@@ -235,6 +235,15 @@ function showResults() {
         localStorage.removeItem('isReviewMode');
         localStorage.removeItem('reviewProblems');
     }
+
+    // ▼▼▼▼▼ 버튼 기능 연결을 이곳으로 이동 ▼▼▼▼▼
+    if (reviewButton) {
+        reviewButton.addEventListener('click', () => {
+            localStorage.setItem('isReviewMode', 'true');
+            localStorage.setItem('reviewProblems', JSON.stringify(savedIncorrect));
+            window.location.reload();
+        });
+    }
 }
 
 // ======== 타이머 및 기타 유틸리티 함수 ========
@@ -280,17 +289,3 @@ function showToast(message, isCorrect) {
 
 // ======== 퀴즈 시작! ========
 setupQuiz();
-
-document.addEventListener('DOMContentLoaded', () => {
-    const reviewButton = document.getElementById('review-button');
-    if(reviewButton) {
-        reviewButton.addEventListener('click', () => {
-            localStorage.setItem('isReviewMode', 'true');
-            const currentUser = localStorage.getItem('currentUser');
-            const studyData = JSON.parse(localStorage.getItem('studyData')) || {};
-            const incorrectProblems = studyData[currentUser]?.incorrect || [];
-            localStorage.setItem('reviewProblems', JSON.stringify(incorrectProblems));
-            window.location.reload();
-        });
-    }
-});
