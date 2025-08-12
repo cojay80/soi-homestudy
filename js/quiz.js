@@ -1,4 +1,4 @@
-// js/quiz.js (구조를 수정한 최종 안정 버전)
+// js/quiz.js (groupProblems 함수가 포함된 최종 버전)
 
 // ======== 1. HTML 요소 및 설정값 가져오기 ========
 const questionText = document.querySelector('.question-text');
@@ -70,7 +70,30 @@ async function setupQuiz() {
     }
 }
 
-// ======== 3. 문제 불러오기 및 타이머 시작 ========
+// ======== 3. 문제들을 '문제 세트'로 그룹화하는 함수 (★★ 추가된 부분 ★★) ========
+function groupProblems(problems) {
+    const grouped = [];
+    const passageMap = new Map();
+
+    problems.forEach(p => {
+        if (p['지문 ID'] && p['지문 ID'].trim() !== '') {
+            if (!passageMap.has(p['지문 ID'])) {
+                passageMap.set(p['지문 ID'], []);
+            }
+            passageMap.get(p['지문 ID']).push(p);
+        } else {
+            grouped.push({ type: 'single', questions: [p] });
+        }
+    });
+
+    passageMap.forEach((questions, id) => {
+        grouped.push({ type: 'passage', questions: questions });
+    });
+
+    return grouped;
+}
+
+// ======== 4. 문제 불러오기 및 타이머 시작 ========
 function loadProblem() {
     isAnswered = false;
     clearTimeout(timerInterval);
@@ -116,7 +139,7 @@ function loadProblem() {
     }
 }
 
-// ======== 4. 답변 클릭 이벤트 처리 ========
+// ======== 5. 답변 클릭 이벤트 처리 ========
 answerOptions.forEach(button => {
     button.addEventListener('click', (event) => {
         if (isAnswered) return;
@@ -146,7 +169,7 @@ answerOptions.forEach(button => {
     });
 });
 
-// ======== 5. 다음 문제 또는 결과 화면으로 이동 ========
+// ======== 6. 다음 문제 또는 결과 화면으로 이동 ========
 function goToNextQuestion() {
     const currentSet = problemSets[currentProblemSetIndex];
     if (currentQuestionInSetIndex < currentSet.questions.length - 1) {
@@ -163,7 +186,7 @@ function goToNextQuestion() {
     }
 }
 
-// ======== 6. 결과 화면 표시 (버튼 기능 연결 포함) ========
+// ======== 7. 결과 화면 표시 ========
 function showResults() {
     quizLayout.style.display = 'none';
     resultsContainer.style.display = 'block';
@@ -236,7 +259,6 @@ function showResults() {
         localStorage.removeItem('reviewProblems');
     }
 
-    // ▼▼▼▼▼ 버튼 기능 연결을 이곳으로 이동 ▼▼▼▼▼
     if (reviewButton) {
         reviewButton.addEventListener('click', () => {
             localStorage.setItem('isReviewMode', 'true');
