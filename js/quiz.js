@@ -1,7 +1,6 @@
-// js/quiz.js (음향 효과 기능이 추가된 최종 버전)
+// js/quiz.js (음향 효과 없는 안정 버전)
 
 // ======== 1. HTML 요소 및 설정값 가져오기 ========
-// ... (기존과 동일한 요소들) ...
 const questionText = document.querySelector('.question-text');
 const answerOptions = document.querySelectorAll('.option');
 const progress = document.querySelector('.progress');
@@ -16,17 +15,12 @@ const passageArea = document.querySelector('.passage-area');
 const passageContent = document.getElementById('passage-content');
 const problemArea = document.querySelector('.problem-area');
 
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?gid=0&single=true&output=tsv';
+const GOOGLE_SHEET_URL = 'https.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?gid=0&single=true&output=tsv';
 const selectedGrade = localStorage.getItem('selectedGrade');
 const selectedSubject = localStorage.getItem('selectedSubject');
 const selectedCount = parseInt(localStorage.getItem('selectedCount'));
 const selectedTimer = parseInt(localStorage.getItem('selectedTimer'));
 const isReviewMode = localStorage.getItem('isReviewMode') === 'true';
-
-// ▼▼▼▼▼ 음향 효과 파일 주소 설정 ▼▼▼▼▼
-const CORRECT_SOUND_URL = 'https://raw.githubusercontent.com/cojay80/soi-homestudy/main/sound/dingdong.wav';
-const INCORRECT_SOUND_URL = 'https://raw.githubusercontent.com/cojay80/soi-homestudy/main/sound/ddang.wav';
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 let currentProblemSetIndex = 0;
 let currentQuestionInSetIndex = 0;
@@ -36,72 +30,7 @@ let incorrectProblems = [];
 let isAnswered = false;
 let timerInterval;
 
-// ======== 음향 재생을 위한 함수 (새로 추가) ========
-function playSound(url) {
-    if (url && url.startsWith('http')) { // 주소가 유효할 때만 재생
-        const audio = new Audio(url);
-        audio.play();
-    }
-}
-
-// ======== 답변 클릭 이벤트 처리 (playSound 함수 호출 추가) ========
-answerOptions.forEach(button => {
-    button.addEventListener('click', (event) => {
-        if (isAnswered) return;
-        isAnswered = true;
-        clearInterval(timerInterval);
-
-        const selectedButton = event.target;
-        const currentQuestion = problemSets[currentProblemSetIndex].questions[currentQuestionInSetIndex];
-        const isCorrect = selectedButton.textContent === currentQuestion.정답;
-
-        if (isCorrect) {
-            playSound(CORRECT_SOUND_URL); // <-- 정답 소리 재생
-            score++;
-            selectedButton.classList.add('correct-answer');
-            showToast("정답입니다! 🎉", true);
-        } else {
-            playSound(INCORRECT_SOUND_URL); // <-- 오답 소리 재생
-            incorrectProblems.push(currentQuestion);
-            selectedButton.classList.add('incorrect-answer');
-            answerOptions.forEach(btn => {
-                if (btn.textContent === currentQuestion.정답) {
-                    btn.classList.add('correct-answer');
-                }
-            });
-            showToast("아쉬워요, 다음 문제로 넘어갑니다.", false);
-        }
-
-        setTimeout(goToNextQuestion, 1500);
-    });
-});
-
-// ======== 타이머 기능 (playSound 함수 호출 추가) ========
-function startTimer(seconds) {
-    let timeLeft = seconds;
-    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            isAnswered = true;
-            playSound(INCORRECT_SOUND_URL); // <-- 시간 초과 시 오답 소리 재생
-            
-            const currentQuestion = problemSets[currentProblemSetIndex].questions[currentQuestionInSetIndex];
-            incorrectProblems.push(currentQuestion);
-            showToast("시간 초과!", false);
-            setTimeout(goToNextQuestion, 1500);
-        }
-    }, 1000);
-}
-
-
-// 
-// ... 이하 setupQuiz, loadProblem, goToNextQuestion, showResults 등 나머지 함수들은 기존과 동일합니다 ...
-// (아래 코드를 그대로 복사해서 붙여넣으시면 됩니다)
-//
-
+// ======== 2. 퀴즈 준비 ========
 async function setupQuiz() {
     if (isReviewMode) {
         const reviewProblems = JSON.parse(localStorage.getItem('reviewProblems'));
@@ -141,6 +70,7 @@ async function setupQuiz() {
     }
 }
 
+// ======== 3. 문제 불러오기 및 타이머 시작 ========
 function loadProblem() {
     isAnswered = false;
     clearTimeout(timerInterval);
@@ -186,6 +116,37 @@ function loadProblem() {
     }
 }
 
+// ======== 4. 답변 클릭 이벤트 처리 ========
+answerOptions.forEach(button => {
+    button.addEventListener('click', (event) => {
+        if (isAnswered) return;
+        isAnswered = true;
+        clearInterval(timerInterval);
+
+        const selectedButton = event.target;
+        const currentQuestion = problemSets[currentProblemSetIndex].questions[currentQuestionInSetIndex];
+        const isCorrect = selectedButton.textContent === currentQuestion.정답;
+
+        if (isCorrect) {
+            score++;
+            selectedButton.classList.add('correct-answer');
+            showToast("정답입니다! 🎉", true);
+        } else {
+            incorrectProblems.push(currentQuestion);
+            selectedButton.classList.add('incorrect-answer');
+            answerOptions.forEach(btn => {
+                if (btn.textContent === currentQuestion.정답) {
+                    btn.classList.add('correct-answer');
+                }
+            });
+            showToast("아쉬워요, 다음 문제로 넘어갑니다.", false);
+        }
+
+        setTimeout(goToNextQuestion, 1500);
+    });
+});
+
+// ======== 5. 다음 문제 또는 결과 화면으로 이동 ========
 function goToNextQuestion() {
     const currentSet = problemSets[currentProblemSetIndex];
     if (currentQuestionInSetIndex < currentSet.questions.length - 1) {
@@ -202,6 +163,7 @@ function goToNextQuestion() {
     }
 }
 
+// ======== 6. 결과 화면 표시 ========
 function showResults() {
     quizLayout.style.display = 'none';
     resultsContainer.style.display = 'block';
@@ -275,6 +237,24 @@ function showResults() {
     }
 }
 
+// ======== 타이머 및 기타 유틸리티 함수 ========
+function startTimer(seconds) {
+    let timeLeft = seconds;
+    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            isAnswered = true;
+            const currentQuestion = problemSets[currentProblemSetIndex].questions[currentQuestionInSetIndex];
+            incorrectProblems.push(currentQuestion);
+            showToast("시간 초과!", false);
+            setTimeout(goToNextQuestion, 1500);
+        }
+    }, 1000);
+}
+
 function parseTsv(text) {
     const lines = text.split(/\r\n|\n/).slice(1);
     const headers = ['학년', '과목', '질문', '보기1', '보기2', '보기3', '보기4', '정답', '이미지', '지문 ID', '지문'];
@@ -283,9 +263,7 @@ function parseTsv(text) {
         if (!line) continue;
         const values = line.split('\t');
         const entry = {};
-        for (let i = 0; i < headers.length; i++) {
-            entry[headers[i]] = values[i];
-        }
+        for (let i = 0; i < headers.length; i++) entry[headers[i]] = values[i];
         data.push(entry);
     }
     return data;
@@ -300,4 +278,19 @@ function showToast(message, isCorrect) {
     }, 1500);
 }
 
+// ======== 퀴즈 시작! ========
 setupQuiz();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const reviewButton = document.getElementById('review-button');
+    if(reviewButton) {
+        reviewButton.addEventListener('click', () => {
+            localStorage.setItem('isReviewMode', 'true');
+            const currentUser = localStorage.getItem('currentUser');
+            const studyData = JSON.parse(localStorage.getItem('studyData')) || {};
+            const incorrectProblems = studyData[currentUser]?.incorrect || [];
+            localStorage.setItem('reviewProblems', JSON.stringify(incorrectProblems));
+            window.location.reload();
+        });
+    }
+});
