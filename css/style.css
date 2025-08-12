@@ -510,19 +510,21 @@ main {
     }
 
     /* ▼▼ 수정 3: 햄버거 메뉴 스타일 조정 (잘림 방지) ▼▼ */
-    .main-nav.active {
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        overflow-y: auto; /* 내용이 길어지면 스크롤 가능 */
-    }
+.main-nav.active {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    flex-direction: column;
+    /* justify-content 삭제 후 padding-top 추가 */
+    padding-top: 80px; /* 위쪽에 충분한 여백을 줘서 정렬 */
+    align-items: center; /* 가로 중앙 정렬은 유지 */
+    overflow-y: auto; /* 내용이 길면 스크롤 */
+    box-sizing: border-box; /* 패딩이 높이를 넘지 않도록 */
+}
     .main-nav.active ul {
         flex-direction: column;
     }
