@@ -8,9 +8,28 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header class="main-header">
-        </header>
+<header class="main-header">
+    <div class="logo">
+        <a href="index.html">소이의 공부방 🎨</a>
+    </div>
 
+    <nav class="main-nav">
+        <ul>
+            <li><a href="index.html">오늘의 학습</a></li>
+            <li><a href="report.html">학습 보고서</a></li>
+            <li><a href="goal.html">나의 목표</a></li>
+            <li><a href="record.html">상세 기록</a></li>
+            <li><a href="notes.html">오답 노트</a></li>
+        </ul>
+    </nav>
+
+    <div class="user-info">
+        <span id="welcome-message"></span>
+        <a href="#" id="logout-button">(로그아웃)</a>
+    </div>
+
+    <button class="mobile-menu-button">☰</button>
+</header>
     <main class="report-container">
         <h1>주간 학습 보고서 📊</h1>
         <p class="report-period">최근 7일간의 학습 기록입니다.</p>
@@ -41,6 +60,6 @@
         <p>&copy; 2025 소이를 위한 아빠의 선물</p>
     </footer>
 
-    <script src="js/report.js"></script>
+    <script src="js/header.js"></script> <script src="js/report.js"></script>
 </body>
 </html>

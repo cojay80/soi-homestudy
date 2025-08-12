@@ -803,3 +803,62 @@ main {
         flex-direction: column;
     }
 }
+/* style.css 파일 맨 아래에 추가 */
+
+/* 모바일 메뉴 버튼 */
+.mobile-menu-button {
+    display: none; /* ▼▼ 평소(PC 화면)에는 숨김 ▼▼ */
+    font-size: 28px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1001; /* 메뉴보다 위에 있도록 */
+}
+
+/* ======== 반응형 웹 디자인 (모바일 최적화) ======== */
+/* 화면 너비가 768px 이하일 때 적용될 스타일 */
+@media (max-width: 768px) {
+    
+    /* ▼▼ 기존 메뉴 숨기고, 햄버거 버튼 보여주기 ▼▼ */
+    .main-nav {
+        display: none; 
+    }
+    .mobile-menu-button {
+        display: block;
+    }
+
+    /* ▼▼ 햄버거 버튼 눌렀을 때 나타날 메뉴 스타일 ▼▼ */
+    .main-nav.active {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8); /* 반투명 검은 배경 */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .main-nav.active ul {
+        flex-direction: column;
+        text-align: center;
+    }
+    .main-nav.active li {
+        margin: 20px 0;
+    }
+    .main-nav.active a {
+        font-size: 24px;
+        color: white;
+    }
+
+    /* 기존 반응형 코드 일부 수정 */
+    .main-header {
+        flex-direction: row; /* 세로 쌓기 취소 */
+        justify-content: space-between;
+        align-items: center;
+    }
+    .main-header .user-info {
+        order: -1; /* 사용자 정보를 로고 앞으로 이동 (선택사항) */
+    }
+}
