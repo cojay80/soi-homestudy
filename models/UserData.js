@@ -32,7 +32,7 @@ const userDataSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     incorrect: [problemSchema],
     records: [recordSchema],
-    goal: goalSchema
+    goals: [goalSchema] // goal -> goals, [] 추가
 });
 
 const UserData = mongoose.model('UserData', userDataSchema);

@@ -8,31 +8,29 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header class="main-header">
-    <div class="logo">
-        <a href="index.html">소이의 공부방 🎨</a>
-    </div>
+    <header class="main-header">
+        <div class="logo">
+            <a href="index.html">소이의 공부방 🎨</a>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html">오늘의 학습</a></li>
+                <li><a href="report.html">학습 보고서</a></li>
+                <li><a href="goal.html" class="active">나의 목표</a></li>
+                <li><a href="record.html">상세 기록</a></li>
+                <li><a href="notes.html">오답 노트</a></li>
+            </ul>
+        </nav>
+        <div class="user-info">
+            <span id="welcome-message"></span>
+            <a href="#" id="logout-button">(로그아웃)</a>
+        </div>
+        <button class="mobile-menu-button">☰</button>
+    </header>
 
-    <nav class="main-nav">
-        <ul>
-            <li><a href="index.html">오늘의 학습</a></li>
-            <li><a href="report.html">학습 보고서</a></li>
-            <li><a href="goal.html">나의 목표</a></li>
-            <li><a href="record.html">상세 기록</a></li>
-            <li><a href="notes.html">오답 노트</a></li>
-        </ul>
-    </nav>
-
-    <div class="user-info">
-        <span id="welcome-message"></span>
-        <a href="#" id="logout-button">(로그아웃)</a>
-    </div>
-
-    <button class="mobile-menu-button">☰</button>
-</header>
     <main class="goal-container">
         <h1>나의 목표 달성도</h1>
-        <div id="goal-progress-box">
+        <div id="goal-progress-container">
             </div>
     </main>
 
@@ -40,6 +38,7 @@
         <p>&copy; 2025 소이를 위한 아빠의 선물</p>
     </footer>
 
-    <script src="js/header.js"></script> <script src="js/goal.js"></script>
+    <script src="js/header.js"></script>
+    <script src="js/goal.js"></script>
 </body>
 </html>

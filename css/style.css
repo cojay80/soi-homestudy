@@ -707,3 +707,24 @@ main {
 .retry-button.disabled-link:hover {
     transform: none;
 }
+/* style.css 파일의 @media 블록 안에 추가해주세요. */
+
+    /* ▼▼ 목표 설정 섹션 모바일 스타일 추가 ▼▼ */
+    #new-goal-form {
+        display: flex;
+        flex-direction: column; /* 세로로 쌓기 */
+        gap: 10px; /* 요소 사이에 간격 추가 */
+    }
+
+    #new-goal-form select,
+    #new-goal-form input,
+    #new-goal-form button {
+        width: 100%; /* 너비를 100%로 설정 */
+        box-sizing: border-box; /* 패딩이 너비를 넘지 않도록 */
+        margin: 0; /* 기존 가로 마진 제거 */
+    }
+    
+    #current-goal-list li {
+        font-size: 14px; /* 글자 크기 살짝 줄이기 */
+        flex-wrap: wrap; /* 창이 좁으면 줄바꿈되도록 */
+    }

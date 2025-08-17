@@ -1,54 +1,62 @@
+// js/goal.js (여러 목표 표시 최종 버전)
 document.addEventListener('DOMContentLoaded', async () => {
-    // 공통 헤더 기능 (header.js가 처리)
-
     const currentUser = localStorage.getItem('currentUser');
-    const goalProgressBox = document.getElementById('goal-progress-box');
+    const goalProgressContainer = document.getElementById('goal-progress-container');
     
-    if (!currentUser) return;
+    if (!currentUser) {
+        // header.js에서 이미 처리하지만, 만약을 위해 추가
+        window.location.href = 'index.html';
+        return;
+    }
 
     try {
-        // 서버에서 현재 사용자의 데이터 불러오기
         const response = await fetch(`/api/data/${currentUser}`);
         const studyData = await response.json();
-        const goal = studyData?.goal;
+        const goals = studyData?.goals || [];
         const records = studyData?.records || [];
 
-        if (!goal) {
-            goalProgressBox.innerHTML = '<p class="no-records">아직 설정된 목표가 없어요. 메인 화면에서 목표를 설정해주세요!</p>';
+        if (goals.length === 0) {
+            goalProgressContainer.innerHTML = '<div class="goal-progress-box"><p class="no-records">아직 설정된 목표가 없어요. 메인 화면에서 목표를 설정해주세요!</p></div>';
             return;
         }
 
-        // 최근 7일간의 기록 필터링
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const recentRecords = records.filter(record => new Date(record.date) >= sevenDaysAgo);
 
-        let solvedCount = 0;
-        recentRecords.forEach(record => {
-            if (record.subject === goal.subject) {
-                const [correct, total] = record.score.split('/').map(Number);
-                solvedCount += total;
-            }
+        // 각 목표별로 달성도를 계산하고 화면에 표시
+        goals.forEach(goal => {
+            let solvedCount = 0;
+            recentRecords.forEach(record => {
+                if (record.subject === goal.subject) {
+                    const [correct, total] = record.score.split('/').map(Number);
+                    solvedCount += total;
+                }
+            });
+
+            const achievementRate = Math.min(100, (solvedCount / goal.count) * 100).toFixed(1);
+
+            const goalBox = document.createElement('div');
+            goalBox.className = 'goal-progress-box'; // CSS 스타일 적용
+            goalBox.innerHTML = `
+                <div class="goal-summary">
+                    <p><strong>이번 주 목표:</strong> ${goal.subject} ${goal.count}문제 풀기</p>
+                </div>
+                <div class="goal-bar-container">
+                    <div class="goal-bar-label">
+                        <span>달성률: ${achievementRate}%</span>
+                        <span>(${solvedCount} / ${goal.count} 문제)</span>
+                    </div>
+                    <div class="goal-progress">
+                        <div class="goal-bar" style="width: ${achievementRate}%;"></div>
+                    </div>
+                </div>
+            `;
+            goalProgressContainer.appendChild(goalBox);
         });
 
-        const achievementRate = Math.min(100, (solvedCount / goal.count) * 100).toFixed(1);
-
-        // 화면에 표시
-        goalProgressBox.innerHTML = `
-            <div class="goal-summary">
-                <p><strong>이번 주 목표:</strong> ${goal.subject} ${goal.count}문제 풀기</p>
-            </div>
-            <div class="goal-bar-container">
-                <div class="goal-bar-label">
-                    <span>달성률: ${achievementRate}%</span>
-                    <span>(${solvedCount} / ${goal.count} 문제)</span>
-                </div>
-                <div class="goal-progress">
-                    <div class="goal-bar" style="width: ${achievementRate}%;"></div>
-                </div>
-            </div>
-        `;
-    } catch (error) {
+    } catch(error) {
         console.error("목표 달성도를 불러오는 데 실패했습니다:", error);
+        goalProgressContainer.innerHTML = '<div class="goal-progress-box"><p class="no-records">오류가 발생하여 목표를 불러올 수 없습니다.</p></div>';
     }
 });
