@@ -697,3 +697,13 @@ main {
         grid-template-columns: 1fr;
     }
 }
+/* style.css 에 이어서 추가 */
+.retry-button:disabled, .retry-button.disabled-link {
+    background-image: none;
+    background-color: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.retry-button.disabled-link:hover {
+    transform: none;
+}

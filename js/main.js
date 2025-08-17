@@ -1,26 +1,10 @@
-// js/main.js (최종 수정 버전)
-
-// ======== 1. 공통 기능 및 요소 ========
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
+// js/main.js (서버 연동 최종 버전)
+const GOOGLE_SHEET_URL = '/api/problems'; // 서버를 통해 문제 요청
 let allProblems = [];
+let studyData = {};
 
-// 공통: 헤더의 사용자 정보와 로그아웃 버튼 설정
-function setupHeader(currentUser) {
-    const welcomeMsgElement = document.getElementById('welcome-message');
-    const logoutBtnElement = document.getElementById('logout-button');
-
-    if (welcomeMsgElement) welcomeMsgElement.textContent = `${currentUser}님, 환영합니다!`;
-    if (logoutBtnElement) {
-        logoutBtnElement.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
-        });
-    }
-}
-
-// ======== 2. 페이지 로드 시 실행되는 메인 함수 ========
 document.addEventListener('DOMContentLoaded', () => {
+    // header.js가 헤더 기능을 모두 처리하므로 이 파일에서는 관련 코드가 없습니다.
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
         showMainScreen(currentUser);
@@ -29,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ======== 3. 화면 표시 함수들 ========
 const loginContainer = document.getElementById('login-container');
 const mainContainer = document.getElementById('main-container');
 
@@ -38,15 +21,27 @@ function showLoginScreen() {
     mainContainer.style.display = 'none';
 }
 
-function showMainScreen(username) {
+async function showMainScreen(username) {
     loginContainer.style.display = 'none';
     mainContainer.style.display = 'block';
-    setupHeader(username); // 공통 헤더 기능 호출
+
+    try {
+        const response = await fetch(`/api/data/${username}`);
+        const data = await response.json();
+        if (data) {
+            studyData = data;
+        } else {
+            studyData = { username: username, incorrect: [], records: [], goal: null };
+        }
+    } catch (error) {
+        console.error("사용자 데이터 로딩 실패:", error);
+        alert("사용자 데이터를 불러오는 데 실패했습니다. 서버가 켜져 있는지 확인해주세요.");
+        return;
+    }
+    
     initializePage();
 }
 
-// 이하 코드는 기존과 동일합니다.
-// (initializePage, updateSubjectSelector, 이벤트 리스너, 목표 설정 기능 등)
 const usernameInput = document.getElementById('username-input');
 const loginButton = document.getElementById('login-button');
 const gradeSelect = document.getElementById('grade-select');
@@ -70,9 +65,8 @@ async function initializePage() {
         
         populateGoalSubjects();
         displayCurrentGoal();
-
     } catch (error) {
-        console.error("데이터 초기화 실패:", error);
+        console.error("문제 데이터 초기화 실패:", error);
         alert("문제 데이터를 불러오는 데 실패했습니다.");
     }
 }
@@ -89,6 +83,8 @@ loginButton.addEventListener('click', () => {
 
 startButton.addEventListener('click', (event) => {
     event.preventDefault();
+    localStorage.setItem('studyData', JSON.stringify(studyData)); 
+    
     const selectedGrade = gradeSelect.value;
     const selectedSubject = subjectSelect.value;
     const selectedCount = document.getElementById('count-select').value;
@@ -107,6 +103,7 @@ startButton.addEventListener('click', (event) => {
 
 gradeSelect.addEventListener('change', updateSubjectSelector);
 
+// ... (이하 목표 설정 기능 및 기타 함수들은 이전과 동일)
 const goalSubjectSelect = document.getElementById('goal-subject-select');
 const goalCountInput = document.getElementById('goal-count-input');
 const setGoalButton = document.getElementById('set-goal-button');
@@ -127,10 +124,7 @@ function populateGoalSubjects() {
 }
 
 function displayCurrentGoal() {
-    const currentUser = localStorage.getItem('currentUser');
-    const studyData = JSON.parse(localStorage.getItem('studyData')) || {};
-    const goal = studyData[currentUser]?.goal;
-
+    const goal = studyData.goal;
     if (goal) {
         currentGoalDisplay.style.display = 'block';
         newGoalForm.style.display = 'none';
@@ -141,32 +135,37 @@ function displayCurrentGoal() {
     }
 }
 
-setGoalButton.addEventListener('click', () => {
+async function saveDataToServer() {
+    const username = localStorage.getItem('currentUser');
+    try {
+        await fetch(`/api/data/${username}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(studyData)
+        });
+    } catch (error) {
+        console.error("데이터 저장 실패:", error);
+        alert("데이터를 서버에 저장하는 데 실패했습니다.");
+    }
+}
+
+setGoalButton.addEventListener('click', async () => {
     const subject = goalSubjectSelect.value;
     const count = goalCountInput.value;
-
     if (!subject || !count || count < 1) {
         alert("과목을 선택하고, 1 이상의 문제 수를 입력해주세요.");
         return;
     }
-
-    const currentUser = localStorage.getItem('currentUser');
-    let studyData = JSON.parse(localStorage.getItem('studyData')) || {};
-    if (!studyData[currentUser]) studyData[currentUser] = {};
-    studyData[currentUser].goal = { subject, count: parseInt(count) };
-    localStorage.setItem('studyData', JSON.stringify(studyData));
-    
+    if (!studyData.goal) studyData.goal = {};
+    studyData.goal = { subject, count: parseInt(count) };
+    await saveDataToServer();
     displayCurrentGoal();
 });
 
-deleteGoalButton.addEventListener('click', () => {
+deleteGoalButton.addEventListener('click', async () => {
     if (confirm("정말로 목표를 삭제하시겠습니까?")) {
-        const currentUser = localStorage.getItem('currentUser');
-        let studyData = JSON.parse(localStorage.getItem('studyData')) || {};
-        if (studyData[currentUser]) {
-            delete studyData[currentUser].goal;
-            localStorage.setItem('studyData', JSON.stringify(studyData));
-        }
+        studyData.goal = null;
+        await saveDataToServer();
         displayCurrentGoal();
     }
 });

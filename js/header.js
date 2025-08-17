@@ -1,4 +1,4 @@
-// js/header.js (최종 수정 버전)
+// js/header.js (서버 연동 최종 버전)
 
 document.addEventListener('DOMContentLoaded', () => {
     // ======== 공통 헤더 기능 (사용자 정보 및 로그아웃) ========
@@ -15,23 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // ▼▼▼▼▼ 이 부분이 수정되었습니다 ▼▼▼▼▼
-    // 로그인 상태일 때만 사용자 정보 표시 (visibility 사용)
     if (currentUser && userInfoElement) {
-        userInfoElement.style.visibility = 'visible'; // 'block' 대신 'visible'
+        userInfoElement.style.visibility = 'visible';
         if (welcomeMsgElement) welcomeMsgElement.textContent = `${currentUser}님, 환영합니다!`;
         if (logoutBtnElement) {
             logoutBtnElement.addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('studyData'); // 로컬 데이터도 클리어
                 window.location.href = 'index.html';
             });
         }
     } else if (userInfoElement) {
-        userInfoElement.style.visibility = 'hidden'; // 'none' 대신 'hidden'
+        userInfoElement.style.visibility = 'hidden';
     }
-    // ▲▲▲▲▲ 여기까지 수정되었습니다 ▲▲▲▲▲
-
 
     // ======== 공통 헤더 기능 (모바일 메뉴 버튼) ========
     const mobileMenuButton = document.querySelector('.mobile-menu-button');

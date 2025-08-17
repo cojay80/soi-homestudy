@@ -1,1 +1,3 @@
 https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv
+
+mongodb+srv://soiuser:soi1234@cluster0.dmtk0ea.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
