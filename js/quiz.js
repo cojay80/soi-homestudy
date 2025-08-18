@@ -1,5 +1,4 @@
-<!-- 공통 head에 추가할 스크립트 (모든 페이지 공통) -->
-<script src="/js/config.js"></script>
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -284,4 +283,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 퀴즈 시작!
     setupQuiz();
+
 });
