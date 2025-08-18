@@ -1,3 +1,6 @@
+<!-- 공통 head에 추가할 스크립트 (모든 페이지 공통) -->
+<script src="/js/config.js"></script>
+
 // server.js (불필요한 부분을 정리한 최종 버전)
 
 const express = require('express');

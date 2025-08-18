@@ -1,0 +1,13 @@
+# 추천 브랜치: feat/soi-upgrade-v2
+git checkout -b feat/soi-upgrade-v2
+# 업그레이드 파일 복사(압축해제 후 레포 루트에 js/, pages/, scripts/ 추가)
+git add js/ pages/ scripts/ README-UPGRADE.md || true
+git commit -m "feat: Soi upgrade v2 (sheet loader, drop/pity, shop, logs)"
+# 자동 삽입 스크립트 실행 (선택)
+# Mac/Linux:
+bash scripts/patch-injector.sh
+# Windows(PowerShell):
+# powershell -ExecutionPolicy Bypass -File scripts/patch-injector.ps1
+git add quiz.html goal.html
+git commit -m "chore: inject scripts and nav for shop/logs"
+git push origin feat/soi-upgrade-v2

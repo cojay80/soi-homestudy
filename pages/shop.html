@@ -1,0 +1,41 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>소이의공부방 - 상점</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<script src="/js/config.js"></script>
+<script src="/js/core-auth-store.js"></script>
+</head><body>
+<header><a href="/">홈</a> | <a href="/quiz.html">퀴즈</a> | <b>상점</b> | <a href="/pages/logs.html">기록</a></header>
+<main>
+  <h1>상점</h1>
+  <div id="points"></div>
+  <ul id="shop"></ul>
+</main>
+<script>
+(async function(){
+  const user = await SoiStore.currentUser() || await SoiStore.signIn("local@demo.com", "local-demo");
+  const uid = user.uid;
+  const doc = await SoiStore.getUserDoc(uid);
+  const catalog = window.SOI_CONFIG.defaultRewards || [];
+  document.getElementById('points').textContent = `포인트: ${doc.points||0}`;
+  const ul = document.getElementById('shop'); ul.innerHTML = "";
+  catalog.forEach(item => {
+    const li = document.createElement('li');
+    const owned = (doc.rewards?.[item.id] || 0);
+    li.innerHTML = `<div><b>${item.name}</b> <small>[${item.cat}]</small><br/>가격 ${item.cost}pt • 보유 ${owned}</div>
+      <button ${ (doc.points||0) < item.cost ? "disabled" : "" }>교환</button>`;
+    li.querySelector('button').onclick = async () => {
+      const latest = await SoiStore.getUserDoc(uid);
+      if ((latest.points||0) < item.cost) return alert("포인트 부족!");
+      latest.points -= item.cost;
+      latest.rewards = latest.rewards || {};
+      latest.rewards[item.id] = (latest.rewards[item.id] || 0) + 1;
+      await SoiStore.setUserDoc(uid, { points: latest.points, rewards: latest.rewards });
+      await SoiStore.pushLog(uid, { source: "상점", tier: "redeem", points: -item.cost, couponName: item.name, action: "redeem" });
+      location.reload();
+    };
+    ul.appendChild(li);
+  });
+})();
+</script>
+</body></html>

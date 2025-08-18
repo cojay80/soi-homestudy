@@ -1,3 +1,6 @@
+<!-- 공통 head에 추가할 스크립트 (모든 페이지 공통) -->
+<script src="/js/config.js"></script>
+
 // js/header.js (서버 연동 최종 버전)
 
 document.addEventListener('DOMContentLoaded', () => {

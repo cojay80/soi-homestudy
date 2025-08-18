@@ -1,0 +1,36 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>소이의공부방 - 기록</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<script src="/js/config.js"></script>
+<script src="/js/core-auth-store.js"></script>
+</head><body>
+<header><a href="/">홈</a> | <a href="/quiz.html">퀴즈</a> | <a href="/pages/shop.html">상점</a> | <b>기록</b></header>
+<main>
+  <h1>드랍/상점 기록</h1>
+  <button id="csv">CSV 다운로드</button>
+  <table border="1" id="tbl"><thead><tr><th>시간</th><th>출처</th><th>결과</th><th>포인트</th><th>쿠폰/항목</th><th>액션</th></tr></thead><tbody></tbody></table>
+</main>
+<script>
+(async function(){
+  const user = await SoiStore.currentUser() || await SoiStore.signIn("local@demo.com", "local-demo");
+  const uid = user.uid;
+  const logs = await SoiStore.readLogs(uid, 500);
+  const tb = document.querySelector('#tbl tbody');
+  tb.innerHTML = "";
+  logs.forEach(l => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${l.time||""}</td><td>${l.source||""}</td><td>${l.tier||""}</td><td>${l.points||0}</td><td>${l.couponName||""}</td><td>${l.action||""}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('csv').onclick = () => {
+    const header = ["시간","출처","결과","포인트","쿠폰/항목","액션"];
+    const rows = logs.map(l => [l.time,l.source,l.tier,l.points,l.couponName||"",l.action||""]);
+    const csv = [header.join(","), ...rows.map(r => r.map(x => `"${String(x??"").replaceAll('"','""')}"`).join(","))].join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob); const a = document.createElement("a");
+    a.href = url; a.download = `soi-drops-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+  };
+})();
+</script>
+</body></html>
