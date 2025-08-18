@@ -111,6 +111,98 @@
 
     <script src="js/header.js"></script>
     <script src="js/main.js"></script>
+<!-- 홈에서 간단히 상태 보여줄 곳 (원하면 숨겨도 됨) -->
+<div id="home-user" style="padding:8px 0; display:none;">
+  <b>내 포인트:</b> <span id="pointsCount">-</span> /
+  <b>보상 보유:</b> <span id="rewardsCount">-</span>
+</div>
+
+<script>
+(async function () {
+  // 로그인 폼/메인 컨테이너 DOM
+  const $login = document.getElementById('login-container');
+  const $main  = document.getElementById('main-container');
+  const $welcome = document.getElementById('welcome-message');
+  const $logout = document.getElementById('logout-button');
+  const $btnLogin = document.getElementById('login-button');
+  const $nameInput = document.getElementById('username-input');
+
+  const $status = document.getElementById('home-user');
+  const $pts = document.getElementById('pointsCount');
+  const $rwd = document.getElementById('rewardsCount');
+
+  // 1) 로그인(or 로컬 폴백) 확보
+  const user = await (window.SoiStore.currentUser() || window.SoiStore.signIn("local@demo.com","local-demo"));
+  const uid = user.uid;
+
+  // 2) 사용자 도큐먼트 읽기
+  let doc = await window.SoiStore.getUserDoc(uid);
+  if (!doc.rewards) doc.rewards = {};
+
+  // 3) 화면 반영 함수
+  function renderUser() {
+    if ($welcome) $welcome.textContent = doc.name ? `${doc.name}님 반가워요!` : `환영합니다!`;
+    if ($status)  $status.style.display = 'block';
+    if ($pts)     $pts.textContent = String(doc.points ?? 0);
+    if ($rwd) {
+      const total = Object.values(doc.rewards || {}).reduce((a,b)=>a+(b||0), 0);
+      $rwd.textContent = String(total);
+    }
+  }
+
+  // 4) 로그인 상태로 전환
+  function gotoMain() { $login.style.display = 'none'; $main.style.display = 'block'; renderUser(); }
+  function gotoLogin() { $main.style.display = 'none'; $login.style.display = 'block'; }
+
+  if (doc.name && String(doc.name).trim()) {
+    // 이름이 이미 저장되어 있으면 바로 메인 진입
+    gotoMain();
+  } else {
+    // 이름이 없으면 로그인 박스 보이기
+    gotoLogin();
+  }
+
+  // 5) 로그인 버튼: 이름 저장 후 메인으로
+  if ($btnLogin) {
+    $btnLogin.addEventListener('click', async () => {
+      const name = ($nameInput?.value || '').trim();
+      if (!name) return alert('이름을 입력해주세요!');
+      doc = await window.SoiStore.setUserDoc(uid, { ...doc, name });
+      await window.SoiStore.pushLog(uid, { source: "홈", tier: "login", points: 0, action: "login", couponName: name });
+      gotoMain();
+    });
+  }
+
+  // 6) 로그아웃
+  if ($logout) {
+    $logout.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await window.SoiStore.signOut();
+      gotoLogin();
+    });
+  }
+
+  // 7) “학습 시작하기!” 버튼이 있으면 퀴즈로 이동(선택)
+  const startBtn = document.querySelector('.start-button');
+  if (startBtn) {
+    startBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const grade = document.getElementById('grade-select')?.value || '';
+      const subject = document.getElementById('subject-select')?.value || '';
+      const count = document.getElementById('count-select')?.value || '10';
+      const timer = document.getElementById('timer-select')?.value || '0';
+      // 선택값을 쿼리로 넘겨 quiz.html에서 활용
+      const qs = new URLSearchParams({ grade, subject, count, timer });
+      location.href = `quiz.html?${qs.toString()}`;
+    });
+  }
+
+  // 8) 초기 렌더 (메인 상태라면 숫자 갱신)
+  if ($main.style.display === 'block') renderUser();
+})();
+</script>
+
 </body>
 
 </html>
+
