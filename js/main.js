@@ -1,5 +1,4 @@
-<!-- 공통 head에 추가할 스크립트 (모든 페이지 공통) -->
-<script src="/js/config.js"></script>
+
 
 // js/main.js (여러 목표 설정 기능 추가 버전)
 
@@ -231,4 +230,5 @@ function parseTsv(text) {
         data.push(entry);
     }
     return data;
+
 }
