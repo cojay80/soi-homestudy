@@ -1,5 +1,3 @@
-<!-- 공통 head에 추가할 스크립트 (모든 페이지 공통) -->
-<script src="/js/config.js"></script>
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 공통 헤더 기능 (header.js가 처리)
@@ -70,4 +68,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error("학습 보고서를 불러오는 데 실패했습니다:", error);
     }
+
 });
