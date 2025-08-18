@@ -1,5 +1,3 @@
-<!-- 공통 head에 추가할 스크립트 (모든 페이지 공통) -->
-<script src="/js/config.js"></script>
 
 // js/goal.js (여러 목표 표시 최종 버전)
 document.addEventListener('DOMContentLoaded', async () => {
@@ -62,4 +60,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("목표 달성도를 불러오는 데 실패했습니다:", error);
         goalProgressContainer.innerHTML = '<div class="goal-progress-box"><p class="no-records">오류가 발생하여 목표를 불러올 수 없습니다.</p></div>';
     }
+
 });
