@@ -12,6 +12,8 @@ app.use(express.static(path.join(__dirname)));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+// .ico로 요청이 오면 .svg로 영구 리다이렉트
+app.get('/favicon.ico', (_req, res) => res.redirect(301, '/favicon.svg'));
 
 // 헬스체크(Health Check Path에 쓸 엔드포인트)
 app.get('/healthz', (_req, res) => res.send('ok'));
