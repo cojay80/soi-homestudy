@@ -8,43 +8,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <!-- 앱 공통 스크립트 (순서 중요) -->
+
+  <!-- 앱 공통 스크립트 (순서 중요: 설정/스토어/폴리필/시트) -->
   <script src="/js/config.js"></script>
   <script src="/js/core-auth-store.js"></script>
   <script src="/js/api-shim.js"></script>
-  <!-- 시트 로딩이 필요한 페이지(index, quiz)에서만 -->
   <script src="/js/sheets.js"></script>
-<script>
-/* URL에 ?reset=1 이면 캐시/세션 정리 후 index로 복귀 */
-(function () {
-  const qs = new URL(location.href).searchParams;
-  if (qs.get('reset') === '1') {
-    try {
-      // 로컬 캐시 정리
-      localStorage.removeItem('soi_name');
-      localStorage.removeItem('selectedGrade');
-      localStorage.removeItem('selectedSubject');
-      localStorage.removeItem('selectedCount');
-      localStorage.removeItem('selectedTimer');
-    } catch {}
-    // SoiStore 로그아웃 시도(있으면)
-    (async () => {
-      try {
-        if (window.SoiStore && typeof window.SoiStore.currentUser === 'function') {
-          const u = await window.SoiStore.currentUser();
-          if (u && u.uid && typeof window.SoiStore.signOut === 'function') {
-            await window.SoiStore.signOut();
-          }
-        }
-      } catch {}
-      // 쿼리 제거하고 깨끗한 index로 이동
-      location.replace('index.html');
-    })();
-  }
-})();
-</script>
 
+  <!-- URL에 ?reset=1 이면 캐시/세션 정리 후 index로 복귀 -->
+  <script>
+    (function () {
+      const qs = new URL(location.href).searchParams;
+      if (qs.get('reset') === '1') {
+        try {
+          localStorage.removeItem('soi_name');
+          localStorage.removeItem('selectedGrade');
+          localStorage.removeItem('selectedSubject');
+          localStorage.removeItem('selectedCount');
+          localStorage.removeItem('selectedTimer');
+        } catch {}
+        (async () => {
+          try {
+            if (window.SoiStore && typeof window.SoiStore.currentUser === 'function') {
+              const u = await window.SoiStore.currentUser();
+              if (u && u.uid && typeof window.SoiStore.signOut === 'function') {
+                await window.SoiStore.signOut();
+              }
+            }
+          } catch {}
+          location.replace('index.html');
+        })();
+      }
+    })();
+  </script>
 </head>
+
 <body>
   <!-- 로그인 화면 (기본 보임) -->
   <div id="login-container" style="display:flex;">
@@ -57,11 +55,12 @@
   </div>
 
   <!-- 메인 화면 (기본 숨김) -->
-  <div id="main-container" style="display: none;">
+  <div id="main-container" style="display:none;">
     <header class="main-header">
       <div class="logo">
         <a href="index.html">소이의 공부방 🎨</a>
       </div>
+
       <nav class="main-nav">
         <ul>
           <li><a href="index.html">오늘의 학습</a></li>
@@ -72,15 +71,23 @@
           <li><a href="shop.html">상점</a></li>
         </ul>
       </nav>
+
       <div class="user-info">
         <span id="welcome-message"></span>
         <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
       </div>
-      <button class="mobile-menu-button">☰</button>
+
+      <button class="mobile-menu-button" aria-label="메뉴 열기/닫기">☰</button>
     </header>
 
+    <!--
+      ⚠️ 중요: 헤더 HTML 바로 뒤에 header.js를 로드해야
+      햄버거 토글이 즉시 바인딩됩니다.
+    -->
+    <script src="js/header.js?v=HDR_MINIMAL_3"></script>
+
     <main>
-      <!-- (선택) 홈 요약 상태 표시 -->
+      <!-- 홈 요약 -->
       <section style="padding:8px 0;">
         <div id="home-user" style="display:none;">
           <b>내 포인트:</b> <span id="pointsCount">-</span>
@@ -92,10 +99,11 @@
       <section class="goal-setting-section">
         <h2>이번 주 학습 목표 설정하기 🎯</h2>
         <div class="goal-box">
-          <div id="current-goal-display" style="display: none;">
+          <div id="current-goal-display" style="display:none;">
             <p><strong>이번 주 목표:</strong></p>
             <ul id="current-goal-list"></ul>
           </div>
+
           <div id="new-goal-form">
             <select id="goal-subject-select">
               <option value="">-- 과목 선택 --</option>
@@ -111,6 +119,7 @@
           <div class="card-header">
             <h2>오늘의 학습 ✏️</h2>
           </div>
+
           <div class="card-content">
             <div class="selection-box">
               <label for="grade-select">학년 선택:</label>
@@ -146,6 +155,7 @@
               </select>
             </div>
           </div>
+
           <div class="card-footer">
             <a href="#" class="start-button">학습 시작하기!</a>
           </div>
@@ -158,21 +168,8 @@
     </footer>
   </div>
 
-  <!-- 페이지 스크립트 (캐시 무력화용 v 파라미터) -->
-<script src="js/header.js?v=HDR_MINIMAL_3"></script>
-<script src="js/main.js?v=LOGIN_STRICT_3"></script>
-<script src="js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <!-- 페이지 전용 스크립트: 메인 로직/강제 로그아웃 헬퍼 -->
+  <script src="js/main.js?v=LOGIN_STRICT_3"></script>
+  <script src="js/logout.js?v=LOGOUT_FORCE_2"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
