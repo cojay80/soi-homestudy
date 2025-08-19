@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', () => {
 
     const questionText = document.querySelector('.question-text');
@@ -31,6 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let incorrectProblems = [];
     let isAnswered = false;
     let timerInterval;
+
+    // === 추가: 보상 안전 호출 (rewards.js가 없으면 조용히 스킵) ===
+    async function awardOnCorrectSafe() {
+        try {
+            if (window.SOI_awardOnCorrect && typeof window.SOI_awardOnCorrect === 'function') {
+                await window.SOI_awardOnCorrect(); // 내부에서 포인트 + 랜덤보상(25%, 대형 1%) 처리
+            }
+        } catch (e) {
+            console.warn('[awardOnCorrectSafe] skipped:', e);
+        }
+    }
 
     async function setupQuiz() {
         if (isReviewMode) {
@@ -98,14 +107,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadProblem() {
         isAnswered = false;
-        clearTimeout(timerInterval);
+        clearTimeout(timerInterval);  // (원래 코드 유지; setInterval은 아래에서 clearInterval도 호출함)
         timerDisplay.textContent = '';
         answerOptions.forEach(button => button.classList.remove('correct-answer', 'incorrect-answer', 'selected'));
 
         const currentSet = problemSets[currentProblemSetIndex];
         const currentQuestion = currentSet.questions[currentQuestionInSetIndex];
 
-        // 이하 생략... (이전 최종 버전과 동일)
         if (currentSet.type === 'passage') {
             passageArea.style.display = 'block';
             problemArea.style.width = '60%';
@@ -137,8 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // === 변경: 클릭 리스너를 async로 전환, 정답 시 보상 지급 ===
     answerOptions.forEach(button => {
-        button.addEventListener('click', (event) => {
+        button.addEventListener('click', async (event) => {
             if (isAnswered) return;
             isAnswered = true;
             clearInterval(timerInterval);
@@ -151,6 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 score++;
                 selectedButton.classList.add('correct-answer');
                 showToast("정답입니다! 🎉", true);
+
+                // ✅ 정답 보상 (포인트 + 랜덤보상 25%, 대형 1%)
+                await awardOnCorrectSafe();
+
             } else {
                 incorrectProblems.push(currentQuestion);
                 selectedButton.classList.add('incorrect-answer');
