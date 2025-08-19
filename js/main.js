@@ -1,15 +1,45 @@
-// js/main.js — 프론트 전용(서버 의존 없음). SoiStore + SoiSheets 사용.
-// /api 호출이 남아 있어도 api-shim이 가로채 주지만, 본 파일은 순수 프론트만 씁니다.
+// js/main.js — 로그인 우선 표시 + 프론트 전용(SoiStore/SoiSheets)
 
 document.addEventListener('DOMContentLoaded', () => {
-  init().catch(err => {
+  safeInit().catch(err => {
     console.error('[init] failed:', err);
+    // 실패해도 최소 로그인창은 보이게
+    forceShowLogin();
     alert('초기화에 실패했습니다. 새로고침(Ctrl/Cmd+Shift+R) 후 다시 시도해주세요.');
   });
 });
 
-async function init() {
-  // --- SoiStore 준비 대기 (중요) ---
+// --- 기본 상태: 로그인 먼저 보여주기 ---
+function forceShowLogin() {
+  const $login = document.getElementById('login-container');
+  const $main  = document.getElementById('main-container');
+  if ($login) $login.style.display = 'flex';
+  if ($main)  $main.style.display  = 'none';
+}
+
+function forceShowMain() {
+  const $login = document.getElementById('login-container');
+  const $main  = document.getElementById('main-container');
+  if ($login) $login.style.display = 'none';
+  if ($main)  $main.style.display  = 'block';
+}
+
+async function waitFor(cond, timeout = 6000, interval = 60) {
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    (function poll() {
+      try { if (cond()) return resolve(); } catch {}
+      if (Date.now() - t0 >= timeout) return reject(new Error('timeout'));
+      setTimeout(poll, interval);
+    })();
+  });
+}
+
+async function safeInit() {
+  // 0) 초기엔 무조건 로그인 보이기
+  forceShowLogin();
+
+  // 1) SoiStore 준비 대기
   await waitFor(() => window.SoiStore && typeof window.SoiStore.currentUser === 'function');
 
   // DOM
@@ -34,19 +64,19 @@ async function init() {
   const newGoalForm        = document.getElementById('new-goal-form');
   const goalList           = document.getElementById('current-goal-list');
 
-  // --- 로그인/사용자 문서 확보 (로컬 폴백) ---
+  // 2) 로그인/사용자 문서 확보 (로컬 폴백)
   let user = await window.SoiStore.currentUser();
   if (!user || !user.uid) user = await window.SoiStore.signIn('local@demo.com', 'local-demo');
   if (!user || !user.uid) throw new Error('signIn failed');
   const uid = user.uid;
 
   let doc = await window.SoiStore.getUserDoc(uid);
-  doc.rewards ||= {};
-  doc.goals   ||= [];
-  doc.records ||= [];
-  doc.incorrect ||= [];
+  doc.rewards  ||= {};
+  doc.goals    ||= [];
+  doc.records  ||= [];
+  doc.incorrect||= [];
 
-  // --- 표시/전환 ---
+  // 3) 표시/전환
   function renderUser() {
     if ($welcome) $welcome.textContent = doc.name ? `${doc.name}님 반가워요!` : '';
     if ($pts) {
@@ -58,12 +88,13 @@ async function init() {
       $rwd.textContent = String(total);
     }
   }
-  function showMain()  { $login.style.display = 'none';  $main.style.display = 'block'; renderUser(); }
-  function showLogin() { $main.style.display  = 'none';  $login.style.display = 'flex'; }
+  function showMain()  { forceShowMain();  renderUser(); }
+  function showLogin() { forceShowLogin(); }
 
+  // 이름 유무에 따라 화면 전환
   if (doc.name && String(doc.name).trim()) showMain(); else showLogin();
 
-  // 로그인 버튼
+  // 4) 로그인 버튼: 이름 저장 → 메인
   $btnLogin?.addEventListener('click', async () => {
     const name = ($nameInput?.value || '').trim();
     if (!name) return alert('이름을 입력해주세요!');
@@ -72,18 +103,17 @@ async function init() {
     showMain();
   });
 
-  // 로그아웃
+  // 5) 로그아웃
   $logout?.addEventListener('click', async (e) => {
     e.preventDefault();
     await window.SoiStore.signOut();
     showLogin();
   });
 
-  // --- 시트 로딩 & 학년/과목 셀렉트 채우기 ---
-  await waitFor(() => window.SoiSheets && typeof window.SoiSheets.load === 'function'); // head에 sheets.js 포함 필요
+  // 6) 시트 준비 대기 (index/quiz만 필요)
+  await waitFor(() => window.SoiSheets && typeof window.SoiSheets.load === 'function');
   let allProblems = [];
   try {
-    // 시트 전체 로딩(필터는 아래에서)
     allProblems = await window.SoiSheets.load({ grade:'', subject:'', difficulty:'' });
     const grades = [...new Set(allProblems.map(p => p.grade || p.학년).filter(Boolean))].sort();
     if (gradeSelect) {
@@ -99,6 +129,7 @@ async function init() {
     alert('문제 데이터를 불러오는 데 실패했습니다.');
   }
 
+  // 학년 바꾸면 과목 채우기
   gradeSelect?.addEventListener('change', () => {
     if (!gradeSelect || !subjectSelect) return;
     const selGrade = gradeSelect.value;
@@ -113,7 +144,7 @@ async function init() {
     });
   });
 
-  // 학습 시작 → quiz.html로 이동
+  // 7) 학습 시작 → quiz.html로 이동
   startButton?.addEventListener('click', (e) => {
     e.preventDefault();
     const selGrade   = gradeSelect?.value || '';
@@ -128,7 +159,7 @@ async function init() {
     location.href = 'quiz.html';
   });
 
-  // --- 목표 설정(저장/삭제) ---
+  // 8) 목표 설정(저장/삭제)
   function renderGoals() {
     if (!goalList) return;
     goalList.innerHTML = '';
@@ -191,18 +222,9 @@ async function init() {
     });
   }
 
+  // 마지막 렌더
   renderGoals();
-  renderUser();
-}
-
-// 간단한 대기 유틸
-function waitFor(cond, timeout = 5000, interval = 50) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    (function poll() {
-      try { if (cond()) return resolve(); } catch {}
-      if (Date.now() - start >= timeout) return reject(new Error('timeout'));
-      setTimeout(poll, interval);
-    })();
-  });
+  if ($main && $main.style.display === 'block') {
+    renderUser();
+  }
 }
