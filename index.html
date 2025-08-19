@@ -14,6 +14,36 @@
   <script src="/js/api-shim.js"></script>
   <!-- 시트 로딩이 필요한 페이지(index, quiz)에서만 -->
   <script src="/js/sheets.js"></script>
+<script>
+/* URL에 ?reset=1 이면 캐시/세션 정리 후 index로 복귀 */
+(function () {
+  const qs = new URL(location.href).searchParams;
+  if (qs.get('reset') === '1') {
+    try {
+      // 로컬 캐시 정리
+      localStorage.removeItem('soi_name');
+      localStorage.removeItem('selectedGrade');
+      localStorage.removeItem('selectedSubject');
+      localStorage.removeItem('selectedCount');
+      localStorage.removeItem('selectedTimer');
+    } catch {}
+    // SoiStore 로그아웃 시도(있으면)
+    (async () => {
+      try {
+        if (window.SoiStore && typeof window.SoiStore.currentUser === 'function') {
+          const u = await window.SoiStore.currentUser();
+          if (u && u.uid && typeof window.SoiStore.signOut === 'function') {
+            await window.SoiStore.signOut();
+          }
+        }
+      } catch {}
+      // 쿼리 제거하고 깨끗한 index로 이동
+      location.replace('index.html');
+    })();
+  }
+})();
+</script>
+
 </head>
 <body>
   <!-- 로그인 화면 (기본 보임) -->
@@ -132,6 +162,7 @@
 <script src="js/main.js?v=LOGIN_FIX_2"></script>
 </body>
 </html>
+
 
 
 
