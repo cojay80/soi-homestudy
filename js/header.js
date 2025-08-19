@@ -9,31 +9,28 @@ async function initHeader() {
   const qs = new URL(location.href).searchParams;
   if (qs.get('reset') === '1') {
     try {
-      // 로컬 캐시 정리
       localStorage.removeItem('soi_name');
       localStorage.removeItem('selectedGrade');
       localStorage.removeItem('selectedSubject');
       localStorage.removeItem('selectedCount');
       localStorage.removeItem('selectedTimer');
     } catch {}
-    // SoiStore 로그아웃 시도 (짧게)
     try {
       await ensureStoreReady(800);
       const u = await window.SoiStore.currentUser();
       if (u?.uid) await window.SoiStore.signOut();
     } catch {}
-    // 쿼리 제거하고 깨끗한 index로
-    location.replace('index.html');
+    location.replace('index.html'); // 쿼리 제거 후 깨끗한 index
     return;
   }
 
   const welcomeEl = document.getElementById('welcome-message');
   const logoutEl  = document.getElementById('logout-button');
 
-  // --- 1) 캐시 이름 우선 ---
+  // --- 1) 캐시 이름 ---
   let name = (localStorage.getItem('soi_name') || '').trim();
 
-  // --- 2) SoiStore 동기화 (있으면/짧게) ---
+  // --- 2) SoiStore 동기화(있으면) ---
   try {
     await ensureStoreReady(1500);
     let user = await window.SoiStore.currentUser();
@@ -47,12 +44,12 @@ async function initHeader() {
       name = String(doc.name).trim();
       localStorage.setItem('soi_name', name);
     }
-  } catch { /* 스토어 없어도 헤더는 계속 진행 */ }
+  } catch {}
 
   // --- 3) 환영문 ---
   if (welcomeEl) welcomeEl.textContent = name ? `${name}님 반가워요!` : '';
 
-  // --- 4) 페이지 가드 (index 외 페이지는 이름 필수) ---
+  // --- 4) 페이지 가드 ---
   const isIndex = /(^|\/)index\.html?$/.test(location.pathname) || location.pathname === '/' || location.pathname === '';
   if (!name && !isIndex) {
     alert('로그인이 필요합니다. 이름을 입력하고 시작해 주세요.');
@@ -60,10 +57,10 @@ async function initHeader() {
     return;
   }
 
-  // --- 5) 로그아웃 링크 강제 설정 (가로채지 않음) ---
+  // --- 5) 로그아웃 링크 강제 설정(가로채지 않음) ---
   if (logoutEl) {
     logoutEl.setAttribute('href', 'index.html?reset=1');
-    // 클릭은 브라우저 내비게이션에 맡김 (preventDefault 안 함)
+    // 이벤트 리스너를 달지 않습니다(브라우저 네비게이션에 맡김)
   }
 }
 
