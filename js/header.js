@@ -9,18 +9,21 @@ async function initHeader() {
   const qs = new URL(location.href).searchParams;
   if (qs.get('reset') === '1') {
     try {
+      // 로컬 캐시 정리
       localStorage.removeItem('soi_name');
       localStorage.removeItem('selectedGrade');
       localStorage.removeItem('selectedSubject');
       localStorage.removeItem('selectedCount');
       localStorage.removeItem('selectedTimer');
     } catch {}
+    // SoiStore 로그아웃 (있으면, 짧게)
     try {
       await ensureStoreReady(800);
       const u = await window.SoiStore.currentUser();
       if (u?.uid) await window.SoiStore.signOut();
     } catch {}
-    location.replace('index.html'); // 쿼리 제거 후 깨끗한 index
+    // 쿼리 제거하고 깨끗한 index로
+    location.replace('index.html');
     return;
   }
 
@@ -44,13 +47,15 @@ async function initHeader() {
       name = String(doc.name).trim();
       localStorage.setItem('soi_name', name);
     }
-  } catch {}
+  } catch { /* 스토어 없어도 헤더는 계속 진행 */ }
 
   // --- 3) 환영문 ---
   if (welcomeEl) welcomeEl.textContent = name ? `${name}님 반가워요!` : '';
 
-  // --- 4) 페이지 가드 ---
-  const isIndex = /(^|\/)index\.html?$/.test(location.pathname) || location.pathname === '/' || location.pathname === '';
+  // --- 4) 페이지 가드 (index 외 페이지는 이름 필수) ---
+  const isIndex =
+    /(^|\/)index\.html?$/.test(location.pathname) ||
+    location.pathname === '/' || location.pathname === '';
   if (!name && !isIndex) {
     alert('로그인이 필요합니다. 이름을 입력하고 시작해 주세요.');
     location.href = 'index.html';
@@ -60,7 +65,7 @@ async function initHeader() {
   // --- 5) 로그아웃 링크 강제 설정(가로채지 않음) ---
   if (logoutEl) {
     logoutEl.setAttribute('href', 'index.html?reset=1');
-    // 이벤트 리스너를 달지 않습니다(브라우저 네비게이션에 맡김)
+    // 클릭은 브라우저 네비게이션에 맡김 (preventDefault 안 함)
   }
 }
 
