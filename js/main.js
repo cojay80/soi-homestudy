@@ -1,20 +1,19 @@
 // js/main.js — 로그인 확정 동작: 첫 화면 로그인 → 버튼 누르면 즉시 메인, 새로고침 후 자동 메인
-
 document.addEventListener('DOMContentLoaded', () => {
-  // 0) 기본: 로그인 먼저 보여줌
+  // 0) 기본: 로그인 먼저
   UI.showLogin();
 
-  // 1) 이벤트 연결 (스토어 준비 전이라도 동작)
+  // 1) 이벤트 연결
   wireEvents();
 
-  // 2) 캐시된 이름이 있으면 즉시 메인으로
+  // 2) 캐시된 이름 있으면 즉시 메인
   const cached = (localStorage.getItem('soi_name') || '').trim();
   if (cached) {
     UI.setWelcome(cached);
     UI.showMain();
   }
 
-  // 3) 스토어/시트는 비동기로 준비 (UI 안 막음)
+  // 3) 스토어/시트는 비동기
   initAsync().catch(e => console.warn('[initAsync] skipped:', e));
 });
 
@@ -43,7 +42,6 @@ const UI = {
 function wireEvents() {
   const btnLogin  = document.getElementById('login-button');
   const nameInput = document.getElementById('username-input');
-  const logoutBtn = document.getElementById('logout-button');
 
   // 로그인: 즉시 메인 전환 + 백그라운드 저장
   btnLogin?.addEventListener('click', async () => {
@@ -67,33 +65,11 @@ function wireEvents() {
     }
   });
 
-  // 로그아웃: 캐시 제거 후 로그인 화면
-  logoutBtn?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    localStorage.removeItem('soi_name');
-    try { await ensureStoreReady(); await window.SoiStore.signOut(); } catch {}
-    UI.showLogin();
-  });
-
-  // 학습 시작
-  const startButton = document.querySelector('.start-button');
-  startButton?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const grade   = document.getElementById('grade-select')?.value || '';
-    const subject = document.getElementById('subject-select')?.value || '';
-    const count   = document.getElementById('count-select')?.value || '10';
-    const timer   = document.getElementById('timer-select')?.value || '0';
-    if (!grade || !subject) return alert('학년과 과목을 모두 선택해주세요!');
-    localStorage.setItem('selectedGrade', grade);
-    localStorage.setItem('selectedSubject', subject);
-    localStorage.setItem('selectedCount', count);
-    localStorage.setItem('selectedTimer', timer);
-    location.href = 'quiz.html';
-  });
+  // ❌ 로그아웃 핸들러는 이 파일에서 더 이상 등록하지 않습니다.
+  //    (헤더의 index.html?reset=1 링크가 전부 처리)
 }
 
 async function initAsync() {
-  // 스토어 준비 후 상태 동기화
   await ensureStoreReady();
   let user = await window.SoiStore.currentUser();
   if (!user?.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
@@ -115,10 +91,10 @@ async function initAsync() {
 
   // 메인 요약 수치 반영
   UI.setWelcome(doc.name || cached || '');
-  if ((doc.name || cached)) UI.showMain(); // 이름 있으면 메인
+  if ((doc.name || cached)) UI.showMain();
   UI.renderSummary(doc);
 
-  // 시트 UI 미리 채우기 (지연돼도 로그인/메인에 영향 없음)
+  // 시트 UI 미리 채우기
   preloadSheetUI().catch(e => console.warn('[preloadSheetUI] skipped', e));
 }
 
@@ -129,7 +105,6 @@ async function preloadSheetUI() {
   const subjSel  = UI.subjEl();
   if (!gradeSel) return;
 
-  // 학년 목록
   gradeSel.innerHTML = '<option value="">-- 학년을 선택하세요 --</option>';
   const grades = [...new Set(all.map(p => p.grade || p.학년).filter(Boolean))].sort();
   grades.forEach(g => {
@@ -138,7 +113,6 @@ async function preloadSheetUI() {
     gradeSel.appendChild(opt);
   });
 
-  // 학년 변경 시 과목 목록
   gradeSel.addEventListener('change', () => {
     if (!subjSel) return;
     const sel = gradeSel.value;
