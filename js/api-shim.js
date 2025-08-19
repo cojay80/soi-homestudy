@@ -1,13 +1,12 @@
-// /js/api-shim.js
-// 백엔드 없이도 기존 "/api/..." 호출이 동작하도록 fetch를 가로채는 셈.
-// 필요: config.js( SOI_CONFIG ), core-auth-store.js( SoiStore )
+// js/api-shim.js
+// 기존 코드의 /api/* 호출을 SoiStore/시트로 에뮬레이션
 
 (function () {
   const origFetch = window.fetch.bind(window);
 
   async function ensureUID() {
     let u = await window.SoiStore.currentUser();
-    if (!u) u = await window.SoiStore.signIn("local@demo.com", "local-demo"); // 로컬 폴백
+    if (!u) u = await window.SoiStore.signIn("local@demo.com", "local-demo");
     return u.uid;
   }
 
@@ -30,26 +29,28 @@
       incorrect: Array.isArray(doc.incorrect) ? doc.incorrect : [],
       records:   Array.isArray(doc.records)   ? doc.records   : [],
       goals:     Array.isArray(doc.goals)     ? doc.goals     : [],
+      points:    Number(doc.points || 0),
+      rewards:   doc.rewards || {}
     };
     return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
   }
 
   async function safeReadJson(input, init) {
     try {
-      if (init && init.body && typeof init.body === "string") return JSON.parse(init.body);
+      if (init && typeof init.body === "string") return JSON.parse(init.body);
       if (typeof Request !== "undefined" && input instanceof Request) return await input.clone().json();
-    } catch (_) {}
+    } catch { /* ignore */ }
     return {};
   }
 
   async function handleUserSave(username, input, init) {
     const uid = await ensureUID();
-    const payload = await safeReadJson(input, init);
+    const patch = await safeReadJson(input, init);
     const doc = await window.SoiStore.getUserDoc(uid);
     const merged = { ...doc };
 
     ["incorrect", "records", "goals", "name", "points", "rewards"].forEach((k) => {
-      if (Object.prototype.hasOwnProperty.call(payload, k)) merged[k] = payload[k];
+      if (Object.prototype.hasOwnProperty.call(patch, k)) merged[k] = patch[k];
     });
 
     await window.SoiStore.setUserDoc(uid, merged);
@@ -65,11 +66,10 @@
       if (url.startsWith("/api/problems")) {
         return await handleProblems();
       }
-
       if (url.startsWith("/api/data/")) {
         const username = decodeURIComponent(url.split("/").pop() || "");
-        if (method === "GET") return await handleUserGET(username);
-        if (["POST","PUT","PATCH"].includes(method)) return await handleUserSave(username, input, init);
+        if (method === "GET")  return await handleUserGET(username);
+        if (["POST", "PUT", "PATCH"].includes(method)) return await handleUserSave(username, input, init);
         return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
       }
     } catch (e) {
