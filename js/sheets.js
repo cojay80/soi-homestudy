@@ -1,74 +1,72 @@
-// js/sheets.js
-// Google Sheet TSV를 읽어 문제 배열로 변환.
-// 헤더 한글/영문 혼용 대응.
+// js/sheets.js — 모바일 안정화 버전 (프록시 실패 시 즉시 TSV 폴백 + 세션 캐시)
+// 사용법: await window.SoiSheets.load({ grade:'', subject:'' })
 
-(function (global) {
-  async function fetchTSV(url) {
-    const r = await fetch(url, { headers: { "Accept": "*/*" } });
-    const text = await r.text();
-    return text;
-  }
+(function () {
+  const TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv";
+  const PROXY_URL = "/api/problems";
+  const CACHE_KEY = "SOI_TSV_CACHE_V1";
 
   function parseTSV(text) {
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    if (lines.length === 0) return [];
-    // 헤더는 다음 컬럼들을 기대 (한국어 기준)
-    // 학년 | 과목 | 질문 | 보기1 | 보기2 | 보기3 | 보기4 | 정답 | 이미지 | 지문 ID | 지문
-    const header = lines[0].split('\t');
-    const idx = (name) => header.indexOf(name);
-
-    const mapIdx = {
-      grade:   idx('학년') !== -1 ? idx('학년') : idx('grade'),
-      subject: idx('과목') !== -1 ? idx('과목') : idx('subject'),
-      question:idx('질문') !== -1 ? idx('질문') : idx('question'),
-      c1:      idx('보기1') !== -1 ? idx('보기1') : idx('choice1'),
-      c2:      idx('보기2') !== -1 ? idx('보기2') : idx('choice2'),
-      c3:      idx('보기3') !== -1 ? idx('보기3') : idx('choice3'),
-      c4:      idx('보기4') !== -1 ? idx('보기4') : idx('choice4'),
-      answer:  idx('정답') !== -1 ? idx('정답') : idx('answer'),
-      image:   idx('이미지') !== -1 ? idx('이미지') : idx('image'),
-      pid:     idx('지문 ID') !== -1 ? idx('지문 ID') : idx('passage id'),
-      passage: idx('지문') !== -1 ? idx('지문') : idx('passage')
-    };
-
-    const rows = [];
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split('\t');
-      if (!cols.length) continue;
-      rows.push({
-        grade:   cols[mapIdx.grade]   ?? "",
-        학년:     cols[mapIdx.grade]   ?? "",
-        subject: cols[mapIdx.subject] ?? "",
-        과목:     cols[mapIdx.subject] ?? "",
-        question:cols[mapIdx.question]?? "",
-        질문:     cols[mapIdx.question]?? "",
-        choices: [
-          cols[mapIdx.c1] ?? "",
-          cols[mapIdx.c2] ?? "",
-          cols[mapIdx.c3] ?? "",
-          cols[mapIdx.c4] ?? ""
-        ],
-        정답:  cols[mapIdx.answer] ?? "",
-        answer:cols[mapIdx.answer] ?? "",
-        image: cols[mapIdx.image]  ?? "",
-        passageId: cols[mapIdx.pid] ?? "",
-        지문ID: cols[mapIdx.pid] ?? "",
-        passage: cols[mapIdx.passage] ?? "",
-        지문: cols[mapIdx.passage] ?? ""
-      });
+    // HTML이 오면(502, 404 등) 첫 글자가 '<'일 수 있음 → 즉시 실패
+    if (text && text.trim().startsWith("<")) {
+      throw new Error("TSV expected but got HTML");
     }
-    return rows;
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) return [];
+    // 1행은 헤더 (실제 시트 헤더가 다를 수 있어 한국어 키 이름으로 매핑)
+    const headers = ['학년','과목','질문','보기1','보기2','보기3','보기4','정답','이미지','지문 ID','지문'];
+    const rows = lines.slice(1);
+    const out = [];
+    for (const line of rows) {
+      const cols = line.split('\t');
+      const obj = {};
+      for (let i = 0; i < headers.length; i++) obj[headers[i]] = cols[i] || '';
+      // 편의: 영문 키도 병행
+      obj.grade = obj['학년']; obj.subject = obj['과목'];
+      out.push(obj);
+    }
+    return out;
   }
 
-  async function load({ grade = "", subject = "" } = {}) {
-    const url = (window.SOI_CONFIG && window.SOI_CONFIG.sheetUrl) || "";
-    if (!url) return [];
-    const tsv = await fetchTSV(url);
-    let all = parseTSV(tsv);
-    if (grade)   all = all.filter(p => (p.grade || p.학년) === grade);
-    if (subject) all = all.filter(p => (p.subject || p.과목) === subject);
-    return all;
+  async function fetchText(url, timeoutMs = 8000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.text();
+    } finally {
+      clearTimeout(t);
+    }
   }
 
-  global.SoiSheets = { load };
-})(window);
+  async function loadProblems() {
+    // 1) 세션 캐시 먼저
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+
+    // 2) 서버 프록시 → 실패 시 TSV 폴백
+    let text;
+    try {
+      text = await fetchText(PROXY_URL, 6000);
+    } catch (e) {
+      // console.warn("proxy fail, fallback tsv:", e);
+      text = await fetchText(TSV_URL, 9000);
+    }
+
+    const parsed = parseTSV(text);
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(parsed)); } catch {}
+    return parsed;
+  }
+
+  async function load({ grade = '', subject = '' } = {}) {
+    const all = await loadProblems();
+    if (!grade && !subject) return all;
+    return all.filter(p => (!grade || (p.grade || p['학년']) === grade)
+                        && (!subject || (p.subject || p['과목']) === subject));
+  }
+
+  window.SoiSheets = { load };
+})();
