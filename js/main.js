@@ -43,8 +43,6 @@ async function safeInit() {
   await waitFor(() => window.SoiStore && typeof window.SoiStore.currentUser === 'function');
 
   // DOM
-  const $login     = document.getElementById('login-container');
-  const $main      = document.getElementById('main-container');
   const $welcome   = document.getElementById('welcome-message');
   const $logout    = document.getElementById('logout-button');
   const $btnLogin  = document.getElementById('login-button');
@@ -71,10 +69,10 @@ async function safeInit() {
   const uid = user.uid;
 
   let doc = await window.SoiStore.getUserDoc(uid);
-  doc.rewards  ||= {};
-  doc.goals    ||= [];
-  doc.records  ||= [];
-  doc.incorrect||= [];
+  doc.rewards   ||= {};
+  doc.goals     ||= [];
+  doc.records   ||= [];
+  doc.incorrect ||= [];
 
   // 3) 표시/전환
   function renderUser() {
@@ -224,6 +222,7 @@ async function safeInit() {
 
   // 마지막 렌더
   renderGoals();
+  const $main = document.getElementById('main-container');
   if ($main && $main.style.display === 'block') {
     renderUser();
   }
