@@ -15,7 +15,6 @@ async function initHeader() {
       localStorage.removeItem('selectedCount');
       localStorage.removeItem('selectedTimer');
     } catch {}
-    // 서버 로그아웃은 굳이 기다리지 않음 (헤더는 로컬만 신뢰)
     try {
       if (window.SoiStore?.currentUser) {
         const u = await window.SoiStore.currentUser();
