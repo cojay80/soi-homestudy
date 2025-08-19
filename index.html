@@ -1,228 +1,134 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>소이의 공부방</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-<script src="/js/config.js"></script>
-<script src="/js/core-auth-store.js"></script>
-<script src="/js/api-shim.js"></script>
-<script src="/js/sheets.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>소이의 공부방</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- 앱 공통 스크립트 (순서 중요) -->
+  <script src="/js/config.js"></script>
+  <script src="/js/core-auth-store.js"></script>
+  <script src="/js/api-shim.js"></script>
+  <!-- 시트 로딩이 필요한 페이지(index, quiz)에서만 -->
+  <script src="/js/sheets.js"></script>
 </head>
 <body>
-
-    <div id="login-container">
-        <div class="login-box">
-            <h1>소이의 공부방</h1>
-            <p>사용자 이름을 입력해주세요.</p>
-            <input type="text" id="username-input" placeholder="예) 소이">
-            <button id="login-button">시작하기</button>
-        </div>
+  <!-- 로그인 화면 -->
+  <div id="login-container">
+    <div class="login-box">
+      <h1>소이의 공부방</h1>
+      <p>사용자 이름을 입력해주세요.</p>
+      <input type="text" id="username-input" placeholder="예) 소이" />
+      <button id="login-button">시작하기</button>
     </div>
+  </div>
 
-    <div id="main-container" style="display: none;">
-        <header class="main-header">
-    <div class="logo">
+  <!-- 메인 화면 -->
+  <div id="main-container" style="display: none;">
+    <header class="main-header">
+      <div class="logo">
         <a href="index.html">소이의 공부방 🎨</a>
-    </div>
-    <nav class="main-nav">
+      </div>
+      <nav class="main-nav">
         <ul>
-            <li><a href="index.html">오늘의 학습</a></li>
-            <li><a href="report.html">학습 보고서</a></li>
-            <li><a href="goal.html">나의 목표</a></li>
-            <li><a href="record.html">상세 기록</a></li>
-            <li><a href="notes.html">오답 노트</a></li>
+          <li><a href="index.html">오늘의 학습</a></li>
+          <li><a href="report.html">학습 보고서</a></li>
+          <li><a href="goal.html">나의 목표</a></li>
+          <li><a href="record.html">상세 기록</a></li>
+          <li><a href="notes.html">오답 노트</a></li>
         </ul>
-    </nav>
-    <div class="user-info">
+      </nav>
+      <div class="user-info">
         <span id="welcome-message"></span>
         <a href="#" id="logout-button">(로그아웃)</a>
-    </div>
-    <button class="mobile-menu-button">☰</button>
-</header>
-        
-        <main>
-            <section class="goal-setting-section">
-                <h2>이번 주 학습 목표 설정하기 🎯</h2>
-                <div class="goal-box">
-                    <div id="current-goal-display" style="display: none;">
-                        <p><strong>이번 주 목표:</strong></p>
-                        <ul id="current-goal-list">
-                            </ul>
-                    </div>
-                    <div id="new-goal-form">
-                        <select id="goal-subject-select">
-                            <option value="">-- 과목 선택 --</option>
-                        </select>
-                        <input type="number" id="goal-count-input" placeholder="문제 수" min="1">
-                        <button id="set-goal-button">목표 설정</button>
-                    </div>
-                </div>
-            </section>
+      </div>
+      <button class="mobile-menu-button">☰</button>
+    </header>
 
-            <section class="today-study-section">
-                <div class="study-card">
-                    <div class="card-header">
-                        <h2>오늘의 학습 ✏️</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="selection-box">
-                            <label for="grade-select">학년 선택:</label>
-                            <select name="grades" id="grade-select">
-                                <option value="">-- 학년을 선택하세요 --</option>
-                            </select>
-                        </div>
-                        <div class="selection-box">
-                            <label for="subject-select">과목 선택:</label>
-                            <select name="subjects" id="subject-select">
-                                <option value="">-- 과목을 선택하세요 --</option>
-                            </select>
-                        </div>
-                        <div class="selection-box">
-                            <label for="count-select">문제 수 선택:</label>
-                            <select name="counts" id="count-select">
-                                <option value="10">10 문제</option>
-                                <option value="20">20 문제</option>
-                                <option value="30">30 문제</option>
-                            </select>
-                        </div>
-                        <div class="selection-box">
-                            <label for="timer-select">시간제한 (문제당):</label>
-                            <select name="timers" id="timer-select">
-                                <option value="0">무제한</option>
-                                <option value="10">10초</option>
-                                <option value="20">20초</option>
-                                <option value="30">30초</option>
-                                <option value="60">60초</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <a href="#" class="start-button">학습 시작하기!</a>
-                    </div>
-                </div>
-            </section>
-        </main>
+    <main>
+      <!-- (선택) 홈 요약 상태 표시 -->
+      <section style="padding:8px 0;">
+        <div id="home-user" style="display:none;">
+          <b>내 포인트:</b> <span id="pointsCount">-</span>
+          &nbsp;/&nbsp;
+          <b>보상 보유:</b> <span id="rewardsCount">-</span>
+        </div>
+      </section>
 
-        <footer class="main-footer">
-            <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-        </footer>
-    </div>
+      <section class="goal-setting-section">
+        <h2>이번 주 학습 목표 설정하기 🎯</h2>
+        <div class="goal-box">
+          <div id="current-goal-display" style="display: none;">
+            <p><strong>이번 주 목표:</strong></p>
+            <ul id="current-goal-list"></ul>
+          </div>
+          <div id="new-goal-form">
+            <select id="goal-subject-select">
+              <option value="">-- 과목 선택 --</option>
+            </select>
+            <input type="number" id="goal-count-input" placeholder="문제 수" min="1" />
+            <button id="set-goal-button">목표 설정</button>
+          </div>
+        </div>
+      </section>
 
-    <script src="js/header.js"></script>
-    <script src="js/main.js"></script>
-<!-- 홈에서 간단히 상태 보여줄 곳 (원하면 숨겨도 됨) -->
-<div id="home-user" style="padding:8px 0; display:none;">
-  <b>내 포인트:</b> <span id="pointsCount">-</span> /
-  <b>보상 보유:</b> <span id="rewardsCount">-</span>
-</div>
+      <section class="today-study-section">
+        <div class="study-card">
+          <div class="card-header">
+            <h2>오늘의 학습 ✏️</h2>
+          </div>
+          <div class="card-content">
+            <div class="selection-box">
+              <label for="grade-select">학년 선택:</label>
+              <select name="grades" id="grade-select">
+                <option value="">-- 학년을 선택하세요 --</option>
+              </select>
+            </div>
 
-<script>
-(async function () {
-  // --- 유틸: SoiStore 로딩을 기다림 ---
-  function waitFor(cond, timeout = 5000, interval = 50) {
-    return new Promise((resolve, reject) => {
-      const start = Date.now();
-      (function poll() {
-        try { if (cond()) return resolve(); } catch {}
-        if (Date.now() - start >= timeout) return reject(new Error('SoiStore not ready'));
-        setTimeout(poll, interval);
-      })();
-    });
-  }
+            <div class="selection-box">
+              <label for="subject-select">과목 선택:</label>
+              <select name="subjects" id="subject-select">
+                <option value="">-- 과목을 선택하세요 --</option>
+              </select>
+            </div>
 
-  // DOM 캐시
-  const $login    = document.getElementById('login-container');
-  const $main     = document.getElementById('main-container');
-  const $welcome  = document.getElementById('welcome-message');
-  const $logout   = document.getElementById('logout-button');
-  const $btnLogin = document.getElementById('login-button');
-  const $nameInput= document.getElementById('username-input');
+            <div class="selection-box">
+              <label for="count-select">문제 수 선택:</label>
+              <select name="counts" id="count-select">
+                <option value="10">10 문제</option>
+                <option value="20">20 문제</option>
+                <option value="30">30 문제</option>
+              </select>
+            </div>
 
-  const $status = document.getElementById('home-user');
-  const $pts    = document.getElementById('pointsCount');
-  const $rwd    = document.getElementById('rewardsCount');
+            <div class="selection-box">
+              <label for="timer-select">시간제한 (문제당):</label>
+              <select name="timers" id="timer-select">
+                <option value="0">무제한</option>
+                <option value="10">10초</option>
+                <option value="20">20초</option>
+                <option value="30">30초</option>
+                <option value="60">60초</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="#" class="start-button">학습 시작하기!</a>
+          </div>
+        </div>
+      </section>
+    </main>
 
-  try {
-    // 0) SoiStore 준비될 때까지 대기 (핵심!)
-    await waitFor(() => window.SoiStore && typeof window.SoiStore.currentUser === 'function');
+    <footer class="main-footer">
+      <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+    </footer>
+  </div>
 
-    // 1) 로그인(로컬 폴백 포함)
-    let user = await window.SoiStore.currentUser();
-    if (!user || !user.uid) {
-      user = await window.SoiStore.signIn("local@demo.com","local-demo");
-    }
-    if (!user || !user.uid) throw new Error('signIn failed: user/uid missing');
-    const uid = user.uid;
-
-    // 2) 사용자 도큐먼트 읽기
-    let doc = await window.SoiStore.getUserDoc(uid);
-    doc.rewards ||= {};
-    doc.goals   ||= [];
-
-    // 3) 화면 반영
-    function renderUser() {
-      if ($welcome) $welcome.textContent = doc.name ? `${doc.name}님 반가워요!` : `환영합니다!`;
-      if ($status)  $status.style.display = 'block';
-      if ($pts)     $pts.textContent = String(doc.points ?? 0);
-      if ($rwd) {
-        const total = Object.values(doc.rewards || {}).reduce((a,b)=>a+(b||0), 0);
-        $rwd.textContent = String(total);
-      }
-    }
-    function gotoMain()  { $login.style.display = 'none'; $main.style.display = 'block'; renderUser(); }
-    function gotoLogin() { $main.style.display = 'none'; $login.style.display = 'block'; }
-
-    if (doc.name && String(doc.name).trim()) gotoMain(); else gotoLogin();
-
-    // 4) 로그인 버튼: 이름 저장 후 메인으로
-    $btnLogin?.addEventListener('click', async () => {
-      const name = ($nameInput?.value || '').trim();
-      if (!name) return alert('이름을 입력해주세요!');
-      doc = await window.SoiStore.setUserDoc(uid, { ...doc, name });
-      await window.SoiStore.pushLog(uid, { source: "홈", tier: "login", points: 0, action: "login", couponName: name });
-      gotoMain();
-    });
-
-    // 5) 로그아웃
-    $logout?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await window.SoiStore.signOut();
-      gotoLogin();
-    });
-
-    // 6) 학습 시작 버튼 → 퀴즈 페이지로 이동
-    const startBtn = document.querySelector('.start-button');
-    startBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const grade   = document.getElementById('grade-select')?.value || '';
-      const subject = document.getElementById('subject-select')?.value || '';
-      const count   = document.getElementById('count-select')?.value || '10';
-      const timer   = document.getElementById('timer-select')?.value || '0';
-      if (!grade || !subject) return alert('학년과 과목을 선택해주세요!');
-      const qs = new URLSearchParams({ grade, subject, count, timer });
-      location.href = `quiz.html?${qs.toString()}`;
-    });
-
-    // 7) 초기 렌더
-    if ($main.style.display === 'block') renderUser();
-
-  } catch (e) {
-    console.error('[index init] failed:', e);
-    alert('사용자 초기화에 실패했습니다. 새로고침(Ctrl/Cmd+Shift+R) 후 다시 시도해주세요.');
-  }
-})();
-</script>
-
-
+  <!-- 페이지 스크립트 -->
+  <script src="js/header.js"></script>
+  <script src="js/main.js"></script>
 </body>
-
 </html>
-
-
-
-
-
-
