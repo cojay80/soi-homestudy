@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>상점 - 소이의 공부방</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <!-- 공통 스크립트 (순서 유지) -->
+  <script src="/js/config.js"></script>
+  <script src="/js/core-auth-store.js"></script>
+  <script src="/js/api-shim.js"></script>
+
+  <!-- 로그아웃/헤더/상점 -->
+  <script src="/js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <script src="/js/header.js?v=HDR_MINIMAL_3"></script>
+  <script src="/js/shop.js?v=SHOP_1"></script>
+</head>
+<body>
+  <header class="main-header">
+    <div class="logo">
+      <a href="index.html">소이의 공부방 🎨</a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">오늘의 학습</a></li>
+        <li><a href="report.html">학습 보고서</a></li>
+        <li><a href="goal.html">나의 목표</a></li>
+        <li><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
+    </div>
+    <button class="mobile-menu-button">☰</button>
+  </header>
+
+  <main class="container" style="max-width:920px;margin:0 auto;padding:16px;">
+    <h1>상점 🛍️</h1>
+
+    <section class="info-row" style="margin:12px 0;">
+      <div><b>내 포인트:</b> <span id="shop-points">0</span></div>
+      <div><b>보유 보상:</b> <span id="shop-inventory">없음</span></div>
+    </section>
+
+    <section class="shop-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+      <div id="shop-items"></div>
+    </section>
+  </main>
+
+  <footer class="main-footer">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
+</body>
+</html>
