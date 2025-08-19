@@ -85,9 +85,7 @@ async function initAsync() {
   const cached = (localStorage.getItem('soi_name') || '').trim();
   if (cached && !doc.name) {
     doc = await window.SoiStore.setUserDoc(uid, { ...doc, name: cached });
-  } else if (!cached && doc.name) {
-    localStorage.setItem('soi_name', doc.name);
-  }
+  } 
 
   // 메인 요약 수치 반영
   UI.setWelcome(doc.name || cached || '');
@@ -148,3 +146,4 @@ function waitFor(cond, timeout=5000, interval=50) {
     })();
   });
 }
+
