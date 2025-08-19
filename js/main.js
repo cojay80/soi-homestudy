@@ -1,80 +1,77 @@
-// js/main.js — 로그인창 강제 우선 표시(불변), SoiStore/시트 오류가 있어도 로그인 UI는 뜸.
+// js/main.js — 로그인 즉시 메인 전환 + 새로고침 시 자동 메인 유지
+// - SoiStore 지연/오류가 있어도 UI는 멈추지 않게 설계
+// - 로그인 성공하면 localStorage에도 이름을 저장해, 다음 로드에서 바로 메인 노출
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 0) 어떤 상황이든 먼저 로그인 보이기
-  const $login = document.getElementById('login-container');
-  const $main  = document.getElementById('main-container');
-  if ($login) $login.style.display = 'flex';
-  if ($main)  $main.style.display  = 'none';
-
-  // 1) 이벤트만 먼저 연결 (스토어 준비 전에도 동작)
-  wireLoginUI();
-
-  // 2) 비동기로 스토어/시트 로딩 (로그인 UI와 별개로 진행)
-  initAsync().catch(err => {
-    console.error('[initAsync] failed:', err);
-    // 스토어/시트 실패해도 로그인 UI는 이미 떠있음
+  boot().catch(err => {
+    console.error('[boot] failed:', err);
+    // 최소한 로그인은 보이게
+    UI.showLogin();
+    alert('초기화에 실패했습니다. 새로고침(Ctrl/Cmd+Shift+R) 후 다시 시도해주세요.');
   });
 });
 
-function wireLoginUI() {
-  const $btnLogin  = document.getElementById('login-button');
-  const $nameInput = document.getElementById('username-input');
-  const $logout    = document.getElementById('logout-button');
+// ---------- UI 제어 ----------
+const UI = {
+  loginEl:   () => document.getElementById('login-container'),
+  mainEl:    () => document.getElementById('main-container'),
+  welcomeEl: () => document.getElementById('welcome-message'),
+  ptsEl:     () => document.getElementById('pointsCount'),
+  rwdEl:     () => document.getElementById('rewardsCount'),
+  gradeEl:   () => document.getElementById('grade-select'),
+  subjEl:    () => document.getElementById('subject-select'),
 
-  // 로그인 버튼: 이름 저장 후 메인으로
-  $btnLogin?.addEventListener('click', async () => {
-    const name = ($nameInput?.value || '').trim();
-    if (!name) return alert('이름을 입력해주세요!');
-
-    try {
-      await ensureStoreReady();
-      let user = await window.SoiStore.currentUser();
-      if (!user || !user.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
-      const uid = user.uid;
-
-      let doc = await window.SoiStore.getUserDoc(uid);
-      doc = await window.SoiStore.setUserDoc(uid, { ...doc, name });
-      await window.SoiStore.pushLog(uid, { source:'홈', action:'login', tier:'login', points:0, couponName:name });
-    } catch (e) {
-      console.warn('저장 없이 메인으로 계속 진행(오프라인 모드):', e);
+  showLogin() { const L=this.loginEl(), M=this.mainEl(); if(L) L.style.display='flex'; if(M) M.style.display='none'; },
+  showMain()  { const L=this.loginEl(), M=this.mainEl(); if(L) L.style.display='none';  if(M) M.style.display='block'; },
+  setWelcome(name) { const W=this.welcomeEl(); if(W) W.textContent = name ? `${name}님 반가워요!` : ''; },
+  renderSummary(doc) {
+    const P=this.ptsEl(), R=this.rwdEl();
+    if (P) P.textContent = String(Number(doc?.points || 0));
+    if (R) {
+      const total = Object.values(doc?.rewards || {}).reduce((a,b)=>a+(b||0),0);
+      R.textContent = String(total);
     }
+  }
+};
 
-    showMain();
+// ---------- 유틸 ----------
+function waitFor(cond, timeout=8000, interval=50) {
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    (function poll(){
+      try { if (cond()) return resolve(); } catch {}
+      if (Date.now()-t0 >= timeout) return reject(new Error('timeout'));
+      setTimeout(poll, interval);
+    })();
   });
-
-  // 로그아웃: 언제든 로그인창으로 복귀
-  $logout?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    try {
-      await ensureStoreReady();
-      await window.SoiStore.signOut();
-    } catch {}
-    showLogin();
-  });
+}
+async function ensureStoreReady() {
+  if (window.SoiStore?.currentUser) return;
+  await waitFor(()=> window.SoiStore && typeof window.SoiStore.currentUser==='function');
+}
+async function ensureSheetsReady() {
+  if (window.SoiSheets?.load) return;
+  await waitFor(()=> window.SoiSheets && typeof window.SoiSheets.load==='function');
 }
 
-function showLogin() {
-  const $login = document.getElementById('login-container');
-  const $main  = document.getElementById('main-container');
-  if ($login) $login.style.display = 'flex';
-  if ($main)  $main.style.display  = 'none';
-}
-function showMain() {
-  const $login = document.getElementById('login-container');
-  const $main  = document.getElementById('main-container');
-  if ($login) $login.style.display = 'none';
-  if ($main)  $main.style.display  = 'block';
-  // 메인 들어왔으면 상단 환영문/상태 갱신 시도
-  renderUserSummary().catch(err => console.warn('user summary render skipped:', err));
-}
+// ---------- 핵심 플로우 ----------
+async function boot() {
+  // 0) 기본은 로그인 먼저 보여주되,
+  //    이전에 로그인한 이름이 있으면 "즉시 메인"으로 전환 (속도 ↑)
+  UI.showLogin();
+  const cachedName = (localStorage.getItem('soi_name') || '').trim();
+  if (cachedName) {
+    UI.setWelcome(cachedName);
+    UI.showMain();
+  }
 
-async function initAsync() {
-  // SoiStore 준비 후, 기존 이름 있으면 입력칸에 미리 채워주기만 함.
+  // 1) 버튼/이벤트 연결 (스토어 준비 전에도 동작)
+  wireEvents();
+
+  // 2) SoiStore 준비 후 상태 동기화
   await ensureStoreReady();
-
   let user = await window.SoiStore.currentUser();
-  if (!user || !user.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
+  if (!user?.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
   const uid = user.uid;
 
   let doc = await window.SoiStore.getUserDoc(uid);
@@ -83,63 +80,66 @@ async function initAsync() {
   doc.records   ||= [];
   doc.incorrect ||= [];
 
-  // 로그인창을 기본으로 유지하되, 이름이 이미 저장돼 있으면 입력칸에 채워줌
-  const $nameInput = document.getElementById('username-input');
-  if ($nameInput && doc.name) $nameInput.value = doc.name;
-
-  // 학년/과목 셀렉트 채우기는 시트 준비 후, 로그인창과 독립적으로 사전 로드
-  try {
-    await ensureSheetsReady();
-    const all = await window.SoiSheets.load({ grade:'', subject:'' });
-    const grades = [...new Set(all.map(p => p.grade || p.학년).filter(Boolean))].sort();
-    const $grade = document.getElementById('grade-select');
-    if ($grade) {
-      $grade.innerHTML = '<option value="">-- 학년을 선택하세요 --</option>';
-      grades.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g; opt.textContent = g;
-        $grade.appendChild(opt);
-      });
-      // 학년 변경 시 과목 채우기
-      const $subject = document.getElementById('subject-select');
-      $grade.addEventListener('change', () => {
-        if (!$subject) return;
-        const sel = $grade.value;
-        $subject.innerHTML = '<option value="">-- 과목을 선택하세요 --</option>';
-        if (!sel) return;
-        const candidates = all.filter(p => (p.grade || p.학년) === sel);
-        const subjects = [...new Set(candidates.map(p => p.subject || p.과목).filter(Boolean))].sort();
-        subjects.forEach(s => {
-          const o = document.createElement('option');
-          o.value = s; o.textContent = s;
-          $subject.appendChild(o);
-        });
-      });
-    }
-  } catch (e) {
-    console.warn('시트 사전 로드는 생략:', e);
+  // 캐시에 이름이 있고, 저장된 이름이 없으면 저장된 문서에 반영
+  if (cachedName && !doc.name) {
+    doc = await window.SoiStore.setUserDoc(uid, { ...doc, name: cachedName });
   }
+
+  // 저장된 이름이 있으면 메인으로, 없으면 로그인 유지
+  if (doc.name && String(doc.name).trim()) {
+    UI.setWelcome(doc.name);
+    UI.showMain();
+  } else {
+    UI.showLogin();
+  }
+
+  // 메인 요약 숫자 갱신
+  UI.renderSummary(doc);
+
+  // 3) 시트 미리 로딩 (UI와 독립)
+  preloadSheetUI().catch(e => console.warn('[preloadSheetUI] skipped:', e));
 }
 
-async function renderUserSummary() {
-  await ensureStoreReady();
-  let user = await window.SoiStore.currentUser();
-  if (!user || !user.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
-  const uid = user.uid;
+function wireEvents() {
+  const btnLogin  = document.getElementById('login-button');
+  const nameInput = document.getElementById('username-input');
+  const logoutBtn = document.getElementById('logout-button');
 
-  const doc = await window.SoiStore.getUserDoc(uid);
-  const $welcome = document.getElementById('welcome-message');
-  const $pts = document.getElementById('pointsCount');
-  const $rwd = document.getElementById('rewardsCount');
+  btnLogin?.addEventListener('click', async () => {
+    const name = (nameInput?.value || '').trim();
+    if (!name) return alert('이름을 입력해주세요!');
 
-  if ($welcome) $welcome.textContent = doc.name ? `${doc.name}님 반가워요!` : '';
-  if ($pts) $pts.textContent = String(Number(doc.points || 0));
-  if ($rwd) {
-    const total = Object.values(doc.rewards || {}).reduce((a,b)=>a+(b||0), 0);
-    $rwd.textContent = String(total);
-  }
+    // 즉시 메인 전환(느린 저장에 UI 안 막힘)
+    localStorage.setItem('soi_name', name);
+    UI.setWelcome(name);
+    UI.showMain();
 
-  // 퀴즈 시작 버튼 핸들러
+    // 백그라운드로 저장 동기화
+    try {
+      await ensureStoreReady();
+      let user = await window.SoiStore.currentUser();
+      if (!user?.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
+      const uid = user.uid;
+      let doc  = await window.SoiStore.getUserDoc(uid);
+      doc = await window.SoiStore.setUserDoc(uid, { ...doc, name });
+      await window.SoiStore.pushLog(uid, { source:'홈', action:'login', tier:'login', points:0, couponName:name });
+      UI.renderSummary(doc);
+    } catch (e) {
+      console.warn('[login save] skipped:', e);
+    }
+  });
+
+  logoutBtn?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      localStorage.removeItem('soi_name');
+      await ensureStoreReady();
+      await window.SoiStore.signOut();
+    } catch {}
+    UI.showLogin();
+  });
+
+  // 학습 시작
   const startButton = document.querySelector('.start-button');
   startButton?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -156,22 +156,35 @@ async function renderUserSummary() {
   });
 }
 
-// 헬퍼: SoiStore/Sheets 준비 대기
-async function ensureStoreReady() {
-  if (window.SoiStore && typeof window.SoiStore.currentUser === 'function') return;
-  await waitFor(() => window.SoiStore && typeof window.SoiStore.currentUser === 'function', 8000, 50);
-}
-async function ensureSheetsReady() {
-  if (window.SoiSheets && typeof window.SoiSheets.load === 'function') return;
-  await waitFor(() => window.SoiSheets && typeof window.SoiSheets.load === 'function', 8000, 50);
-}
-function waitFor(cond, timeout = 5000, interval = 50) {
-  return new Promise((resolve, reject) => {
-    const t0 = Date.now();
-    (function poll() {
-      try { if (cond()) return resolve(); } catch {}
-      if (Date.now() - t0 >= timeout) return reject(new Error('timeout'));
-      setTimeout(poll, interval);
-    })();
+async function preloadSheetUI() {
+  await ensureSheetsReady();
+  const all = await window.SoiSheets.load({ grade:'', subject:'' });
+
+  const gradeSel = UI.gradeEl();
+  const subjSel  = UI.subjEl();
+  if (!gradeSel) return;
+
+  // 학년 목록
+  const grades = [...new Set(all.map(p => p.grade || p.학년).filter(Boolean))].sort();
+  gradeSel.innerHTML = '<option value="">-- 학년을 선택하세요 --</option>';
+  grades.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    gradeSel.appendChild(opt);
+  });
+
+  // 학년 변경 시 과목 채우기
+  gradeSel.addEventListener('change', () => {
+    if (!subjSel) return;
+    const sel = gradeSel.value;
+    subjSel.innerHTML = '<option value="">-- 과목을 선택하세요 --</option>';
+    if (!sel) return;
+    const candidates = all.filter(p => (p.grade || p.학년) === sel);
+    const subjects = [...new Set(candidates.map(p => p.subject || p.과목).filter(Boolean))].sort();
+    subjects.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      subjSel.appendChild(o);
+    });
   });
 }
