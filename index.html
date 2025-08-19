@@ -134,8 +134,10 @@
   const $rwd = document.getElementById('rewardsCount');
 
   // 1) 로그인(or 로컬 폴백) 확보
-  const user = await (window.SoiStore.currentUser() || window.SoiStore.signIn("local@demo.com","local-demo"));
+  let user = await window.SoiStore.currentUser();
+  if (!user) user = await window.SoiStore.signIn("local@demo.com","local-demo");
   const uid = user.uid;
+
 
   // 2) 사용자 도큐먼트 읽기
   let doc = await window.SoiStore.getUserDoc(uid);
@@ -207,6 +209,7 @@
 </body>
 
 </html>
+
 
 
 
