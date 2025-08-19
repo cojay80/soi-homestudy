@@ -1,69 +1,80 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>문제 풀이 - 소이의 공부방</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-<script src="/js/config.js"></script>
-<script src="/js/core-auth-store.js"></script>
-<script src="/js/api-shim.js"></script>	
-<script src="/js/drop.js"></script>
-<script src="/js/sheets.js"></script>
-<script src="/js/rewards.js?v=RW1"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>문제 풀이 - 소이의 공부방</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <!-- 공통: 순서 유지 -->
+  <script src="/js/config.js"></script>
+  <script src="/js/core-auth-store.js"></script>
+  <script src="/js/api-shim.js"></script>
+
+  <!-- 문제 불러오기(구글시트 파서 등) -->
+  <script src="/js/sheets.js"></script>
+
+  <!-- (선택) 다른 부가 스크립트가 있다면 여기 -->
+  <script src="/js/drop.js"></script>
+
+  <!-- ✅ 정답 보상(포인트+랜덤드랍) 먼저 로드 -->
+  <script src="/js/rewards.js?v=RW1"></script>
 </head>
 <body>
-    <div class="quiz-container">
-        <header class="quiz-header">
-            <h1>문제 쑥쑥! 🧠</h1>
-            <div id="timer-display"></div>
-        </header>
-        
-        <div class="quiz-layout">
-            <div class="passage-area">
-                <h2>📜 지문</h2>
-                <div id="passage-content">
-                    </div>
-            </div>
-            <div class="problem-area">
-                <main class="quiz-main">
-                    <div class="progress-bar">
-                        <div class="progress"></div>
-                    </div>
-                    <p class="question-number">1 / 10</p>
-                    
-                    <div class="question-box">
-                        <img id="question-image" src="" alt="문제 이미지">
-                        <p class="question-text">문제를 불러오는 중입니다...</p>
-                    </div>
-                    
-                    <div class="answer-options">
-                        <button class="option">1)</button>
-                        <button class="option">2)</button>
-                        <button class="option">3)</button>
-                        <button class="option">4)</button>
-                    </div>
-                </main>
-            </div>
-        </div>
+  <div class="quiz-container">
+    <header class="quiz-header">
+      <h1>문제 쑥쑥! 🧠</h1>
+      <div id="timer-display"></div>
+    </header>
 
-	<div id="results-container" style="display: none;">
-	    <h2>✨ 퀴즈 결과 ✨</h2>
-	    <p id="score-text"></p>
-	    <p id="message-text"></p>
-	    <div class="result-buttons">
-    <button id="review-button" class="retry-button" disabled>저장 중...</button>
-    <a href="index.html" id="main-menu-button" class="retry-button disabled-link">메인으로 돌아가기</a>
-</div>
-	</div>
-        <div id="toast-message"></div>
+    <div class="quiz-layout">
+      <div class="passage-area">
+        <h2>📜 지문</h2>
+        <div id="passage-content"></div>
+      </div>
+
+      <div class="problem-area">
+        <main class="quiz-main">
+          <div class="progress-bar">
+            <div class="progress"></div>
+          </div>
+          <p class="question-number">1 / 10</p>
+
+          <div class="question-box">
+            <img id="question-image" alt="문제 이미지" style="display:none;" />
+            <p class="question-text">문제를 불러오는 중입니다...</p>
+          </div>
+
+          <div class="answer-options">
+            <button class="option">1)</button>
+            <button class="option">2)</button>
+            <button class="option">3)</button>
+            <button class="option">4)</button>
+          </div>
+        </main>
+      </div>
     </div>
 
-    <script src="js/header.js"></script> <script src="js/quiz.js"></script>
+    <div id="results-container" style="display:none;">
+      <h2>✨ 퀴즈 결과 ✨</h2>
+      <p id="score-text"></p>
+      <p id="message-text"></p>
+      <div class="result-buttons">
+        <button id="review-button" class="retry-button" disabled>저장 중...</button>
+        <a href="index.html" id="main-menu-button" class="retry-button disabled-link">메인으로 돌아가기</a>
+      </div>
+    </div>
+
+    <div id="toast-message"></div>
+  </div>
+
+  <!-- 헤더(로그인 가드/로그아웃 링크 처리 등) -->
+  <script src="/js/header.js?v=HDR_MIN_1"></script>
+
+  <!-- ✅ 마지막에 퀴즈 로직. rewards.js 보다 “반드시 뒤에” -->
+  <script src="/js/quiz.js?v=QZ1"></script>
 </body>
-
 </html>
-
-
-
