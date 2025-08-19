@@ -16,8 +16,8 @@
   <script src="/js/sheets.js"></script>
 </head>
 <body>
-  <!-- 로그인 화면 -->
-  <div id="login-container">
+  <!-- 로그인 화면 (기본 보임) -->
+  <div id="login-container" style="display:flex;">
     <div class="login-box">
       <h1>소이의 공부방</h1>
       <p>사용자 이름을 입력해주세요.</p>
@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <!-- 메인 화면 -->
+  <!-- 메인 화면 (기본 숨김) -->
   <div id="main-container" style="display: none;">
     <header class="main-header">
       <div class="logo">
@@ -127,8 +127,8 @@
     </footer>
   </div>
 
-  <!-- 페이지 스크립트 -->
+  <!-- 페이지 스크립트 (캐시 무력화용 v 파라미터) -->
   <script src="js/header.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=4"></script>
 </body>
 </html>
