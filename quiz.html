@@ -9,19 +9,19 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
-  <!-- 공통: 순서 유지 -->
-  <script src="/js/config.js"></script>
-  <script src="/js/core-auth-store.js"></script>
-  <script src="/js/api-shim.js"></script>
+  <!-- 공통: 순서 유지 + defer -->
+  <script src="/js/config.js" defer></script>
+  <script src="/js/core-auth-store.js" defer></script>
+  <script src="/js/api-shim.js" defer></script>
 
   <!-- 문제 불러오기(구글시트 파서 등) -->
-  <script src="/js/sheets.js"></script>
+  <script src="/js/sheets.js" defer></script>
 
-  <!-- (선택) 다른 부가 스크립트가 있다면 여기 -->
-  <script src="/js/drop.js"></script>
+  <!-- (선택) 부가 스크립트 -->
+  <script src="/js/drop.js" defer></script>
 
   <!-- ✅ 정답 보상(포인트+랜덤드랍) 먼저 로드 -->
-  <script src="/js/rewards.js?v=RW1"></script>
+  <script src="/js/rewards.js?v=RW1" defer></script>
 </head>
 <body>
   <div class="quiz-container">
@@ -72,9 +72,9 @@
   </div>
 
   <!-- 헤더(로그인 가드/로그아웃 링크 처리 등) -->
-  <script src="/js/header.js?v=HDR_MIN_1"></script>
+  <script src="/js/header.js?v=HDR_MIN_1" defer></script>
 
   <!-- ✅ 마지막에 퀴즈 로직. rewards.js 보다 “반드시 뒤에” -->
-  <script src="/js/quiz.js?v=QZ1"></script>
+  <script src="/js/quiz.js?v=QZ1" defer></script>
 </body>
 </html>
