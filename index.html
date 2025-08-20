@@ -1,181 +1,157 @@
-#1<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>소이의 공부방</title>
 
+  <!-- 폰트 / 공통 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- 앱 공통 스크립트 (순서 중요: 설정/스토어/폴리필/시트) -->
+  <!-- 공통 스크립트 (순서 유지) -->
   <script src="/js/config.js"></script>
-  <script src="/js/core-auth-store.js?v=LS_PERSIST_1"></script>
+  <script src="/js/core-auth-store.js"></script>
   <script src="/js/api-shim.js"></script>
-  <script src="/js/sheets.js"></script>
+
+  <!-- 포인트/인벤토리(로컬) -->
   <script src="/js/soi-store.js"></script>
-<style>.soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}</style>
 
-  <!-- URL에 ?reset=1 이면 캐시/세션 정리 후 index로 복귀 -->
-  <script>
-    (function () {
-      const qs = new URL(location.href).searchParams;
-      if (qs.get('reset') === '1') {
-        try {
-          localStorage.removeItem('soi_name');
-          localStorage.removeItem('selectedGrade');
-          localStorage.removeItem('selectedSubject');
-          localStorage.removeItem('selectedCount');
-          localStorage.removeItem('selectedTimer');
-        } catch {}
-        (async () => {
-          try {
-            if (window.SoiStore && typeof window.SoiStore.currentUser === 'function') {
-              const u = await window.SoiStore.currentUser();
-              if (u && u.uid && typeof window.SoiStore.signOut === 'function') {
-                await window.SoiStore.signOut();
-              }
-            }
-          } catch {}
-          location.replace('index.html');
-        })();
-      }
-    })();
-  </script>
+  <!-- 헤더/로그아웃 -->
+  <script src="/js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <script src="/js/header.js?v=HDR_MINIMAL_3"></script>
+
+  <!-- 홈 전용 -->
+  <script src="/js/home.js?v=HOME_1"></script>
+
+  <style>
+    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+    .card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;background:#fff}
+    .mini{color:#666;font-size:13px}
+    .kpi{font-size:24px;font-weight:700}
+    label.inline{display:flex;align-items:center;gap:8px}
+    input[type=number], select{padding:8px;border:1px solid #ddd;border-radius:10px}
+    button.btn{padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fafafa;cursor:pointer}
+    .cta{display:flex;gap:8px;flex-wrap:wrap}
+    .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @media (max-width:640px){ .quick{grid-template-columns:1fr} }
+    .barwrap{background:#f3f3f3;border-radius:8px;overflow:hidden;height:12px}
+    .bar{height:100%;background:#7aa6ff}
+    .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .link-card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
+    .link-card a{display:inline-block}
+  </style>
 </head>
-
 <body>
-  <!-- 로그인 화면 (기본 보임) -->
-  <div id="login-container" style="display:flex;">
-    <div class="login-box">
-      <h1>소이의 공부방</h1>
-      <p>사용자 이름을 입력해주세요.</p>
-      <input type="text" id="username-input" placeholder="예) 소이" />
-      <button id="login-button">시작하기</button>
+  <!-- 고정 헤더 -->
+  <header class="main-header">
+    <div class="logo">
+      <a href="index.html">소이의 공부방 🎨</a>
     </div>
-  </div>
+    <nav class="main-nav">
+      <ul>
+        <li class="active"><a href="index.html">오늘의 학습</a></li>
+        <li><a href="report.html">학습 보고서</a></li>
+        <li><a href="goal.html">나의 목표</a></li>
+        <li><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
+    </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+  </header>
 
-  <!-- 메인 화면 (기본 숨김) -->
-  <div id="main-container" style="display:none;">
-    <header class="main-header">
-      <div class="logo">
-        <a href="index.html">소이의 공부방 🎨</a>
+  <!-- 본문 -->
+  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+    <h1>오늘의 학습 ✨</h1>
+    <p class="mini">학년/과목을 고르고 바로 시작! 정답을 맞히면 포인트와 보상을 얻을 수 있어요.</p>
+
+    <!-- 빠른 시작 -->
+    <section class="card" style="margin:12px 0;">
+      <h2 style="margin:0 0 8px;">빠른 시작</h2>
+      <div class="quick">
+        <label class="inline">학년
+          <select id="sel-grade">
+            <option value="">선택</option>
+            <option>초1</option><option>초2</option><option>초3</option>
+            <option>초4</option><option>초5</option><option>초6</option>
+          </select>
+        </label>
+        <label class="inline">과목
+          <select id="sel-subject">
+            <option value="">선택</option>
+            <option>국어</option><option>수학</option><option>사회</option>
+            <option>과학</option><option>영어</option>
+          </select>
+        </label>
+        <label class="inline">세트 수(지문/단일 묶음)
+          <input type="number" id="sel-count" min="1" step="1" value="10"/>
+        </label>
+        <label class="inline">문항 타이머(초, 0=무제한)
+          <input type="number" id="sel-timer" min="0" step="10" value="0"/>
+        </label>
       </div>
-
-      <nav class="main-nav">
-        <ul>
-          <li><a href="index.html">오늘의 학습</a></li>
-          <li><a href="report.html">학습 보고서</a></li>
-          <li><a href="goal.html">나의 목표</a></li>
-          <li><a href="record.html">상세 기록</a></li>
-          <li><a href="notes.html">오답 노트</a></li>
-          <li><a href="shop.html">상점</a></li>
-          <span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span>
-        </ul>
-      </nav>
-
-      <div class="user-info">
-        <span id="welcome-message"></span>
-        <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
+      <div class="cta" style="margin-top:10px;">
+        <button class="btn" id="btn-start">시작하기 ▶</button>
+        <button class="btn" id="btn-review" title="오답이 있으면 복습 모드로 이동">오답 복습</button>
+        <a class="btn" href="shop.html">상점 가기</a>
       </div>
+      <div id="home-msg" class="mini" style="margin-top:6px;color:#d33;"></div>
+    </section>
 
-      <button class="mobile-menu-button" aria-label="메뉴 열기/닫기">☰</button>
-       </header>
+    <!-- 오늘 진행 -->
+    <section class="grid" style="margin:12px 0;">
+      <article class="card">
+        <div class="mini">오늘 푼 문항</div>
+        <div class="kpi"><span id="today-total">0</span></div>
+        <div class="barwrap"><div id="bar-today" class="bar" style="width:0%"></div></div>
+        <div class="mini">* 목표 대비 진행률은 <a href="goal.html">나의 목표</a>에서 확인/설정</div>
+      </article>
+      <article class="card">
+        <div class="mini">오늘 정답 수(=획득 포인트)</div>
+        <div class="kpi"><span id="today-correct">0</span>p</div>
+      </article>
+      <article class="card">
+        <div class="mini">최근 세션</div>
+        <div id="recent-session" class="mini">—</div>
+      </article>
+    </section>
 
-    <!--
-      ⚠️ 중요: 헤더 HTML 바로 뒤에 header.js를 로드해야
-      햄버거 토글이 즉시 바인딩됩니다.
-    -->
-    <script src="js/header.js?v=HDR_MINIMAL_3"></script>
+    <!-- 바로가기 -->
+    <section class="links" style="margin:12px 0;">
+      <div class="link-card">
+        <h3 style="margin:0;">학습 보고서</h3>
+        <p class="mini">최근 7일 성과를 한눈에</p>
+        <a class="btn" href="report.html">보고서 보기</a>
+      </div>
+      <div class="link-card">
+        <h3 style="margin:0;">오답 노트</h3>
+        <p class="mini">틀린 문제 복습/정리</p>
+        <a class="btn" href="notes.html">오답 보러가기</a>
+      </div>
+      <div class="link-card">
+        <h3 style="margin:0;">상세 기록</h3>
+        <p class="mini">모든 세션을 필터/정렬</p>
+        <a class="btn" href="record.html">기록 관리</a>
+      </div>
+      <div class="link-card">
+        <h3 style="margin:0;">상점</h3>
+        <p class="mini">포인트로 보상을 받자!</p>
+        <a class="btn" href="shop.html">상점으로</a>
+      </div>
+    </section>
+  </main>
 
-    <main>
-      <!-- 홈 요약 -->
-      <section style="padding:8px 0;">
-        <div id="home-user" style="display:none;">
-          <b>내 포인트:</b> <span id="pointsCount">-</span>
-          &nbsp;/&nbsp;
-          <b>보상 보유:</b> <span id="rewardsCount">-</span>
-        </div>
-      </section>
-
-      <section class="goal-setting-section">
-        <h2>이번 주 학습 목표 설정하기 🎯</h2>
-        <div class="goal-box">
-          <div id="current-goal-display" style="display:none;">
-            <p><strong>이번 주 목표:</strong></p>
-            <ul id="current-goal-list"></ul>
-          </div>
-
-          <div id="new-goal-form">
-            <select id="goal-subject-select">
-              <option value="">-- 과목 선택 --</option>
-            </select>
-            <input type="number" id="goal-count-input" placeholder="문제 수" min="1" />
-            <button id="set-goal-button">목표 설정</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="today-study-section">
-        <div class="study-card">
-          <div class="card-header">
-            <h2>오늘의 학습 ✏️</h2>
-          </div>
-
-          <div class="card-content">
-            <div class="selection-box">
-              <label for="grade-select">학년 선택:</label>
-              <select name="grades" id="grade-select">
-                <option value="">-- 학년을 선택하세요 --</option>
-              </select>
-            </div>
-
-            <div class="selection-box">
-              <label for="subject-select">과목 선택:</label>
-              <select name="subjects" id="subject-select">
-                <option value="">-- 과목을 선택하세요 --</option>
-              </select>
-            </div>
-
-            <div class="selection-box">
-              <label for="count-select">문제 수 선택:</label>
-              <select name="counts" id="count-select">
-                <option value="10">10 문제</option>
-                <option value="20">20 문제</option>
-                <option value="30">30 문제</option>
-              </select>
-            </div>
-
-            <div class="selection-box">
-              <label for="timer-select">시간제한 (문제당):</label>
-              <select name="timers" id="timer-select">
-                <option value="0">무제한</option>
-                <option value="10">10초</option>
-                <option value="20">20초</option>
-                <option value="30">30초</option>
-                <option value="60">60초</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <a href="quiz.html" class="start-button" id="start-button">학습 시작하기!</a>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="main-footer">
-      <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-    </footer>
-  </div>
-
-  <!-- 페이지 전용 스크립트: 메인 로직/강제 로그아웃 헬퍼 -->
-  <script src="js/main.js?v=LOGIN_STRICT_3"></script>
-  <script src="js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <!-- 푸터 -->
+  <footer class="main-footer">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
 </body>
 </html>
-
-
-
