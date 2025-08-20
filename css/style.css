@@ -152,5 +152,48 @@ th button { background:none; border:none; font-weight:700; cursor:pointer; }
 #toast-message.incorrect {
   background: #b91c1c; /* 빨강 */
 }
+/* === SOI QUICK POLISH PACK: keep original skeleton, just align/spacing === */
+
+/* 1) 헤더/내비: 중앙 정렬 + 좌우 여백 정돈 */
+.main-header { position: static; }
+.main-nav ul { display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; }
+.main-nav a { display:inline-block; padding:8px 12px; border-radius:8px; }
+.main-nav li.active a, .main-nav a:hover { background:#eef4ff; color:#1f3b8f; }
+.mobile-menu-button { display:none; }
+
+/* 2) 공통 컨테이너 폭/간격(너무 넓거나 붙어 보이는 문제 방지) */
+.container { max-width: 980px; margin: 0 auto; padding: 16px; }
+h1, h2, h3 { margin: 0 0 12px; }
+section { margin: 12px 0; }
+
+/* 3) 카드/버튼/입력 기본 톤을 통일 */
+.card { background:#fff; border:1px solid #e5e5e5; border-radius:12px; padding:12px; }
+button, .btn { padding:10px 14px; border:1px solid #ddd; border-radius:12px; background:#fafafa; cursor:pointer; }
+button:hover, .btn:hover { background:#f3f4f6; }
+input, select { padding:8px; border:1px solid #ddd; border-radius:10px; }
+
+/* 4) 진행바/퀴즈 레이아웃 살짝 정돈 */
+.progress-bar{background:#f3f3f3;border-radius:8px;overflow:hidden;height:12px}
+.progress{height:100%;background:#7aa6ff;transition:width .2s}
+.passage-area{display:none} /* 지문 문제일 때만 JS가 표시 */
+.problem-area{width:100%}
+
+/* 5) 토스트 메시지(정답/오답 피드백) */
+#toast-message{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  padding:10px 14px;border-radius:10px;background:#333;color:#fff;
+  opacity:0;transition:.2s;z-index:1000
+}
+#toast-message.show{opacity:1}
+#toast-message.correct{background:#0a7f2e}
+#toast-message.incorrect{background:#b91c1c}
+
+/* 6) 모바일에서만 메뉴 버튼 보이기(원래 뼈대 유지) */
+@media (max-width: 860px){
+  .mobile-menu-button{display:inline-block;border:1px solid #ddd;background:#fff;border-radius:8px;padding:6px 10px}
+  .main-nav ul{display:none}
+  .main-nav.open ul{display:flex;background:#fff;padding:8px;border:1px solid #e5e5e5;border-radius:12px}
+}
+
 
 
