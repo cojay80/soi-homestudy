@@ -14,6 +14,8 @@
   <script src="/js/core-auth-store.js?v=LS_PERSIST_1"></script>
   <script src="/js/api-shim.js"></script>
   <script src="/js/sheets.js"></script>
+  <script src="/js/soi-store.js"></script>
+<style>.soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}</style>
 
   <!-- URL에 ?reset=1 이면 캐시/세션 정리 후 index로 복귀 -->
   <script>
@@ -69,6 +71,7 @@
           <li><a href="record.html">상세 기록</a></li>
           <li><a href="notes.html">오답 노트</a></li>
           <li><a href="shop.html">상점</a></li>
+          <span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span>
         </ul>
       </nav>
 
@@ -78,7 +81,7 @@
       </div>
 
       <button class="mobile-menu-button" aria-label="메뉴 열기/닫기">☰</button>
-    </header>
+       </header>
 
     <!--
       ⚠️ 중요: 헤더 HTML 바로 뒤에 header.js를 로드해야
@@ -173,5 +176,6 @@
   <script src="js/logout.js?v=LOGOUT_FORCE_2"></script>
 </body>
 </html>
+
 
 
