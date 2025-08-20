@@ -123,3 +123,11 @@ th button { background:none; border:none; font-weight:700; cursor:pointer; }
 @media (max-width:640px){
   .grid { grid-template-columns:1fr !important; }
 }
+/* === quick override: keep original top-centered nav === */
+.main-header { position: static; }              /* 고정 헤더 싫다면 기본 흐름으로 */
+.main-nav ul { justify-content: center; }       /* 메뉴 중앙 정렬 */
+.main-nav a { padding: 8px 12px; }              /* 여백 조금 더 */
+@media (max-width: 860px){
+  .main-nav.open ul { width: 100%; }            /* 모바일 펼침 가독성 유지 */
+}
+
