@@ -130,4 +130,27 @@ th button { background:none; border:none; font-weight:700; cursor:pointer; }
 @media (max-width: 860px){
   .main-nav.open ul { width: 100%; }            /* 모바일 펼침 가독성 유지 */
 }
+#toast-message {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #333;
+  color: #fff;
+  opacity: 0;
+  transition: .2s;
+  z-index: 1000; /* 다른 요소 위에 표시 */
+}
+#toast-message.show {
+  opacity: 1;
+}
+#toast-message.correct {
+  background: #0a7f2e; /* 초록 */
+}
+#toast-message.incorrect {
+  background: #b91c1c; /* 빨강 */
+}
+
 
