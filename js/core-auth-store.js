@@ -1,122 +1,67 @@
-// js/core-auth-store.js — localStorage 영구 저장 버전 (브라우저 전용)
-// 기존 코드 전체 교체해도 됩니다.
+// js/core-auth-store.js — 간단 사용자 보장/초기화 최종본
+// 역할:
+//  - currentUser 확보 (URL ?user=, 기존 값, 없으면 기본값 '소이')
+//  - 페이지 공통 초기화(필요 키 보정)
+//  - 환영 문구/포인트 뱃지 동기화는 header.js가 처리
 
 (function () {
-  const DB_PREFIX = 'soi_user_';    // 개별 사용자 데이터 키 접두사
-  const KEY_UID   = 'soi_uid';      // 현재 로그인한 UID 저장
-  const KEY_NAME  = 'soi_name';     // 화면용 이름 (이미 사용 중)
+  function qs(sel, root=document){ return root.querySelector(sel); }
+  function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
 
-  // 기본 문서 스키마 (앱 전역 호환)
-  function defaultDoc(uid, name = '') {
-    return {
-      uid,
-      name,                // 표시 이름
-      points: 0,           // 포인트 합계
-      rewards: {},         // 아이템(상점/드랍)
-      goals: [],           // {subject, count}
-      records: [],         // {date, grade, subject, score}
-      incorrect: [],       // 오답 문제 배열
-      logs: []             // 활동 로그
-    };
+  // URL 파라미터 읽기
+  const params = new URLSearchParams(location.search);
+  const userFromUrl = (params.get('user') || '').trim();
+
+  // 1) 사용자 보장
+  let currentUser = localStorage.getItem('currentUser');
+  if (userFromUrl) {
+    currentUser = userFromUrl;
+    localStorage.setItem('currentUser', currentUser);
+  }
+  if (!currentUser) {
+    // 최초 방문 등: 기본값 할당
+    currentUser = '소이';
+    localStorage.setItem('currentUser', currentUser);
   }
 
-  function readDoc(uid) {
-    try {
-      const raw = localStorage.getItem(DB_PREFIX + uid);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      // 과거 필드가 없던 경우를 대비해 스키마 보정
-      const merged = { ...defaultDoc(uid), ...parsed };
-      return merged;
-    } catch (e) {
-      console.error('[SoiStore] readDoc error:', e);
-      return null;
+  // 2) 기본 키 보정(없으면 합리적 기본값 세팅)
+  if (!localStorage.getItem('selectedCount'))  localStorage.setItem('selectedCount', '10');
+  if (!localStorage.getItem('selectedTimer'))  localStorage.setItem('selectedTimer', '0');
+  if (!localStorage.getItem('soi:points'))     localStorage.setItem('soi:points', '0');
+  if (!localStorage.getItem('soi:inventory'))  localStorage.setItem('soi:inventory', '{}');
+
+  // 3) studyData 구조 보장
+  try {
+    const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
+    if (!sd[currentUser]) {
+      sd[currentUser] = { incorrect: [], records: [] };
+      localStorage.setItem('studyData', JSON.stringify(sd));
+    } else {
+      // 필수 필드 보정
+      sd[currentUser].incorrect = Array.isArray(sd[currentUser].incorrect) ? sd[currentUser].incorrect : [];
+      sd[currentUser].records   = Array.isArray(sd[currentUser].records)   ? sd[currentUser].records   : [];
+      localStorage.setItem('studyData', JSON.stringify(sd));
     }
+  } catch {
+    const fix = {};
+    fix[currentUser] = { incorrect: [], records: [] };
+    localStorage.setItem('studyData', JSON.stringify(fix));
   }
 
-  function writeDoc(uid, doc) {
+  // 4) 페이지 진입 시 서버 동기화(선택): 너무 잦은 호출 방지용 딜레이 최소화
+  //    - 실패해도 조용히 무시, 로컬 우선
+  (async function syncOnce() {
+    if (!window.API || !window.API.loadUserData) return;
     try {
-      const safe = { ...defaultDoc(uid), ...doc, uid };
-      localStorage.setItem(DB_PREFIX + uid, JSON.stringify(safe));
-      return safe;
+      await window.API.loadUserData(currentUser);
+      // 포인트 뱃지 즉시 갱신(서버와 무관)
+      qsa('[data-soi-points]').forEach(el => el.textContent = localStorage.getItem('soi:points') || '0');
+      const wm = qs('#welcome-message');
+      if (wm) wm.textContent = `안녕, ${currentUser}!`;
     } catch (e) {
-      console.error('[SoiStore] writeDoc error:', e);
-      return doc;
+      // 조용히 패스
+      // console.warn('[core-auth-store] 초기 동기화 실패:', e?.message||e);
     }
-  }
+  })();
 
-  async function getUserDoc(uid) {
-    if (!uid) throw new Error('getUserDoc: uid required');
-    const doc = readDoc(uid);
-    if (doc) return doc;
-    // 최초 생성
-    const name = (localStorage.getItem(KEY_NAME) || '').trim();
-    return writeDoc(uid, defaultDoc(uid, name));
-  }
-
-  async function setUserDoc(uid, data) {
-    if (!uid) throw new Error('setUserDoc: uid required');
-    const existing = readDoc(uid) || defaultDoc(uid);
-    return writeDoc(uid, { ...existing, ...data });
-  }
-
-  async function pushLog(uid, entry) {
-    if (!uid) throw new Error('pushLog: uid required');
-    const doc = await getUserDoc(uid);
-    const logs = Array.isArray(doc.logs) ? [...doc.logs] : [];
-    logs.push({ ...entry, timestamp: new Date().toISOString() });
-    return writeDoc(uid, { ...doc, logs });
-  }
-
-  // --- 인증 흉내 (로컬 고정 사용자) ---
-  let _currentUser = null;
-
-  function ensureUid(email) {
-    // email이 local@demo.com이면 고정 uid를 사용해 세션간 연속성 유지
-    if (email && email.startsWith('local@')) return 'local-user-0001';
-    // 그 외는 저장된 값 있으면 재사용
-    return localStorage.getItem(KEY_UID) || 'local-user-0001';
-  }
-
-  async function signIn(email = 'local@demo.com', password = 'local-demo') {
-    const uid = ensureUid(email);
-    const name = (localStorage.getItem(KEY_NAME) || '').trim();
-    // 문서 생성/보정
-    const doc = await getUserDoc(uid);
-    const next = (name && !doc.name) ? await setUserDoc(uid, { ...doc, name }) : doc;
-
-    localStorage.setItem(KEY_UID, uid);
-    _currentUser = { uid, name: next.name || name || '' };
-    return _currentUser;
-  }
-
-  async function currentUser() {
-    if (_currentUser) return _currentUser;
-    const uid = localStorage.getItem(KEY_UID);
-    const name = (localStorage.getItem(KEY_NAME) || '').trim();
-    if (!uid) return null;
-    const doc = await getUserDoc(uid);
-    _currentUser = { uid, name: doc.name || name || '' };
-    return _currentUser;
-  }
-
-  async function signOut() {
-    try {
-      // 문서는 남겨두고, 세션만 끊음
-      localStorage.removeItem(KEY_UID);
-      _currentUser = null;
-    } catch (e) {
-      console.warn('[SoiStore] signOut error:', e);
-    }
-  }
-
-  // 전역 노출
-  window.SoiStore = {
-    getUserDoc,
-    setUserDoc,
-    pushLog,
-    signIn,
-    currentUser,
-    signOut
-  };
 })();
