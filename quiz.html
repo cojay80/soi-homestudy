@@ -9,16 +9,13 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
-  <!-- 공통: 순서 유지 + defer -->
+  <!-- 공통: 순서 유지 + defer (CONFIG가 반드시 최상단) -->
   <script src="/js/config.js" defer></script>
   <script src="/js/core-auth-store.js" defer></script>
   <script src="/js/api-shim.js" defer></script>
 
-  <!-- 문제 불러오기(구글시트 파서 등) -->
-  <script src="/js/sheets.js" defer></script>
-
-  <!-- (선택) 부가 스크립트 -->
-  <script src="/js/drop.js" defer></script>
+  <!-- (선택) 부가 스크립트 - 필요 없으면 주석/삭제 -->
+  <!-- <script src="/js/drop.js" defer></script> -->
 
   <!-- ✅ 정답 보상(포인트+랜덤드랍) 먼저 로드 -->
   <script src="/js/rewards.js?v=RW1" defer></script>
@@ -45,7 +42,7 @@
 
           <div class="question-box">
             <img id="question-image" alt="문제 이미지" style="display:none;" />
-            <p class="question-text">문제를 불러오는 중입니다...</p>
+            <p class="question-text" aria-live="polite">문제를 불러오는 중입니다...</p>
           </div>
 
           <div class="answer-options">
