@@ -289,3 +289,37 @@ function waitFor(cond, timeout=5000, interval=50) {
     })();
   });
 }
+
+// --- 학습 시작 버튼: 선택값 저장 후 이동 (모바일 보장 버전) ---
+(function attachStartHandler(){
+  const btn = document.getElementById('start-button') || document.querySelector('.start-button');
+  if (!btn) return;
+
+  btn.addEventListener('click', (e) => {
+    // a 태그 기본 이동을 막고 우리가 먼저 저장 처리
+    e.preventDefault();
+
+    const grade   = document.getElementById('grade-select')?.value || '';
+    const subject = document.getElementById('subject-select')?.value || '';
+    const count   = document.getElementById('count-select')?.value || '10';
+    const timer   = document.getElementById('timer-select')?.value || '0';
+
+    if (!grade || !subject) {
+      alert('학년과 과목을 선택해주세요!');
+      return;
+    }
+
+    try {
+      localStorage.setItem('selectedGrade', grade);
+      localStorage.setItem('selectedSubject', subject);
+      localStorage.setItem('selectedCount', String(count));
+      localStorage.setItem('selectedTimer', String(timer));
+    } catch (err) {
+      console.warn('localStorage 실패:', err);
+    }
+
+    // 확실한 이동 (캐시 무력화 파라미터로 모바일 새로고침 효과)
+    const v = Date.now();
+    location.href = `quiz.html?v=${v}`;
+  }, { passive: false });
+})();
