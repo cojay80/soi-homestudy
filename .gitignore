@@ -1,0 +1,4 @@
+# --- protect secrets ---
+.env
+.env.*
+!.env.example
