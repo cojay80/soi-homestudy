@@ -1,71 +1,53 @@
-// server.js (완성본, CommonJS)
-// Render/Heroku 스타일 포트 바인딩 + 헬스체크 + 안전한 정적 서빙
+// server.js - Render 환경에서 동작하는 안전한 최소 버전
 
-'use strict';
-
-const express = require('express');
 const path = require('path');
-const compression = require('compression');
-const morgan = require('morgan');
+const express = require('express');
+const mongoose = require('mongoose');
 
 const app = express();
 
-// Render 프록시 뒤라면 신뢰(실제 클라이언트 IP 파악)
-app.set('trust proxy', 1);
+// Render가 지정한 포트 우선 사용 (없으면 10000)
+const PORT = Number(process.env.PORT) || 10000;
+// Render 대시보드에 넣을 MongoDB 접속 문자열
+const MONGODB_URI = process.env.MONGODB_URI || '';
 
-// 압축 & 간단 로깅
-app.use(compression());
-app.use(morgan('tiny'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// 헬스체크 (Render Health Check에서 /healthz 설정)
-app.get('/healthz', (_req, res) => {
-  res.status(200).type('text/plain').send('ok');
+// 정적 파일 서빙: 레포 루트(index.html 등)
+app.use(express.static(path.join(__dirname)));
+
+// 헬스체크 (배포 확인용)
+app.get('/health', (req, res) => {
+  res.json({ ok: true, env: process.env.NODE_ENV || 'development' });
 });
 
-// 캐시 정책: HTML은 no-cache, 정적 에셋은 장기 캐시
-app.use((req, res, next) => {
-  const url = req.url.split('?')[0];
+// DB 연결 테스트용 간단 모델
+const pingSchema = new mongoose.Schema({
+  at: { type: Date, default: Date.now },
+});
+const Ping = mongoose.model('Ping', pingSchema);
 
-  if (/\.(?:js|css|png|jpg|jpeg|webp|gif|svg|ico|woff2?|ttf|eot)$/.test(url)) {
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1y
-  } else if (url === '/' || /\.html?$/.test(url)) {
-    res.setHeader('Cache-Control', 'no-cache');
+async function connectDB() {
+  if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI 환경변수가 없습니다. Render 대시보드 > Environment에서 설정하세요.');
+    return;
   }
-  next();
-});
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000, // 10초 안에 접속 안 되면 실패
+    });
+    console.log('✅ MongoDB 연결 성공');
+    // 아주 간단한 쓰기 테스트
+    await Ping.create({});
+    console.log('✅ 간단한 쓰기 테스트 성공 (pings 컬렉션에 문서 1개 추가)');
+  } catch (err) {
+    console.error('❌ MongoDB 연결 실패:', err.message);
+  }
+}
 
-// 정적 파일 화이트리스트 서빙 (server.js 같은 내부 파일 노출 방지)
-const ROOT = path.resolve(__dirname);
-
-const staticOpts = {
-  etag: true,
-  // maxAge는 위 캐시 미들웨어로 제어하므로 여기선 기본값 사용
-};
-
-app.use('/css', express.static(path.join(ROOT, 'css'), staticOpts));
-app.use('/js', express.static(path.join(ROOT, 'js'), staticOpts));
-app.use('/images', express.static(path.join(ROOT, 'images'), staticOpts));
-app.use('/pages', express.static(path.join(ROOT, 'pages'), staticOpts));
-
-// 루트/인덱스
-app.get(['/', '/index.html'], (_req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
-});
-
-// (선택) SPA 라우팅이 필요한 경우, 아래 주석 해제
-// app.get('*', (_req, res) => {
-//   res.sendFile(path.join(ROOT, 'index.html'));
-// });
-
-// 404 핸들러 (정적/정의된 라우트 외)
-app.use((_req, res) => {
-  res.status(404).type('text/plain').send('Not Found');
-});
-
-// 포트 바인딩: Render가 제공하는 PORT 사용 (없으면 3000)
-const PORT = Number(process.env.PORT) || 3000;
-const HOST = '0.0.0.0';
-
-app.listen(PORT, HOST, () => {
+// 서버 시작 후 DB 연결 시도
+app.listen(PORT, () => {
   console.log(`soi-homestudy running on port ${PORT}`);
+  connectDB();
 });
