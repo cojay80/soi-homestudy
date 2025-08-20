@@ -5,23 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>상점 - 소이의 공부방</title>
 
+  <!-- 폰트 / 공통 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
   <!-- 공통 스크립트 (순서 유지) -->
   <script src="/js/config.js"></script>
   <script src="/js/core-auth-store.js"></script>
   <script src="/js/api-shim.js"></script>
-<script src="/js/soi-store.js"></script>
-<style>.soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}</style>
+
+  <!-- 포인트/인벤토리 로컬 저장소 + 뱃지 스타일 -->
+  <script src="/js/soi-store.js"></script>
+  <style>
+    .soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}
+    .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+    .card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
+    .card h3{margin:0;font-size:16px}
+    .card .price{font-weight:700}
+    .card button{margin-top:6px;padding:8px;border-radius:10px;border:1px solid #ddd;cursor:pointer;background:#fafafa}
+    .info-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  </style>
 
   <!-- 로그아웃/헤더/상점 -->
   <script src="/js/logout.js?v=LOGOUT_FORCE_2"></script>
   <script src="/js/header.js?v=HDR_MINIMAL_3"></script>
   <script src="/js/shop.js?v=SHOP_1"></script>
+
+  <noscript>
+    <style>.container{max-width:920px;margin:0 auto;padding:16px}</style>
+  </noscript>
 </head>
 <body>
+  <!-- 고정 헤더 -->
   <header class="main-header">
     <div class="logo">
       <a href="index.html">소이의 공부방 🎨</a>
@@ -33,31 +49,35 @@
         <li><a href="goal.html">나의 목표</a></li>
         <li><a href="record.html">상세 기록</a></li>
         <li><a href="notes.html">오답 노트</a></li>
-        <li><a href="shop.html">상점</a></li>
-     <span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span>
-
+        <li class="active"><a href="shop.html">상점</a></li>
+        <!-- 포인트 뱃지는 <li>로 감싸서 HTML 구조를 안전하게 -->
+        <li><span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
     <div class="user-info">
       <span id="welcome-message"></span>
       <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
     </div>
-    <button class="mobile-menu-button">☰</button>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
 
+  <!-- 본문 -->
   <main class="container" style="max-width:920px;margin:0 auto;padding:16px;">
     <h1>상점 🛍️</h1>
 
+    <!-- 상단 정보: shop.js가 여기 값을 채움 -->
     <section class="info-row" style="margin:12px 0;">
-      <div><b>내 포인트:</b> <span id="shop-points">0</span></div>
+      <div><b>내 포인트:</b> <span id="shop-points">0</span>p</div>
       <div><b>보유 보상:</b> <span id="shop-inventory">없음</span></div>
     </section>
 
-    <section class="shop-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+    <!-- 아이템 그리드: shop.js가 카드들을 주입 -->
+    <section class="shop-grid">
       <div id="shop-items"></div>
     </section>
   </main>
 
+  <!-- 푸터 -->
   <footer class="main-footer">
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
