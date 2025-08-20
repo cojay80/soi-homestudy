@@ -1,68 +1,140 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학습 기록 - 소이의 공부방</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-<script src="/js/config.js"></script>
-<script src="/js/core-auth-store.js"></script>
-<script src="/js/api-shim.js"></script>
-<script src="/js/soi-store.js"></script>
-<style>.soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>상세 기록 - 소이의 공부방</title>
 
+  <!-- 폰트 / 공통 스타일 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+
+  <!-- 공통 스크립트 (순서 유지) -->
+  <script src="/js/config.js"></script>
+  <script src="/js/core-auth-store.js"></script>
+  <script src="/js/api-shim.js"></script>
+
+  <!-- 포인트/인벤토리(로컬) -->
+  <script src="/js/soi-store.js"></script>
+
+  <!-- 헤더/로그아웃 -->
+  <script src="/js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <script src="/js/header.js?v=HDR_MINIMAL_3"></script>
+
+  <!-- 기록 전용 -->
+  <script src="/js/record.js?v=RECORD_1"></script>
+
+  <style>
+    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+    .toolbar .spacer{flex:1}
+    .mini{color:#666;font-size:13px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:14px;white-space:nowrap}
+    th button{background:none;border:none;cursor:pointer;font-weight:700}
+    .pagination{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:10px}
+    .pagination button{padding:6px 10px;border:1px solid #ddd;border-radius:8px;background:#fafafa;cursor:pointer}
+    input,select{padding:6px;border:1px solid #ddd;border-radius:8px}
+    .sum{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:8px 0}
+    .sum .k{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:8px 10px}
+  </style>
 </head>
 <body>
-<header class="main-header">
+  <!-- 고정 헤더 -->
+  <header class="main-header">
     <div class="logo">
-        <a href="index.html">소이의 공부방 🎨</a>
+      <a href="index.html">소이의 공부방 🎨</a>
     </div>
-
     <nav class="main-nav">
-        <ul>
-            <li><a href="index.html">오늘의 학습</a></li>
-            <li><a href="report.html">학습 보고서</a></li>
-            <li><a href="goal.html">나의 목표</a></li>
-            <li><a href="record.html">상세 기록</a></li>
-            <li><a href="notes.html">오답 노트</a></li>
-            <li><a href="shop.html">상점</a></li>
-       <span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span>
-
-        </ul>
+      <ul>
+        <li><a href="index.html">오늘의 학습</a></li>
+        <li><a href="report.html">학습 보고서</a></li>
+        <li><a href="goal.html">나의 목표</a></li>
+        <li class="active"><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
+      </ul>
     </nav>
-
     <div class="user-info">
-        <span id="welcome-message"></span>
-        <a href="#" id="logout-button">(로그아웃)</a>
+      <span id="welcome-message"></span>
+      <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
     </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+  </header>
 
-    <button class="mobile-menu-button">☰</button>
-</header>
-    <main class="record-container">
-        <h1>나의 학습 다이어리 📔</h1>
-        <table class="record-table">
-            <thead>
-                <tr>
-                    <th>날짜</th>
-                    <th>학년</th>
-                    <th>과목</th>
-                    <th>점수</th>
-                </tr>
-            </thead>
-            <tbody id="record-list-body">
-                </tbody>
-        </table>
-    </main>
+  <!-- 본문 -->
+  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+    <h1>상세 기록 📒</h1>
+    <p class="mini">퀴즈 종료 시 저장된 모든 세션을 확인하고 관리합니다.</p>
 
-    <footer class="main-footer">
-        <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-    </footer>
+    <!-- 필터/도구 -->
+    <section class="toolbar">
+      <label class="mini">시작일 <input type="date" id="f-start"></label>
+      <label class="mini">종료일 <input type="date" id="f-end"></label>
+      <label class="mini">학년
+        <select id="f-grade">
+          <option value="">전체</option>
+        </select>
+      </label>
+      <label class="mini">과목
+        <select id="f-subject">
+          <option value="">전체</option>
+        </select>
+      </label>
+      <div class="spacer"></div>
+      <button id="btn-export" title="현재 필터 결과를 CSV로 저장">CSV 내보내기</button>
+      <button id="btn-del-selected" class="danger" title="선택된 행 삭제">선택 삭제</button>
+      <button id="btn-del-all" class="danger" title="모든 세션 삭제">전체 삭제</button>
+    </section>
 
-    <script src="js/header.js"></script> <script src="js/record.js"></script>
+    <!-- 합계 -->
+    <section class="sum">
+      <div class="k mini">세션 수: <b id="sum-sessions">0</b></div>
+      <div class="k mini">총 문항: <b id="sum-total">0</b></div>
+      <div class="k mini">정답 수: <b id="sum-correct">0</b></div>
+      <div class="k mini">평균 정답률: <b id="sum-acc">0%</b></div>
+    </section>
+
+    <!-- 표 -->
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="cb-all"></th>
+            <th>날짜</th>
+            <th>학년</th>
+            <th>과목</th>
+            <th>점수</th>
+            <th>정답수/총문항</th>
+            <th>
+              <button id="btn-sort-acc" aria-label="정답률 정렬 토글">정답률 ⮟</button>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="rec-body">
+          <tr><td colspan="7" class="mini">기록이 없습니다.</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button id="p-prev">이전</button>
+        <span class="mini" id="p-info">1 / 1</span>
+        <button id="p-next">다음</button>
+        <label class="mini">페이지당
+          <select id="p-size">
+            <option>10</option>
+            <option selected>20</option>
+            <option>50</option>
+          </select>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="main-footer">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
 </body>
-
 </html>
-
-
-
