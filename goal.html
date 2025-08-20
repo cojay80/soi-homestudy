@@ -1,58 +1,143 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나의 목표 - 소이의 공부방</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-<script src="/js/config.js"></script>
-<script src="/js/core-auth-store.js"></script>
-<script src="/js/api-shim.js"></script>
-<script src="/js/drop.js"></script>
-<script src="/js/soi-store.js"></script>
-<style>.soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>나의 목표 - 소이의 공부방</title>
 
+  <!-- 폰트 / 공통 스타일 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+
+  <!-- 공통 스크립트 (순서 유지) -->
+  <script src="/js/config.js"></script>
+  <script src="/js/core-auth-store.js"></script>
+  <script src="/js/api-shim.js"></script>
+
+  <!-- 포인트/인벤토리(로컬) -->
+  <script src="/js/soi-store.js"></script>
+
+  <!-- 헤더/로그아웃 -->
+  <script src="/js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <script src="/js/header.js?v=HDR_MINIMAL_3"></script>
+
+  <!-- 목표 전용 -->
+  <script src="/js/goal.js?v=GOAL_1"></script>
+
+  <style>
+    .badge { padding:.2rem .5rem; border:1px solid #ddd; border-radius:999px; font-weight:600 }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px }
+    .card { border:1px solid #e5e5e5; border-radius:12px; padding:12px; background:#fff }
+    .mini { color:#666; font-size:13px }
+    .kpi { font-size:22px; font-weight:700 }
+    .barwrap { background:#f3f3f3; border-radius:8px; overflow:hidden; height:14px }
+    .bar { height:100%; background:#7aa6ff }
+    label.inline { display:flex; align-items:center; gap:8px; }
+    input[type=number]{ width:96px; padding:6px; border:1px solid #ddd; border-radius:8px; }
+    button.btn { padding:8px 12px; border:1px solid #ddd; border-radius:10px; background:#fafafa; cursor:pointer }
+    .ok { color:#0a7f2e; font-weight:700 }
+  </style>
 </head>
 <body>
-    <header class="main-header">
-        <div class="logo">
-            <a href="index.html">소이의 공부방 🎨</a>
+  <!-- 고정 헤더 -->
+  <header class="main-header">
+    <div class="logo">
+      <a href="index.html">소이의 공부방 🎨</a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">오늘의 학습</a></li>
+        <li><a href="report.html">학습 보고서</a></li>
+        <li class="active"><a href="goal.html">나의 목표</a></li>
+        <li><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
+    </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+  </header>
+
+  <!-- 본문 -->
+  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+    <h1>나의 목표 🎯</h1>
+    <p class="mini">목표를 정하고 달성하면 보상을 받아요. (퀴즈 종료 시 저장된 기록을 기준으로 집계)</p>
+
+    <!-- 설정 -->
+    <section class="card" style="margin:12px 0;">
+      <h2 style="margin:0 0 8px;">목표 설정</h2>
+      <div class="grid">
+        <div>
+          <h3 style="margin:0 0 6px;">일일 목표</h3>
+          <label class="inline mini">문항 수
+            <input type="number" id="goal-daily-questions" min="0" step="1" value="20">
+          </label>
+          <label class="inline mini">포인트
+            <input type="number" id="goal-daily-points" min="0" step="1" value="10">
+          </label>
         </div>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="index.html">오늘의 학습</a></li>
-                <li><a href="report.html">학습 보고서</a></li>
-                <li><a href="goal.html" class="active">나의 목표</a></li>
-                <li><a href="record.html">상세 기록</a></li>
-                <li><a href="notes.html">오답 노트</a></li>
-                <li><a href="shop.html">상점</a></li>
-            <span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span>
-            </ul>
-        </nav>
-        <div class="user-info">
-            <span id="welcome-message"></span>
-            <a href="#" id="logout-button">(로그아웃)</a>
+        <div>
+          <h3 style="margin:0 0 6px;">주간 목표</h3>
+          <label class="inline mini">세션 수
+            <input type="number" id="goal-weekly-sessions" min="0" step="1" value="7">
+          </label>
+          <label class="inline mini">정답률(%) 
+            <input type="number" id="goal-weekly-acc" min="0" max="100" step="1" value="70">
+          </label>
         </div>
-        <button class="mobile-menu-button">☰</button>
-    </header>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" id="btn-goal-save">저장</button>
+        <button class="btn" id="btn-goal-reset">초기화</button>
+        <span id="goal-save-state" class="mini"></span>
+      </div>
+    </section>
 
-    <main class="goal-container">
-        <h1>나의 목표 달성도</h1>
-        <div id="goal-progress-container">
-            </div>
-    </main>
+    <!-- 진행 상황 -->
+    <section class="grid" style="margin:12px 0;">
+      <article class="card">
+        <div class="mini">오늘 푼 문항</div>
+        <div class="kpi"><span id="today-questions">0</span> / <span id="today-questions-goal">0</span></div>
+        <div class="barwrap"><div id="bar-today-questions" class="bar" style="width:0%"></div></div>
+      </article>
+      <article class="card">
+        <div class="mini">오늘 획득 포인트</div>
+        <div class="kpi"><span id="today-points">0</span> / <span id="today-points-goal">0</span></div>
+        <div class="barwrap"><div id="bar-today-points" class="bar" style="width:0%"></div></div>
+      </article>
+      <article class="card">
+        <div class="mini">이번 주 세션 수</div>
+        <div class="kpi"><span id="week-sessions">0</span> / <span id="week-sessions-goal">0</span></div>
+        <div class="barwrap"><div id="bar-week-sessions" class="bar" style="width:0%"></div></div>
+      </article>
+      <article class="card">
+        <div class="mini">이번 주 평균 정답률</div>
+        <div class="kpi"><span id="week-acc">0%</span> / <span id="week-acc-goal">0%</span></div>
+        <div class="barwrap"><div id="bar-week-acc" class="bar" style="width:0%"></div></div>
+      </article>
+    </section>
 
-    <footer class="main-footer">
-        <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-    </footer>
+    <!-- 달성 상태 / 보상 -->
+    <section class="card" style="margin:12px 0;">
+      <h2 style="margin:0 0 8px;">달성 현황 & 보상</h2>
+      <ul style="margin:0; padding-left:18px;">
+        <li id="state-daily-questions">일일 문항: —</li>
+        <li id="state-daily-points">일일 포인트: —</li>
+        <li id="state-week-sessions">주간 세션: —</li>
+        <li id="state-week-acc">주간 정답률: —</li>
+      </ul>
+      <div class="mini" style="margin-top:8px;">* 각 목표는 최초 달성 시 1회 보상됩니다. (일일 보상은 매일 갱신)</div>
+    </section>
+  </main>
 
-    <script src="js/header.js"></script>
-    <script src="js/goal.js"></script>
+  <!-- 푸터 -->
+  <footer class="main-footer">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
 </body>
-
 </html>
-
-
-
-
