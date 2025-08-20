@@ -350,6 +350,46 @@ input, select { padding:8px; border:1px solid #ddd; border-radius:10px; }
 @media (max-width: 480px){
   .main-nav ul { gap: 12px; }
 }
+/* 헤더를 Flexbox 컨테이너로 지정 */
+.main-header {
+  display: flex; /* 자식 요소들을 유연하게 배치 */
+  justify-content: space-between; /* 양쪽 끝으로 최대한 밀어내기 */
+  align-items: center; /* 세로 방향으로 가운데 정렬 */
+  padding: 1rem; /* 내부 여백 */
+  border-bottom: 1px solid #eee;
+}
+
+/* 네비게이션 메뉴도 Flexbox로 정렬 (선택 사항) */
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1rem; /* 메뉴 아이템 사이의 간격 */
+}
+/* 카드/아이템 목록을 담는 컨테이너에 적용할 스타일 */
+.card-container { /* 이 클래스 이름을 실제 사용하는 컨테이너에 맞게 바꿔줘. 예: .shop-grid */
+  display: grid;
+  /* 마법의 한 줄: 자동으로 칸 수를 조절해 줌 */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem; /* 카드 사이의 간격 */
+  padding: 1rem;
+}
+html, body {
+  height: 100%; /* html과 body가 화면 전체 높이를 차지하도록 설정 */
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column; /* 자식 요소들을 세로로 쌓기 */
+}
+
+/* 메인 콘텐츠 영역이 남는 공간을 모두 차지하도록 설정 */
+main.container {
+  flex-grow: 1;
+}
+
 
 
 
