@@ -1,77 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>주간 학습 보고서 - 소이의 공부방</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-<script src="/js/config.js"></script>
-<script src="/js/core-auth-store.js"></script>
-<script src="/js/api-shim.js"></script>
-<script src="/js/soi-store.js"></script>
-<style>.soi-points-badge{padding:.2rem .5rem;border-radius:999px;border:1px solid #ddd;font-weight:600}</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>학습 보고서 - 소이의 공부방</title>
 
+  <!-- 폰트 / 공통 스타일 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+
+  <!-- 공통 스크립트 (순서 유지) -->
+  <script src="/js/config.js"></script>
+  <script src="/js/core-auth-store.js"></script>
+  <script src="/js/api-shim.js"></script>
+
+  <!-- 포인트/인벤토리(로컬) -->
+  <script src="/js/soi-store.js"></script>
+
+  <!-- 헤더/로그아웃 -->
+  <script src="/js/logout.js?v=LOGOUT_FORCE_2"></script>
+  <script src="/js/header.js?v=HDR_MINIMAL_3"></script>
+
+  <!-- 리포트 전용 -->
+  <script src="/js/report.js?v=REPORT_1"></script>
+
+  <style>
+    .badge { padding:.2rem .5rem; border:1px solid #ddd; border-radius:999px; font-weight:600 }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px }
+    .card { border:1px solid #e5e5e5; border-radius:12px; padding:12px; background:#fff }
+    .kpi { font-size:26px; font-weight:700 }
+    .mini { color:#666; font-size:13px }
+    .barwrap { background:#f3f3f3; border-radius:8px; overflow:hidden; height:12px }
+    .bar { height:100%; background:#7aa6ff }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:8px; border-bottom:1px solid #eee; text-align:left; font-size:14px }
+    th { background:#fafafa }
+  </style>
 </head>
 <body>
-<header class="main-header">
+  <!-- 고정 헤더 -->
+  <header class="main-header">
     <div class="logo">
-        <a href="index.html">소이의 공부방 🎨</a>
+      <a href="index.html">소이의 공부방 🎨</a>
     </div>
-
     <nav class="main-nav">
-        <ul>
-            <li><a href="index.html">오늘의 학습</a></li>
-            <li><a href="report.html">학습 보고서</a></li>
-            <li><a href="goal.html">나의 목표</a></li>
-            <li><a href="record.html">상세 기록</a></li>
-            <li><a href="notes.html">오답 노트</a></li>
-            <li><a href="shop.html">상점</a></li>
-        <span class="soi-points-badge">포인트: <b data-soi-points>0</b>p</span>
-
-        </ul>
+      <ul>
+        <li><a href="index.html">오늘의 학습</a></li>
+        <li class="active"><a href="report.html">학습 보고서</a></li>
+        <li><a href="goal.html">나의 목표</a></li>
+        <li><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
+      </ul>
     </nav>
-
     <div class="user-info">
-        <span id="welcome-message"></span>
-        <a href="#" id="logout-button">(로그아웃)</a>
+      <span id="welcome-message"></span>
+      <a href="index.html?reset=1" id="logout-button">(로그아웃)</a>
     </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+  </header>
 
-    <button class="mobile-menu-button">☰</button>
-</header>
-    <main class="report-container">
-        <h1>주간 학습 보고서 📊</h1>
-        <p class="report-period">최근 7일간의 학습 기록입니다.</p>
+  <!-- 본문 -->
+  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+    <h1>학습 보고서 📊</h1>
+    <p class="mini">최근 <b>7일</b> 기준 요약입니다. (퀴즈 종료 시 저장된 기록 기준)</p>
 
-        <div class="summary-grid">
-            <div class="summary-box">
-                <h3>총 푼 문제</h3>
-                <p id="total-problems">0개</p>
-            </div>
-            <div class="summary-box">
-                <h3>총 정답 수</h3>
-                <p id="total-correct">0개</p>
-            </div>
-            <div class="summary-box">
-                <h3>평균 점수</h3>
-                <p id="average-score">0점</p>
-            </div>
-        </div>
+    <!-- KPI -->
+    <section class="grid" style="margin:12px 0;">
+      <article class="card">
+        <div class="mini">총 푼 문항(7일)</div>
+        <div id="kpi-total" class="kpi">0</div>
+      </article>
+      <article class="card">
+        <div class="mini">정답률(7일)</div>
+        <div id="kpi-acc" class="kpi">0%</div>
+      </article>
+      <article class="card">
+        <div class="mini">획득 포인트(누적)</div>
+        <div id="kpi-points" class="kpi">0p</div>
+      </article>
+      <article class="card">
+        <div class="mini">학습 세션 수(7일)</div>
+        <div id="kpi-sessions" class="kpi">0</div>
+      </article>
+    </section>
 
-        <div class="subject-analysis">
-            <h2>과목별 분석</h2>
-            <div id="subject-bars">
-                </div>
-        </div>
-    </main>
+    <!-- 과목/학년 분포 -->
+    <section class="grid" style="margin:12px 0;">
+      <article class="card">
+        <h2 style="margin:0 0 8px;">과목별 정답률</h2>
+        <div id="subject-bars" class="mini">데이터 없음</div>
+      </article>
+      <article class="card">
+        <h2 style="margin:0 0 8px;">학년별 풀이 수</h2>
+        <div id="grade-bars" class="mini">데이터 없음</div>
+      </article>
+    </section>
 
-    <footer class="main-footer">
-        <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-    </footer>
+    <!-- 최근 세션 목록 -->
+    <section class="card" style="margin:12px 0;">
+      <h2 style="margin:0 0 8px;">최근 세션 기록</h2>
+      <div class="mini" id="range-label">기간: -</div>
+      <div class="table-wrap" style="margin-top:8px;">
+        <table>
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>학년</th>
+              <th>과목</th>
+              <th>점수</th>
+              <th>정답수/총문항</th>
+              <th>정답률</th>
+            </tr>
+          </thead>
+          <tbody id="session-body">
+            <tr><td colspan="6" class="mini">기록이 없습니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-    <script src="js/header.js"></script> <script src="js/report.js"></script>
+  <!-- 푸터 -->
+  <footer class="main-footer">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
 </body>
-
 </html>
-
-
