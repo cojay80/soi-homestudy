@@ -21,14 +21,14 @@
       if (!user?.uid) user = await window.SoiStore.signIn('local@demo.com','local-demo');
       const uid = user.uid;
 
-      const POINT_PER_CORRECT = 10;
+      const POINT_PER_CORRECT = 1;
       let doc = await window.SoiStore.getUserDoc(uid);
       doc.points = (doc.points || 0) + POINT_PER_CORRECT;
 
       // 총 25%: 대형 1% + 일반 24%
       const roll = Math.random();
-      const BIG_RATE  = 0.01;
-      const NORM_RATE = 0.24;
+      const BIG_RATE  = 0.002;
+      const NORM_RATE = 0.02;
       doc.rewards ||= {};
 
       if (roll < BIG_RATE) {
