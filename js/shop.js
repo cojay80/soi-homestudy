@@ -25,12 +25,34 @@
   const invGet = (window.soi_inventoryGet) || (() => lsObjGet(KEYS.INVENTORY));
   const invSet = (window.soi_inventorySet) || ((o) => lsObjSet(KEYS.INVENTORY, o));
 
-  // ---------- 상점 아이템 ----------
+  // ---------- 상점 아이템 (8살 맞춤) ----------
+  // cost는 원하는 난이도에 맞게 자유 조정 가능
   const SHOP_ITEMS = [
-    { id: 'theme_pink',    title: '핑크 테마',        cost: 20, consumable: false, detail: '화사한 핑크 테마' },
-    { id: 'theme_blue',    title: '블루 테마',        cost: 20, consumable: false, detail: '시원한 블루 테마' },
-    { id: 'sticker_star',  title: '별 스티커 ×5',     cost: 10, consumable: true,  qty: 5, detail: '칭찬/보상에 쓰는 별' },
-    { id: 'sticker_heart', title: '하트 스티커 ×5',   cost: 10, consumable: true,  qty: 5, detail: '응원/격려 하트' },
+    // ── 테마(비소모품: 1번만 구매) ──
+    { id: 'theme_pink',    title: '핑크 테마',         cost: 20,  consumable: false, detail: '화사한 핑크 테마' },
+    { id: 'theme_blue',    title: '블루 테마',         cost: 20,  consumable: false, detail: '시원한 블루 테마' },
+
+    // ── 스티커(소모품: 수량 누적) ──
+    { id: 'sticker_star',  title: '별 스티커 ×5',      cost: 10,  consumable: true,  qty: 5,  detail: '칭찬/보상 별 스티커' },
+    { id: 'sticker_heart', title: '하트 스티커 ×5',    cost: 10,  consumable: true,  qty: 5,  detail: '응원/격려 하트 스티커' },
+
+    // ── 자유시간/스크린타임 쿠폰(소모품) ──
+    { id: 'coupon_freeplay_15', title: '자유시간 15분 쿠폰', cost: 30,  consumable: true, qty: 1, detail: '하고 싶은 놀이 15분 🕒' },
+    { id: 'coupon_freeplay_30', title: '자유시간 30분 쿠폰', cost: 55,  consumable: true, qty: 1, detail: '하고 싶은 놀이 30분 🕒' },
+    { id: 'coupon_screentime_20', title: '스크린타임 20분', cost: 40,  consumable: true, qty: 1, detail: '영상/게임 20분 🎮' },
+
+    // ── 간식/디저트/식사 선택(소모품) ──
+    { id: 'coupon_snack_choice',  title: '간식 선택권',    cost: 25,  consumable: true, qty: 1, detail: '원하는 간식 1개 🍪' },
+    { id: 'coupon_dessert_choice',title: '디저트 선택권',  cost: 35,  consumable: true, qty: 1, detail: '원하는 디저트 1개 🍰' },
+    { id: 'coupon_dinner_choice', title: '저녁 메뉴 선택권', cost: 80, consumable: true, qty: 1, detail: '오늘 저녁 메뉴는 내가 정해요 🍽️' },
+
+    // ── 취침/외출/문화(소모품) ──
+    { id: 'coupon_bedtime_plus_10', title: '취침시간 +10분', cost: 30, consumable: true, qty: 1, detail: '잠들기 전 10분 더 😴' },
+    { id: 'coupon_playground',      title: '놀이터 30분',    cost: 90, consumable: true, qty: 1, detail: '놀이터에서 신나게! 🛝' },
+    { id: 'coupon_movie_night',     title: '영화밤 쿠폰',     cost: 120, consumable: true, qty: 1, detail: '영화 선택 + 간식 🍿' },
+
+    // ── 책(소모품) ──
+    { id: 'coupon_choose_book',     title: '새 책 1권 고르기', cost: 100, consumable: true, qty: 1, detail: '서점/전자책에서 1권 📚' },
   ];
 
   // 사용자 친화적 이름/이모지(인벤토리 표시에 사용)
@@ -39,6 +61,19 @@
     theme_blue:   '블루 테마 💧',
     sticker_star: '별 스티커 ⭐',
     sticker_heart:'하트 스티커 ❤️',
+
+    coupon_freeplay_15:   '자유시간 15분 🕒',
+    coupon_freeplay_30:   '자유시간 30분 🕒',
+    coupon_screentime_20: '스크린타임 20분 🎮',
+    coupon_snack_choice:  '간식 선택권 🍪',
+    coupon_dessert_choice:'디저트 선택권 🍰',
+    coupon_dinner_choice: '저녁 메뉴 선택권 🍽️',
+    coupon_bedtime_plus_10:'취침 +10분 😴',
+    coupon_playground:    '놀이터 30분 🛝',
+    coupon_movie_night:   '영화밤 쿠폰 🍿',
+    coupon_choose_book:   '새 책 1권 📚',
+
+    // 예비 배지들(필요시)
     badge_gold:   '골드 배지 🏅',
     badge_silver: '실버 배지 🥈',
   };
