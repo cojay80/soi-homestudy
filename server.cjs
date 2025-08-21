@@ -1,73 +1,77 @@
-// server.cjs — Render 배포용 확정본
+// server.cjs — Render 배포용 확정본 (CommonJS)
+// - 정적파일 (/js, /css) 정확히 서빙 → "<" 에러 차단
+// - /api/problems: 구글시트 TSV 프록시
+// - /api/data/:user: 학습데이터 저장/조회 (MongoDB)
+
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
-const fetch = require('node-fetch');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 10000;
 
 // ===== 환경변수 =====
-// Render 대시보드 > Environment에 넣어두면 서버 재시작 없이 사용
+// Render > Environment 에 넣어두면 사용됩니다.
 const GOOGLE_SHEET_TSV =
   process.env.GOOGLE_SHEET_TSV ||
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv";
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 
 const MONGODB_URI =
   process.env.MONGODB_URI ||
-  "mongodb+srv://soiuser:162wn4331@cluster0.dmtk0ea.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  'mongodb+srv://soiuser:162wn4331@cluster0.dmtk0ea.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
-// ===== 본문 파서 =====
+// ===== 미들웨어 =====
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ===== 정적 파일 서빙 (핵심) =====
-// 루트 + /js /css /images 확실히 매핑해서 JS 404 시 HTML이 내려오는 문제 차단
+// 루트와 하위 경로를 명시적으로 매핑해 JS 404 -> HTML 문제를 차단
 app.use(express.static(path.join(__dirname)));
-app.use('/js',     express.static(path.join(__dirname, 'js')));
-app.use('/css',    express.static(path.join(__dirname, 'css')));
+app.use('/js',  express.static(path.join(__dirname, 'js')));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use('/sound',  express.static(path.join(__dirname, 'sound')));
 
 // 헬스체크
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// ===== Google Sheet 프록시 (프론트에서는 /api/problems 만 호출) =====
-app.get('/api/problems', async (req, res) => {
+// ===== Google Sheet TSV 프록시 (/api/problems) =====
+// Node 18+ 에선 전역 fetch 사용 가능 (node-fetch 불필요)
+app.get('/api/problems', async (_req, res) => {
   try {
-    const r = await fetch(GOOGLE_SHEET_TSV, { timeout: 10000 });
+    const r = await fetch(GOOGLE_SHEET_TSV, { cache: 'no-store' });
     if (!r.ok) return res.status(502).send('Bad gateway: sheet');
     const tsv = await r.text();
     res.type('text/tab-separated-values').send(tsv);
   } catch (e) {
-    console.error('[sheet] error', e.message);
+    console.error('[sheet] error:', e.message);
     res.status(500).send('Sheet fetch error');
   }
 });
 
-// ===== Mongo 연결 & 사용자 학습데이터 저장 =====
+// ===== Mongo 연결 및 모델 =====
 let UserData;
 async function connectDB() {
   if (!MONGODB_URI) {
-    console.warn('[mongo] no MONGODB_URI');
+    console.warn('[mongo] MONGODB_URI not set (no-db mode)');
     return;
   }
   await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
   const schema = new mongoose.Schema({
     user: { type: String, index: true },
     blob: { type: Object, default: {} },
-    updatedAt: { type: Date, default: Date.now }
-  });
+    updatedAt: { type: Date, default: Date.now },
+  }, { collection: 'user_data' });
   UserData = mongoose.models.UserData || mongoose.model('UserData', schema);
   console.log('✅ Mongo connected');
 }
 connectDB().catch(err => console.error('❌ Mongo error:', err.message));
 
-// GET: 사용자 데이터
+// 조회
 app.get('/api/data/:user', async (req, res) => {
   try {
-    if (!UserData) return res.json({});
-    const doc = await UserData.findOne({ user: req.params.user }).lean();
+    if (!UserData) return res.json({}); // no-db-mode
+    const doc = await UserData.findOne({ user: String(req.params.user) }).lean();
     res.json(doc?.blob || {});
   } catch (e) {
     console.error('[data:get]', e.message);
@@ -75,16 +79,13 @@ app.get('/api/data/:user', async (req, res) => {
   }
 });
 
-// POST: 사용자 데이터 저장(전체 덮어쓰기)
+// 저장(전체 덮어쓰기)
 app.post('/api/data/:user', async (req, res) => {
   try {
-    const user = req.params.user;
-    const blob = req.body || {};
     if (!UserData) return res.status(200).json({ ok: true, memo: 'no-db-mode' });
-
     await UserData.findOneAndUpdate(
-      { user },
-      { $set: { blob, updatedAt: new Date() } },
+      { user: String(req.params.user) },
+      { $set: { blob: req.body || {}, updatedAt: new Date() } },
       { upsert: true }
     );
     res.json({ ok: true });
@@ -94,8 +95,8 @@ app.post('/api/data/:user', async (req, res) => {
   }
 });
 
-// ===== SPA 기본 라우팅(정적 파일과 충돌 없게 *마지막*에 배치) =====
-app.get('*', (req, res) => {
+// ===== SPA 라우팅(맨 마지막) =====
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
