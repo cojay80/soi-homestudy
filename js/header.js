@@ -1,70 +1,47 @@
-// js/header.js — 최종본
-// - 환영문구/로그아웃 버튼/포인트 뱃지 렌더
-// - 모바일 햄버거 토글
-// - 외부에서 window.updateHeaderUI()로 강제 갱신 가능
+// /js/header.js — 최종본
+// 헤더 환영문구, 포인트, 로그아웃 버튼 표시/갱신
 
 (function () {
-  function getCurrentUser() {
-    // URL ?user= 지원(테스트용), 없으면 localStorage → 기본 'soi'
-    try {
-      const m = location.search.match(/[?&]user=([^&]+)/);
-      if (m && m[1]) {
-        const u = decodeURIComponent(m[1]);
-        localStorage.setItem('currentUser', u);
-        return u;
-      }
-    } catch {}
-    return localStorage.getItem('currentUser') || 'soi';
-  }
-
-  function readPoints() {
-    return String(localStorage.getItem('soi:points') || '0');
-  }
-
-  function paint() {
+  function paintHeader() {
     const welcomeEl = document.getElementById('welcome-message');
     const logoutBtn = document.getElementById('logout-button');
-    const user = getCurrentUser();
+    const name = localStorage.getItem('currentUser') || '';
+    const points = localStorage.getItem('soi:points') || '0';
 
     if (welcomeEl) {
-      welcomeEl.innerHTML = `<small>${user}님 환영해요!</small>`;
-      welcomeEl.style.display = 'inline';
+      if (name) {
+        welcomeEl.innerHTML = `<small>${name}님 환영해요!</small>`;
+        welcomeEl.style.display = 'inline';
+      } else {
+        welcomeEl.textContent = '';
+        welcomeEl.style.display = 'none';
+      }
     }
+
     if (logoutBtn) {
-      logoutBtn.style.display = 'inline';
-      // 클릭은 logout.js가 처리
+      // 버튼은 logout.js에서 실제 동작을 바인딩하므로 여기선 보이기만
+      logoutBtn.style.display = name ? 'inline' : 'none';
     }
-    const p = readPoints();
-    document.querySelectorAll('[data-soi-points]').forEach(el => (el.textContent = p));
+
+    document
+      .querySelectorAll('[data-soi-points]')
+      .forEach((el) => (el.textContent = points));
   }
 
-  // 모바일 네비 토글
-  function initMobileNav() {
-    const button = document.querySelector('.mobile-menu-button');
-    if (!button) return;
-    button.addEventListener('click', () => {
-      document.body.classList.toggle('nav-open');
-    });
-  }
-
-  // 초기화
+  // 첫 로드 + 변경 이벤트에 반응
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      paint();
-      initMobileNav();
-    });
+    document.addEventListener('DOMContentLoaded', paintHeader);
   } else {
-    paint();
-    initMobileNav();
+    paintHeader();
   }
+  window.addEventListener('user:changed', paintHeader);
+  window.addEventListener('points:changed', paintHeader);
 
-  // 변화에 반응
+  // 탭 간 동기화
   window.addEventListener('storage', (ev) => {
-    if (ev.key === 'currentUser' || ev.key === 'soi:points') paint();
+    if (ev.key === 'currentUser' || ev.key === 'soi:points') paintHeader();
   });
-  window.addEventListener('user:changed', paint);
-  window.addEventListener('points:changed', paint);
 
-  // 전역 노출
-  window.updateHeaderUI = paint;
+  // 디버깅용
+  window.updateHeaderUI = paintHeader;
 })();
