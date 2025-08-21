@@ -93,6 +93,20 @@
 
   <!-- 퀴즈 로직(보상 스크립트 뒤에) -->
   <script src="./js/quiz.js?v=QZ1" defer></script>
+<script>
+(function(){
+  var l = document.getElementById('logout-button');
+  if(!l) return;
+  l.style.display = 'inline';
+  l.addEventListener('click', function(e){
+    e.preventDefault();
+    ['currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer','isReviewMode','reviewProblems','soi:points','soi:inventory'].forEach(k=>localStorage.removeItem(k));
+    location.href = 'index.html?ts=' + Date.now(); // 캐시무시 새로고침
+  }, { once:true });
+})();
+</script>
+
 </body>
 </html>
+
 
