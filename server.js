@@ -1,29 +1,41 @@
-// server.js — Render/로컬 공용, 결과 저장 API 포함 완성본
-
+// server.js — Render용 최소 백엔드(문제 프록시 + 사용자 데이터 저장)
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
-const morgan = require('morgan');
+const fetch = require('node-fetch');
 
 const app = express();
-
-// ===== 환경설정 =====
 const PORT = Number(process.env.PORT) || 10000;
-const MONGODB_URI = process.env.MONGODB_URI || ''; // Render 대시보드에 설정
-const GOOGLE_SHEET_TSV = process.env.GOOGLE_SHEET_TSV || ''; // (선택) 프록시용
+const MONGODB_URI = process.env.MONGODB_URI || '';
+// 시트 TSV를 서버에서 프록시하고 싶을 때(선택) — 없으면 프런트가 직접 읽음
+const GOOGLE_SHEET_TSV = process.env.GOOGLE_SHEET_TSV || '';
 
-// ===== 미들웨어 =====
-app.use(morgan('tiny'));
-app.use(express.json({ limit: '2mb' }));            // JSON 파서
-app.use(express.urlencoded({ extended: true }));    // 폼 파서
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// 정적 파일: 레포 루트(index.html 등)
+// 정적 파일 (repo 루트)
 app.use(express.static(path.join(__dirname)));
 
-// ===== DB 연결 =====
+// 헬스체크
+app.get('/health', (req, res) => {
+  res.json({ ok: true, env: process.env.NODE_ENV || 'development' });
+});
+
+// ---- Mongo 연결 & 모델
+const userDataSchema = new mongoose.Schema(
+  {
+    user: { type: String, index: true, unique: true },
+    // studyData 전체를 그대로 저장(프런트 구조 유지)
+    data: { type: Object, default: {} },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { collection: 'user_data' }
+);
+const UserData = mongoose.model('UserData', userDataSchema);
+
 async function connectDB() {
   if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI 환경변수가 없습니다.');
+    console.error('❌ MONGODB_URI 환경변수가 없습니다. Render 대시보드 > Environment에서 설정하세요.');
     return;
   }
   try {
@@ -33,86 +45,62 @@ async function connectDB() {
     console.error('❌ MongoDB 연결 실패:', err.message);
   }
 }
-connectDB();
 
-// ===== 스키마/모델 =====
-// studyData 전부를 data 필드로 저장(유연)
-const StudyDataSchema = new mongoose.Schema(
-  {
-    userId: { type: String, required: true, index: true, unique: true },
-    data:   { type: mongoose.Schema.Types.Mixed, default: {} },
-  },
-  { timestamps: true }
-);
-const StudyData = mongoose.model('StudyData', StudyDataSchema);
-
-// ===== 헬스체크 =====
-app.get('/health', async (req, res) => {
-  let db = 'disconnected';
-  try {
-    await mongoose.connection.db.admin().ping();
-    db = 'connected';
-  } catch (_) {}
-  res.json({ ok: true, env: process.env.NODE_ENV || 'development', db });
-});
-
-// ===== (선택) 시트 프록시 =====
-// 프론트가 시트를 직접 가져오지 못하는 환경일 때 사용.
-// config.js 의 GOOGLE_SHEET_TSV 를 비워두고 이 엔드포인트를 사용하게 할 수 있음.
+// ---- API: 문제 프록시 (선택)
+// 프런트가 config.js의 GOOGLE_SHEET_TSV로 직접 불러오지만,
+// 보안/속도 때문에 서버로 우회하고 싶을 때 사용.
 app.get('/api/problems', async (req, res) => {
   try {
-    if (!GOOGLE_SHEET_TSV) return res.status(501).json({ error: 'GOOGLE_SHEET_TSV not set' });
-    const fetch = (await import('node-fetch')).default;
-    const r = await fetch(GOOGLE_SHEET_TSV, { timeout: 8000 });
-    if (!r.ok) return res.status(502).json({ error: 'Sheet fetch failed', status: r.status });
+    const url = GOOGLE_SHEET_TSV || '';
+    if (!url) {
+      res.status(200).type('text/plain').send(''); // 서버 프록시 미사용
+      return;
+    }
+    const r = await fetch(url, { timeout: 10000 });
+    if (!r.ok) throw new Error('Sheet fetch error: ' + r.status);
     const text = await r.text();
-    res.type('text/tab-separated-values').send(text);
+    res.status(200).type('text/plain').send(text);
   } catch (e) {
-    console.error('Sheet proxy error:', e.message);
-    res.status(500).json({ error: 'sheet_proxy_failed' });
+    console.error('GET /api/problems error:', e.message);
+    res.status(500).json({ error: 'PROBLEMS_FETCH_FAILED' });
   }
 });
 
-// ===== 저장/조회 API =====
+// ---- API: 사용자 데이터 저장/조회 ----
 
-// GET /api/data/:user  -> 유저 데이터 조회(없으면 빈 객체)
+// 조회
 app.get('/api/data/:user', async (req, res) => {
   try {
-    const userId = decodeURIComponent(req.params.user);
-    const doc = await StudyData.findOne({ userId }).lean();
+    const user = String(req.params.user || '').trim();
+    if (!user) return res.status(400).json({ error: 'NO_USER' });
+    const doc = await UserData.findOne({ user });
     res.json(doc?.data || {});
   } catch (e) {
-    console.error('GET data error:', e);
-    res.status(500).json({ error: 'get_failed' });
+    console.error('GET /api/data error:', e.message);
+    res.status(500).json({ error: 'DATA_GET_FAILED' });
   }
 });
 
-// POST /api/data/:user -> 유저 데이터 저장(업서트)
-// 프론트에서 studyData 전체를 보내는 경우가 있어 user 스코프로 잘라 저장 처리 추가.
+// 저장(덮어쓰기)
 app.post('/api/data/:user', async (req, res) => {
   try {
-    const userId = decodeURIComponent(req.params.user);
-
-    // 프론트에서 온 body가 전체 studyData면 해당 유저 부분만 꺼내기
-    let payload = req.body;
-    if (payload && typeof payload === 'object' && payload[userId]) {
-      payload = payload[userId];
-    }
-
-    const doc = await StudyData.findOneAndUpdate(
-      { userId },
-      { $set: { data: payload || {} } },
-      { new: true, upsert: true }
-    ).lean();
-
-    res.json({ ok: true, updatedAt: new Date().toISOString() });
+    const user = String(req.params.user || '').trim();
+    if (!user) return res.status(400).json({ error: 'NO_USER' });
+    const data = req.body || {};
+    const doc = await UserData.findOneAndUpdate(
+      { user },
+      { $set: { data, updatedAt: new Date() } },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true, savedAt: doc.updatedAt });
   } catch (e) {
-    console.error('POST data error:', e);
-    res.status(500).json({ error: 'post_failed' });
+    console.error('POST /api/data error:', e.message);
+    res.status(500).json({ error: 'DATA_SAVE_FAILED' });
   }
 });
 
-// ===== 서버 시작 =====
+// 서버 시작
 app.listen(PORT, () => {
-  console.log(`soi-homestudy listening on :${PORT}`);
+  console.log(`soi-homestudy running on port ${PORT}`);
+  connectDB();
 });
