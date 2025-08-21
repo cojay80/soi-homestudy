@@ -58,7 +58,8 @@
     </nav>
 <div class="user-info">
   <span id="welcome-message"></span>
-  <a href="#" id="logout-button" style="display:none">(로그아웃)</a>
+  <!-- a 대신 button: 클릭만 하고 JS가 처리 -->
+  <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
 </div>
     <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
@@ -154,5 +155,6 @@
 
 </body>
 </html>
+
 
 
