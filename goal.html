@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>나의 목표 - 소이의 공부방</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+
+  <style>
+    :root{--page-w:980px;--card-b:#e5e5e5;--muted:#666;--bar:#7aa6ff}
+    *{box-sizing:border-box} body{margin:0;font-family:"Noto Sans KR",system-ui,Arial,sans-serif;background:#fafafa;color:#111}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--page-w);margin:0 auto;padding:16px}
+
+    /* 헤더 */
+    .main-header{background:#fff;border-bottom:1px solid #eee;padding:12px 16px}
+    .main-header .logo a{font-weight:800}
+    .main-nav ul{display:flex;gap:14px;list-style:none;margin:8px 0 0;padding:0;justify-content:center;flex-wrap:wrap}
+    .main-nav li a{display:inline-block;padding:8px 12px;border-radius:10px}
+    .main-nav li.active a,.main-nav li a:hover{background:#eef4ff;color:#1f3b8f}
+    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
+    .user-info{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);margin-top:6px}
+    .mobile-menu-button{display:none}
+
+    /* 카드/그리드 */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+    .card{border:1px solid var(--card-b);border-radius:12px;padding:12px;background:#fff}
+    .mini{color:var(--muted);font-size:13px}
+    .kpi{font-size:22px;font-weight:700}
+    .barwrap{background:#f3f3f3;border-radius:8px;overflow:hidden;height:14px}
+    .bar{height:100%;background:var(--bar);width:0%}
+    label.inline{display:flex;align-items:center;gap:8px;margin:6px 0}
+    input[type=number]{width:96px;padding:6px;border:1px solid #ddd;border-radius:8px;background:#fff}
+    button.btn{padding:8px 12px;border:1px solid #ddd;border-radius:10px;background:#fafafa;cursor:pointer;transition:.15s}
+    .btn:hover{background:#f3f4f6;transform:translateY(-1px)}
+    .ok{color:#0a7f2e;font-weight:700}
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <header class="main-header">
+    <div class="logo" style="text-align:center">
+      <a href="index.html">소이의 공부방 🎨</a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">오늘의 학습</a></li>
+        <li><a href="report.html">학습 보고서</a></li>
+        <li class="active"><a href="goal.html">나의 목표</a></li>
+        <li><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
+    </div>
+  </header>
+
+  <!-- 본문 -->
+  <main class="container">
+    <h1>나의 목표 🎯</h1>
+    <p class="mini">목표를 정하고 달성하면 보상을 받아요. (퀴즈 종료 시 저장된 기록을 기준으로 집계)</p>
+
+    <!-- 설정 -->
+    <section class="card" style="margin:12px 0;">
+      <h2 style="margin:0 0 8px;">목표 설정</h2>
+      <div class="grid">
+        <div>
+          <h3 style="margin:0 0 6px;">일일 목표</h3>
+          <label class="inline mini">문항 수
+            <input type="number" id="goal-daily-questions" min="0" step="1" value="20">
+          </label>
+          <label class="inline mini">포인트
+            <input type="number" id="goal-daily-points" min="0" step="1" value="10">
+          </label>
+        </div>
+        <div>
+          <h3 style="margin:0 0 6px;">주간 목표</h3>
+          <label class="inline mini">세션 수
+            <input type="number" id="goal-weekly-sessions" min="0" step="1" value="7">
+          </label>
+          <label class="inline mini">정답률(%)
+            <input type="number" id="goal-weekly-acc" min="0" max="100" step="1" value="70">
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" id="btn-goal-save">저장</button>
+        <button class="btn" id="btn-goal-reset">초기화</button>
+        <span id="goal-save-state" class="mini"></span>
+      </div>
+    </section>
+
+    <!-- 진행 상황 -->
+    <section class="grid" style="margin:12px 0;">
+      <article class="card">
+        <div class="mini">오늘 푼 문항</div>
+        <div class="kpi"><span id="today-questions">0</span> / <span id="today-questions-goal">0</span></div>
+        <div class="barwrap"><div id="bar-today-questions" class="bar"></div></div>
+      </article>
+      <article class="card">
+        <div class="mini">오늘 획득 포인트(정답 기준)</div>
+        <div class="kpi"><span id="today-points">0</span> / <span id="today-points-goal">0</span></div>
+        <div class="barwrap"><div id="bar-today-points" class="bar"></div></div>
+      </article>
+      <article class="card">
+        <div class="mini">이번 주 세션 수</div>
+        <div class="kpi"><span id="week-sessions">0</span> / <span id="week-sessions-goal">0</span></div>
+        <div class="barwrap"><div id="bar-week-sessions" class="bar"></div></div>
+      </article>
+      <article class="card">
+        <div class="mini">이번 주 평균 정답률</div>
+        <div class="kpi"><span id="week-acc">0%</span> / <span id="week-acc-goal">0%</span></div>
+        <div class="barwrap"><div id="bar-week-acc" class="bar"></div></div>
+      </article>
+    </section>
+
+    <!-- 달성 상태 / 보상 -->
+    <section class="card" style="margin:12px 0;">
+      <h2 style="margin:0 0 8px;">달성 현황 & 보상</h2>
+      <ul style="margin:0; padding-left:18px;">
+        <li id="state-daily-questions">일일 문항: —</li>
+        <li id="state-daily-points">일일 포인트: —</li>
+        <li id="state-week-sessions">주간 세션: —</li>
+        <li id="state-week-acc">주간 정답률: —</li>
+      </ul>
+      <div class="mini" style="margin-top:8px;">* 각 목표는 최초 달성 시 1회 보상됩니다. (일일 보상은 매일 갱신)</div>
+    </section>
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="main-footer" style="text-align:center; padding:24px 16px; color:#777;">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
+
+  <script>
+  // ========= 간단 전역 설정 =========
+  const GOAL_KEYS = {
+    dQ: 'goal:daily:questions',
+    dP: 'goal:daily:points',
+    wS: 'goal:weekly:sessions',
+    wA: 'goal:weekly:acc'
+  };
+  const REWARD = {
+    POINTS_PER_CORRECT: 1,    // 오늘 포인트 계산 기준(정답 1개=1p 가정)
+    DAILY_QUESTIONS: 5,       // 일일 문항 목표 달성 보상
+    DAILY_POINTS: 5,          // 일일 포인트 목표 달성 보상
+    WEEKLY_SESSIONS: 20,      // 주간 세션 목표 달성 보상
+    WEEKLY_ACC: 20            // 주간 정답률 목표 달성 보상
+  };
+
+  // ========= 유저/포인트 유틸 =========
+  function ensureUser(){
+    let u = localStorage.getItem('currentUser');
+    if (!u) { u = 'soi'; localStorage.setItem('currentUser', u); }
+    return u;
+  }
+  function pointsGet(){
+    return Number(localStorage.getItem('soi:points') || '0');
+  }
+  function pointsAdd(delta){
+    const v = pointsGet() + Number(delta||0);
+    localStorage.setItem('soi:points', String(v));
+    document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = v);
+    window.dispatchEvent(new Event('points:changed'));
+    return v;
+  }
+
+  // ========= 날짜/주 키 =========
+  function todayStr(){
+    const d = new Date();
+    const m2 = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${m2(d.getMonth()+1)}-${m2(d.getDate())}`;
+  }
+  function weekKey(){
+    // ISO 주 번호 간단 버전(월요일 시작)
+    const d = new Date();
+    const day = (d.getDay() + 6) % 7; // 월=0
+    const monday = new Date(d); monday.setDate(d.getDate() - day);
+    const year = monday.getFullYear();
+    const first = new Date(year,0,1);
+    const diff = Math.floor((monday - first) / 86400000);
+    const ww = Math.floor(diff/7)+1;
+    return `${year}-W${String(ww).padStart(2,'0')}`;
+  }
+
+  // ========= header 표시/로그아웃 =========
+  (function headerPaint(){
+    const u = ensureUser();
+    const w = document.getElementById('welcome-message');
+    const lb = document.getElementById('logout-button');
+    if (w) w.innerHTML = `<small>${u}님 환영해요!</small>`;
+    if (lb) {
+      lb.style.display = 'inline';
+      lb.addEventListener('click', () => {
+        [
+          'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
+          'isReviewMode','reviewProblems','soi:points','soi:inventory'
+        ].forEach(k=>localStorage.removeItem(k));
+        location.href = 'index.html?ts=' + Date.now();
+      }, { once:true });
+    }
+    document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = pointsGet());
+  })();
+
+  // ========= 목표 저장/복구 =========
+  function goalLoad(){
+    return {
+      dQ: Number(localStorage.getItem(GOAL_KEYS.dQ) || '20'),
+      dP: Number(localStorage.getItem(GOAL_KEYS.dP) || '10'),
+      wS: Number(localStorage.getItem(GOAL_KEYS.wS) || '7'),
+      wA: Number(localStorage.getItem(GOAL_KEYS.wA) || '70')
+    };
+  }
+  function goalSave(g){
+    localStorage.setItem(GOAL_KEYS.dQ, String(g.dQ));
+    localStorage.setItem(GOAL_KEYS.dP, String(g.dP));
+    localStorage.setItem(GOAL_KEYS.wS, String(g.wS));
+    localStorage.setItem(GOAL_KEYS.wA, String(g.wA));
+  }
+  function bindGoalForm(){
+    const f = goalLoad();
+    const $ = id => document.getElementById(id);
+    $('goal-daily-questions').value = f.dQ;
+    $('goal-daily-points').value = f.dP;
+    $('goal-weekly-sessions').value = f.wS;
+    $('goal-weekly-acc').value = f.wA;
+
+    $('btn-goal-save').addEventListener('click', () => {
+      const g = {
+        dQ: Number($('goal-daily-questions').value || '0'),
+        dP: Number($('goal-daily-points').value || '0'),
+        wS: Number($('goal-weekly-sessions').value || '0'),
+        wA: Number($('goal-weekly-acc').value || '0')
+      };
+      goalSave(g);
+      $('goal-save-state').textContent = '저장 완료!';
+      setTimeout(()=> $('goal-save-state').textContent = '', 1200);
+      render(); // 즉시 반영
+    });
+    $('btn-goal-reset').addEventListener('click', () => {
+      localStorage.removeItem(GOAL_KEYS.dQ);
+      localStorage.removeItem(GOAL_KEYS.dP);
+      localStorage.removeItem(GOAL_KEYS.wS);
+      localStorage.removeItem(GOAL_KEYS.wA);
+      bindGoalForm();
+      render();
+    });
+  }
+
+  // ========= 데이터 집계 =========
+  function parseScore(scoreStr){
+    // "8/10" -> {c:8,t:10}
+    const m = String(scoreStr||'').match(/(\d+)\s*\/\s*(\d+)/);
+    if (!m) return {c:0,t:0};
+    return {c:Number(m[1]), t:Number(m[2])};
+  }
+  function loadRecordsTodayWeek(){
+    const u = ensureUser();
+    const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
+    const recs = sd?.[u]?.records || [];
+    const today = todayStr();
+    const wk = weekKey();
+
+    const todayRecs = recs.filter(r => r.date === today);
+    const weekRecs = recs.filter(r => {
+      // 같은 주인지 확인: 간단히 weekKey 재계산
+      // 날짜 문자열을 Date로 변환
+      const d = new Date(r.date + 'T00:00:00');
+      const day = (d.getDay() + 6) % 7;
+      const monday = new Date(d); monday.setDate(d.getDate() - day);
+      const year = monday.getFullYear();
+      const first = new Date(year,0,1);
+      const diff = Math.floor((monday - first) / 86400000);
+      const ww = Math.floor(diff/7)+1;
+      const key = `${year}-W${String(ww).padStart(2,'0')}`;
+      return key === wk;
+    });
+
+    // 오늘 집계
+    let tQ=0, tC=0;
+    todayRecs.forEach(r => {
+      const {c,t} = parseScore(r.score);
+      tQ += t; tC += c;
+    });
+
+    // 주간 집계
+    let wSess = weekRecs.length, wC=0, wT=0;
+    weekRecs.forEach(r => {
+      const {c,t} = parseScore(r.score);
+      wC += c; wT += t;
+    });
+    const wAcc = wT>0 ? Math.round((wC/wT)*100) : 0;
+
+    return { todayQuestions:tQ, todayCorrect:tC, weekSessions:wSess, weekAcc:wAcc };
+  }
+
+  // ========= 보상/달성 체크 =========
+  function claimKeyDaily(kind){ return `reward:daily:${kind}:${todayStr()}`;}
+  function claimKeyWeekly(kind){ return `reward:weekly:${kind}:${weekKey()}`;}
+  function isClaimed(key){ return localStorage.getItem(key)==='1';}
+  function setClaimed(key){ localStorage.setItem(key,'1'); }
+
+  function checkAndReward(progress, goals){
+    // 상태 라벨
+    const $ = id => document.getElementById(id);
+
+    // 1) 일일 문항
+    const dQKey = claimKeyDaily('questions');
+    if (goals.dQ>0 && progress.todayQuestions >= goals.dQ){
+      if (!isClaimed(dQKey)){
+        pointsAdd(REWARD.DAILY_QUESTIONS);
+        setClaimed(dQKey);
+        $('state-daily-questions').innerHTML = `일일 문항: <span class="ok">달성! +${REWARD.DAILY_QUESTIONS}p</span>`;
+      } else {
+        $('state-daily-questions').textContent = '일일 문항: 달성(보상 수령 완료)';
+      }
+    } else {
+      $('state-daily-questions').textContent = '일일 문항: 미달성';
+    }
+
+    // 2) 일일 포인트(정답×1p 기준)
+    const todayPts = progress.todayCorrect * REWARD.POINTS_PER_CORRECT;
+    const dPKey = claimKeyDaily('points');
+    if (goals.dP>0 && todayPts >= goals.dP){
+      if (!isClaimed(dPKey)){
+        pointsAdd(REWARD.DAILY_POINTS);
+        setClaimed(dPKey);
+        $('state-daily-points').innerHTML = `일일 포인트: <span class="ok">달성! +${REWARD.DAILY_POINTS}p</span>`;
+      } else {
+        $('state-daily-points').textContent = '일일 포인트: 달성(보상 수령 완료)';
+      }
+    } else {
+      $('state-daily-points').textContent = '일일 포인트: 미달성';
+    }
+
+    // 3) 주간 세션
+    const wSKey = claimKeyWeekly('sessions');
+    if (goals.wS>0 && progress.weekSessions >= goals.wS){
+      if (!isClaimed(wSKey)){
+        pointsAdd(REWARD.WEEKLY_SESSIONS);
+        setClaimed(wSKey);
+        $('state-week-sessions').innerHTML = `주간 세션: <span class="ok">달성! +${REWARD.WEEKLY_SESSIONS}p</span>`;
+      } else {
+        $('state-week-sessions').textContent = '주간 세션: 달성(보상 수령 완료)';
+      }
+    } else {
+      $('state-week-sessions').textContent = '주간 세션: 미달성';
+    }
+
+    // 4) 주간 정답률
+    const wAKey = claimKeyWeekly('acc');
+    if (goals.wA>0 && progress.weekAcc >= goals.wA){
+      if (!isClaimed(wAKey)){
+        pointsAdd(REWARD.WEEKLY_ACC);
+        setClaimed(wAKey);
+        $('state-week-acc').innerHTML = `주간 정답률: <span class="ok">달성! +${REWARD.WEEKLY_ACC}p</span>`;
+      } else {
+        $('state-week-acc').textContent = '주간 정답률: 달성(보상 수령 완료)';
+      }
+    } else {
+      $('state-week-acc').textContent = '주간 정답률: 미달성';
+    }
+  }
+
+  // ========= 렌더 =========
+  function pct(cur, goal){ return (goal>0)? Math.max(0, Math.min(100, Math.round((cur/goal)*100))) : 0; }
+  function render(){
+    const goals = goalLoad();
+    const prog = loadRecordsTodayWeek();
+
+    // 목표 수치 표시
+    document.getElementById('today-questions-goal').textContent = goals.dQ;
+    document.getElementById('today-points-goal').textContent = goals.dP;
+    document.getElementById('week-sessions-goal').textContent = goals.wS;
+    document.getElementById('week-acc-goal').textContent = goals.wA + '%';
+
+    // 현재 수치 표시
+    document.getElementById('today-questions').textContent = prog.todayQuestions;
+    const todayPts = prog.todayCorrect * REWARD.POINTS_PER_CORRECT;
+    document.getElementById('today-points').textContent = todayPts;
+    document.getElementById('week-sessions').textContent = prog.weekSessions;
+    document.getElementById('week-acc').textContent = prog.weekAcc + '%';
+
+    // 진행바
+    document.getElementById('bar-today-questions').style.width = pct(prog.todayQuestions, goals.dQ) + '%';
+    document.getElementById('bar-today-points').style.width   = pct(todayPts, goals.dP) + '%';
+    document.getElementById('bar-week-sessions').style.width  = pct(prog.weekSessions, goals.wS) + '%';
+    document.getElementById('bar-week-acc').style.width       = pct(prog.weekAcc, goals.wA) + '%';
+
+    // 달성/보상 체크
+    checkAndReward(prog, goals);
+  }
+
+  // ========= 시작 =========
+  document.addEventListener('DOMContentLoaded', () => {
+    bindGoalForm();
+    render();
+  });
+  </script>
+</body>
+</html>
