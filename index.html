@@ -10,31 +10,25 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- 공통 스크립트 (순서 유지) -->
+  <!-- 공통 스크립트 (반드시 이 순서, 모두 defer) -->
   <script src="/js/config.js" defer></script>
   <script src="/js/core-auth-store.js" defer></script>
   <script src="/js/api-shim.js" defer></script>
-
-  <!-- 포인트/인벤토리(로컬) -->
   <script src="/js/soi-store.js" defer></script>
+  <script src="/js/logout.js" defer></script>
+  <script src="/js/header.js" defer></script>
 
-  <!-- 헤더/로그아웃/드로워 토글 -->
-  <script src="/js/logout.js?v=LOGOUT_FORCE_2" defer></script>
-  <script src="/js/header.js?v=HDR_MINIMAL_3" defer></script>
-
-  <!-- 홈 전용 (필요시) -->
-  <!-- <script src="/js/home.js?v=HOME_1" defer></script> -->
-
+  <!-- 페이지 전용 보조 스타일(필요 최소만) -->
   <style>
-    /* 공용 카드/그리드 */
     .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
     .card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;background:#fff}
     .mini{color:#666;font-size:13px}
     .kpi{font-size:24px;font-weight:700}
     label.inline{display:flex;align-items:center;gap:8px}
-    input[type=number], select{padding:8px;border:1px solid #ddd;border-radius:10px}
-    button.btn{padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fafafa;cursor:pointer}
+    input[type=number], select{padding:8px;border:1px solid #ddd;border-radius:10px;background:#fff}
+    button.btn{padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fafafa;cursor:pointer;transition:.15s}
+    .btn:hover{background:#f3f4f6;transform:translateY(-1px)}
     .cta{display:flex;gap:8px;flex-wrap:wrap}
     .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     @media (max-width:640px){ .quick{grid-template-columns:1fr} }
@@ -43,93 +37,12 @@
     .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
     .link-card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
     .link-card a{display:inline-block}
-
-    /* ===== 헤더(데스크톱: 중앙 정렬 / 모바일: 좌-중-우 배치) ===== */
-    :root { --page-width: 980px; --header-pad-x:16px; --header-pad-y:12px; }
-    .main-header {
-      position: relative;
-      background:#fff;
-      border-bottom:1px solid #e5e5e5;
-      padding: var(--header-pad-y) var(--header-pad-x);
-      z-index: 1000;
-    }
-    .main-header > .logo,
-    .main-header > .main-nav,
-    .main-header > .user-info {
-      max-width: var(--page-width);
-      margin: 0 auto;
-      text-align: center;
-    }
-    .main-header > .logo{ margin-bottom: 8px; }
-    .main-header > .main-nav{ margin-bottom: 8px; }
-
-    /* 데스크톱 메뉴 */
-    .main-nav ul{
-      display:flex;justify-content:center;align-items:center;gap:18px;margin:0;padding:0;list-style:none
-    }
-    .main-nav a{
-      display:inline-block;padding:8px 12px;border-radius:8px;color:#333;text-decoration:none;font-weight:600
-    }
-    .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
-    .user-info{display:flex;justify-content:center;align-items:center;gap:10px;color:#666}
-    .mobile-menu-button{display:none}
-
-    /* ===== 모바일(≤860px): 로고 왼쪽, 로그인정보(작게) 가운데, 햄버거 오른쪽 ===== */
-    @media (max-width:860px){
-      .main-header{
-        display:flex; align-items:center; justify-content:flex-start; gap:8px;
-        padding:8px 12px;
-      }
-      .main-header > .logo,
-      .main-header > .main-nav,
-      .main-header > .user-info { max-width: none; margin: 0; text-align:left; }
-
-      /* 로고: 항상 맨 왼쪽, 한 줄로 */
-      .main-header .logo{ order:0; flex:1; }
-      .main-header .logo a{
-        font-size:18px; font-weight:700; color:#333; text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      }
-
-      /* 로그인 정보: 햄버거 왼쪽에 작은 글씨 */
-      .main-header .user-info{
-        order:1; display:block; font-size:12px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      }
-      .main-header .user-info a{ font-size:12px; color:#666; text-decoration:none; margin-left:4px; }
-
-      /* 햄버거: 맨 오른쪽 */
-      .main-header .mobile-menu-button{
-        order:2; display:block;
-        font-size:22px; line-height:1; border:1px solid #ddd; background:#fff; border-radius:10px; padding:6px 10px; cursor:pointer;
-      }
-
-      /* 기본 내비는 숨김 (드로워에서 표시) */
-      .main-header .main-nav{ display:none; }
-
-      /* 드로워 열림 상태 및 백드롭 */
-      body.nav-open { overflow:hidden; }
-      .main-header::before{ content:""; display:none; }
-      body.nav-open .main-header::before{
-        display:block; position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.35);
-      }
-
-      /* 드로워 메뉴(풀스크린) */
-      body.nav-open .main-nav{ display:block; }
-      body.nav-open .main-nav ul{
-        display:flex; flex-direction:column;
-        position:fixed; inset:0; z-index:1200;
-        padding:72px 16px 24px; gap:0; background:#fff; overflow-y:auto;
-      }
-      body.nav-open .main-nav a, body.nav-open .main-nav .badge{
-        display:block; width:100%;
-        padding:14px 12px; margin:6px 0;
-        border:1px solid #e5e5e5; border-radius:12px; background:#fff;
-      }
-      .main-nav li.active a, .main-nav a:hover{ background:#f7f9ff; }
-    }
+    /* 모바일에서 로그인 문구 더 작게 */
+    @media (max-width:860px){ .user-info small{font-size:12px;color:#666} }
   </style>
 </head>
 <body>
-  <!-- 고정 헤더 -->
+  <!-- 헤더 -->
   <header class="main-header">
     <div class="logo">
       <a href="index.html">소이의 공부방 🎨</a>
@@ -162,10 +75,10 @@
       <h2 style="margin:0 0 8px;">빠른 시작</h2>
       <div class="quick">
         <label class="inline">학년
-          <select id="sel-grade"><!-- 시트에서 동적 채움 --></select>
+          <select id="sel-grade"><option value="">학년 선택</option></select>
         </label>
         <label class="inline">과목
-          <select id="sel-subject"><!-- 시트에서 동적 채움 --></select>
+          <select id="sel-subject"><option value="">과목 선택</option></select>
         </label>
         <label class="inline">세트 수(지문/단일 묶음)
           <input type="number" id="sel-count" min="1" step="1" value="10"/>
@@ -230,21 +143,18 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- ✅ 시트 기반 동적 드롭다운 + 시작/복습 로직 -->
+  <!-- 시트 기반 드롭다운 + 시작/복습 로직 -->
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const gradeSel = document.getElementById('sel-grade');
     const subjSel  = document.getElementById('sel-subject');
     const msgEl    = document.getElementById('home-msg');
 
-    gradeSel.innerHTML = '<option value="">학년 선택</option>';
-    subjSel.innerHTML  = '<option value="">과목 선택</option>';
-
     // 1) 시트 TSV 로드
     let text = '';
     try {
       if (!window.API || !window.API.problems) throw new Error('API.problems 미탑재');
-      text = await window.API.problems();
+      text = await window.API.problems(); // config.js의 GOOGLE_SHEET_TSV 직결 또는 /api/problems
     } catch (e) {
       console.error('문제 로드 실패:', e);
       msgEl.textContent = '문제 목록을 불러오지 못했습니다. 인터넷/시트 공개 상태를 확인해주세요.';
@@ -277,7 +187,7 @@
       subjectsByGrade.get(g).add(s);
     }
 
-    // 3) 셀렉트 채우기
+    // 3) 드롭다운 채우기
     const gradeList = [...grades].sort((a,b)=>a.localeCompare(b,'ko'));
     gradeSel.innerHTML = ['<option value="">학년 선택</option>']
       .concat(gradeList.map(g=>`<option value="${g}">${g}</option>`)).join('');
@@ -298,6 +208,7 @@
       localStorage.setItem('selectedSubject', subjSel.value || '');
     });
 
+    // 이전 선택 복구
     const prevG = localStorage.getItem('selectedGrade');
     const prevS = localStorage.getItem('selectedSubject');
     if (prevG && gradeList.includes(prevG)) {
@@ -309,8 +220,8 @@
 
     // 시작
     document.getElementById('btn-start').addEventListener('click', () => {
-      const g = gradeSel.value.trim();
-      const s = subjSel.value.trim();
+      const g = (gradeSel.value || '').trim();
+      const s = (subjSel.value  || '').trim();
       const cnt = parseInt(document.getElementById('sel-count').value || '10', 10);
       const tmr = parseInt(document.getElementById('sel-timer').value || '0', 10);
 
@@ -324,12 +235,13 @@
 
       localStorage.removeItem('isReviewMode');
       localStorage.removeItem('reviewProblems');
+
       location.href = 'quiz.html';
     });
 
     // 오답 복습
     document.getElementById('btn-review').addEventListener('click', () => {
-      const user = localStorage.getItem('currentUser');
+      const user = (window.getCurrentUser && window.getCurrentUser()) || localStorage.getItem('currentUser');
       try {
         const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
         const wrongs = sd?.[user]?.incorrect || [];
