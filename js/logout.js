@@ -1,21 +1,32 @@
-<script>
-// js/logout.js — ?reset=1 처리
-(function(){
-  function doLogout(){
-    // 필요한 키만 정리 (원하면 아래 주석 풀어서 전부 삭제 가능)
-    // localStorage.clear();
+// js/logout.js — 로그아웃/초기화 (완성본)
+// - index.html?reset=1 로 들어오면 사용자 관련 로컬데이터 최소 초기화
 
-    // 로그인만 초기화
-    localStorage.removeItem('currentUser');
-    // 페이지 이동
-    location.href = 'index.html';
+(function () {
+  function doLogoutIfQuery() {
+    const hasReset = /[?&]reset=1/.test(location.search);
+    if (!hasReset) return;
+
+    // 학습/사용자 관련 최소 키만 정리 (전체 clear는 지양)
+    const keep = new Set(['soi:points']); // 포인트는 유지하고 싶으면 여기 남김
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(k => { if (!keep.has(k)) localStorage.removeItem(k); });
+
+    // 사용자 닉네임도 기본값으로
+    localStorage.setItem('currentUser', 'soi');
+
+    // 화면 갱신
+    window.dispatchEvent(new Event('user:changed'));
+    window.dispatchEvent(new Event('points:changed'));
+
+    // ?reset=1 제거
+    const url = new URL(location.href);
+    url.searchParams.delete('reset');
+    history.replaceState({}, '', url.toString());
   }
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const url = new URL(location.href);
-    if (url.searchParams.get('reset') === '1') {
-      doLogout();
-    }
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', doLogoutIfQuery);
+  } else {
+    doLogoutIfQuery();
+  }
 })();
-</script>
