@@ -1,59 +1,42 @@
-<script>
-// js/api-shim.js — 프론트 API 일원화 (시트/데이터)
+// js/api-shim.js — 클라이언트 API 단일 진입점 (완성본)
+// - window.CONFIG.GOOGLE_SHEET_TSV가 있으면 그것을 우선 사용
+// - 없으면 서버 프록시 /api/problems 사용
+// - 사용자 데이터 저장/조회도 여기서 래핑
+
 (function () {
   const CFG = window.CONFIG || {};
-  const TSV = CFG.GOOGLE_SHEET_TSV || "";           // 직결 시트 URL (있으면 최우선)
-  const E   = CFG.ENDPOINTS || {};
-  const TMO = CFG.API_TIMEOUT_MS || 8000;
-  const RET = CFG.API_RETRIES || 1;
+  const SHEET_URL = CFG.GOOGLE_SHEET_TSV || '';
+  const EP = (CFG.ENDPOINTS || {});
 
-  function timeoutFetch(url, opt={}, ms=TMO){
-    return new Promise((resolve, reject)=>{
-      const ac = new AbortController();
-      const id = setTimeout(()=>ac.abort(), ms);
-      fetch(url, { ...opt, signal: ac.signal })
-        .then(r=>{ clearTimeout(id); resolve(r); })
-        .catch(e=>{ clearTimeout(id); reject(e); });
+  async function problems() {
+    const url = SHEET_URL && typeof SHEET_URL === 'string' && SHEET_URL.startsWith('http')
+      ? SHEET_URL
+      : (EP.PROBLEMS || '/api/problems');
+
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`problems fetch fail: ${r.status}`);
+    return await r.text(); // TSV/CSV 원문 텍스트
+  }
+
+  async function loadUserData(user) {
+    if (!user) return {};
+    const url = (EP.DATA_GET ? EP.DATA_GET(user) : `/api/data/${encodeURIComponent(user)}`);
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) return {};
+    return await r.json();
+  }
+
+  async function saveUserData(user, blob) {
+    if (!user) return { ok: false, reason: 'no-user' };
+    const url = (EP.DATA_POST ? EP.DATA_POST(user) : `/api/data/${encodeURIComponent(user)}`);
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(blob || {})
     });
+    if (!r.ok) throw new Error(`saveUserData fail: ${r.status}`);
+    return await r.json();
   }
 
-  async function retry(fn, times=RET){
-    let last;
-    for(let i=0;i<=times;i++){
-      try { return await fn(); } catch(e){ last=e; }
-    }
-    throw last;
-  }
-
-  // ===== Problems (TSV) =====
-  async function problems(){
-    return retry(async ()=>{
-      const url = TSV || (E.PROBLEMS || "/api/problems");
-      const r = await timeoutFetch(url, { headers: { "Cache-Control":"no-cache" }});
-      if (!r.ok) throw new Error("problems fetch failed: "+r.status);
-      return r.text();
-    });
-  }
-
-  // ===== StudyData GET/POST =====
-  async function dataGet(user){
-    const url = (E.DATA_GET && E.DATA_GET(user)) || `/api/data/${encodeURIComponent(user)}`;
-    const r = await timeoutFetch(url, { headers:{ "Accept":"application/json" }});
-    if (!r.ok) throw new Error("data get failed: "+r.status);
-    return r.json();
-  }
-
-  async function dataPost(user, payload){
-    const url = (E.DATA_POST && E.DATA_POST(user)) || `/api/data/${encodeURIComponent(user)}`;
-    const r = await timeoutFetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-      body: JSON.stringify(payload || {})
-    });
-    if (!r.ok) throw new Error("data post failed: "+r.status);
-    return r.json();
-  }
-
-  window.API = { problems, dataGet, dataPost };
+  window.API = { problems, loadUserData, saveUserData };
 })();
-</script>
