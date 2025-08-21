@@ -1,32 +1,54 @@
-// js/logout.js — 로그아웃/초기화 (완성본)
-// - index.html?reset=1 로 들어오면 사용자 관련 로컬데이터 최소 초기화
+// js/logout.js — 최종본
+// - 방법 A: <a id="logout-button"> 클릭 시 즉시 로그아웃
+// - 방법 B: URL에 ?reset=1 있으면 로드 직후 자동 로그아웃
+// - 로그아웃: 학습 관련 로컬 키만 깨끗하게 정리
 
 (function () {
-  function doLogoutIfQuery() {
-    const hasReset = /[?&]reset=1/.test(location.search);
-    if (!hasReset) return;
+  const KEYS = [
+    'currentUser',
+    'studyData',
+    'selectedGrade',
+    'selectedSubject',
+    'selectedCount',
+    'selectedTimer',
+    'isReviewMode',
+    'reviewProblems',
+    'soi:points',
+    'soi:inventory',
+  ];
 
-    // 학습/사용자 관련 최소 키만 정리 (전체 clear는 지양)
-    const keep = new Set(['soi:points']); // 포인트는 유지하고 싶으면 여기 남김
-    const allKeys = Object.keys(localStorage);
-    allKeys.forEach(k => { if (!keep.has(k)) localStorage.removeItem(k); });
-
-    // 사용자 닉네임도 기본값으로
-    localStorage.setItem('currentUser', 'soi');
-
-    // 화면 갱신
+  function clearSoiData() {
+    KEYS.forEach(k => localStorage.removeItem(k));
+    // 헤더 뱃지/문구 재렌더를 위한 이벤트
     window.dispatchEvent(new Event('user:changed'));
     window.dispatchEvent(new Event('points:changed'));
-
-    // ?reset=1 제거
-    const url = new URL(location.href);
-    url.searchParams.delete('reset');
-    history.replaceState({}, '', url.toString());
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', doLogoutIfQuery);
-  } else {
-    doLogoutIfQuery();
+  function doLogout() {
+    try { clearSoiData(); } catch(e) { console.warn('logout clear error:', e); }
+    // 캐시 무시 + 진입 사용자 명시(optional)
+    const url = new URL(location.origin + '/index.html');
+    url.searchParams.set('ts', Date.now());
+    location.href = url.toString();
   }
+
+  // A) 클릭 핸들러
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('logout-button');
+    if (btn) {
+      btn.style.display = 'inline';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        doLogout();
+      });
+    }
+  });
+
+  // B) ?reset=1 지원 (예전 링크 호환)
+  (function autoByQuery() {
+    try {
+      const u = new URL(location.href);
+      if (u.searchParams.get('reset') === '1') doLogout();
+    } catch {}
+  })();
 })();
