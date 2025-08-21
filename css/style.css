@@ -763,6 +763,7 @@ main.container {
     display: none;
   }
 }
+@media (max-width: 860px){ .user-info small { font-size: 12px; color:#666; } }
 
 
 
