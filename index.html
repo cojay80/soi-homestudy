@@ -255,5 +255,41 @@
     });
   });
   </script>
+  <script>
+/* === 로그인명 표시 강제 & 진단용 핫픽스 === */
+(function(){
+  // 1) 요소가 있는지 확인
+  const welcomeEl = document.getElementById('welcome-message');
+  const logoutBtn = document.getElementById('logout-button');
+  console.log('[HF] elements', {welcomeEl: !!welcomeEl, logoutBtn: !!logoutBtn});
+
+  // 2) currentUser 기본값 보정
+  let u = localStorage.getItem('currentUser');
+  if (!u) { u = 'soi'; localStorage.setItem('currentUser', u); }
+  console.log('[HF] currentUser =', u);
+
+  // 3) 표시 강제
+  if (welcomeEl) {
+    welcomeEl.innerHTML = `<small>${u}님 환영해요!</small>`;
+    welcomeEl.style.display = 'inline';
+  }
+  if (logoutBtn) logoutBtn.style.display = 'inline';
+
+  // 4) 포인트 뱃지도 동기화(있으면)
+  const p = localStorage.getItem('soi:points') || '0';
+  document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
+  console.log('[HF] points =', p);
+
+  // 5) 혹시 외부 스크립트가 나중에 덮어써도 1초 뒤 재반영
+  setTimeout(() => {
+    if (welcomeEl && !welcomeEl.textContent.trim()) {
+      welcomeEl.innerHTML = `<small>${u}님 환영해요!</small>`;
+      console.log('[HF] reapplied welcome text');
+    }
+  }, 1000);
+})();
+</script>
+
 </body>
 </html>
+
