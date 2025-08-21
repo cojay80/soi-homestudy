@@ -18,7 +18,7 @@
   <!-- 포인트/인벤토리(로컬) -->
   <script src="/js/soi-store.js" defer></script>
 
-  <!-- 헤더/로그아웃 -->
+  <!-- 헤더/로그아웃/드로워 토글 -->
   <script src="/js/logout.js?v=LOGOUT_FORCE_2" defer></script>
   <script src="/js/header.js?v=HDR_MINIMAL_3" defer></script>
 
@@ -26,6 +26,7 @@
   <!-- <script src="/js/home.js?v=HOME_1" defer></script> -->
 
   <style>
+    /* 공용 카드/그리드 */
     .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
     .card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;background:#fff}
@@ -43,9 +44,15 @@
     .link-card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
     .link-card a{display:inline-block}
 
-    /* 헤더 전체 중앙 정렬 + 본문 폭 맞춤 */
-    :root { --page-width: 980px; }
-    .main-header { background:#fff;border-bottom:1px solid #e5e5e5;padding:12px 16px; }
+    /* ===== 헤더(데스크톱: 중앙 정렬 / 모바일: 좌-중-우 배치) ===== */
+    :root { --page-width: 980px; --header-pad-x:16px; --header-pad-y:12px; }
+    .main-header {
+      position: relative;
+      background:#fff;
+      border-bottom:1px solid #e5e5e5;
+      padding: var(--header-pad-y) var(--header-pad-x);
+      z-index: 1000;
+    }
     .main-header > .logo,
     .main-header > .main-nav,
     .main-header > .user-info {
@@ -55,11 +62,70 @@
     }
     .main-header > .logo{ margin-bottom: 8px; }
     .main-header > .main-nav{ margin-bottom: 8px; }
-    .main-nav ul{display:flex;justify-content:center;align-items:center;gap:18px;margin:0;padding:0;list-style:none}
-    .main-nav a{display:inline-block;padding:8px 12px;border-radius:8px;color:#333;text-decoration:none;font-weight:600}
+
+    /* 데스크톱 메뉴 */
+    .main-nav ul{
+      display:flex;justify-content:center;align-items:center;gap:18px;margin:0;padding:0;list-style:none
+    }
+    .main-nav a{
+      display:inline-block;padding:8px 12px;border-radius:8px;color:#333;text-decoration:none;font-weight:600
+    }
     .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
     .user-info{display:flex;justify-content:center;align-items:center;gap:10px;color:#666}
     .mobile-menu-button{display:none}
+
+    /* ===== 모바일(≤860px): 로고 왼쪽, 로그인정보(작게) 가운데, 햄버거 오른쪽 ===== */
+    @media (max-width:860px){
+      .main-header{
+        display:flex; align-items:center; justify-content:flex-start; gap:8px;
+        padding:8px 12px;
+      }
+      .main-header > .logo,
+      .main-header > .main-nav,
+      .main-header > .user-info { max-width: none; margin: 0; text-align:left; }
+
+      /* 로고: 항상 맨 왼쪽, 한 줄로 */
+      .main-header .logo{ order:0; flex:1; }
+      .main-header .logo a{
+        font-size:18px; font-weight:700; color:#333; text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+
+      /* 로그인 정보: 햄버거 왼쪽에 작은 글씨 */
+      .main-header .user-info{
+        order:1; display:block; font-size:12px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+      .main-header .user-info a{ font-size:12px; color:#666; text-decoration:none; margin-left:4px; }
+
+      /* 햄버거: 맨 오른쪽 */
+      .main-header .mobile-menu-button{
+        order:2; display:block;
+        font-size:22px; line-height:1; border:1px solid #ddd; background:#fff; border-radius:10px; padding:6px 10px; cursor:pointer;
+      }
+
+      /* 기본 내비는 숨김 (드로워에서 표시) */
+      .main-header .main-nav{ display:none; }
+
+      /* 드로워 열림 상태 및 백드롭 */
+      body.nav-open { overflow:hidden; }
+      .main-header::before{ content:""; display:none; }
+      body.nav-open .main-header::before{
+        display:block; position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.35);
+      }
+
+      /* 드로워 메뉴(풀스크린) */
+      body.nav-open .main-nav{ display:block; }
+      body.nav-open .main-nav ul{
+        display:flex; flex-direction:column;
+        position:fixed; inset:0; z-index:1200;
+        padding:72px 16px 24px; gap:0; background:#fff; overflow-y:auto;
+      }
+      body.nav-open .main-nav a, body.nav-open .main-nav .badge{
+        display:block; width:100%;
+        padding:14px 12px; margin:6px 0;
+        border:1px solid #e5e5e5; border-radius:12px; background:#fff;
+      }
+      .main-nav li.active a, .main-nav a:hover{ background:#f7f9ff; }
+    }
   </style>
 </head>
 <body>
@@ -96,14 +162,10 @@
       <h2 style="margin:0 0 8px;">빠른 시작</h2>
       <div class="quick">
         <label class="inline">학년
-          <select id="sel-grade">
-            <!-- 시트에서 동적 채움 -->
-          </select>
+          <select id="sel-grade"><!-- 시트에서 동적 채움 --></select>
         </label>
         <label class="inline">과목
-          <select id="sel-subject">
-            <!-- 시트에서 동적 채움 -->
-          </select>
+          <select id="sel-subject"><!-- 시트에서 동적 채움 --></select>
         </label>
         <label class="inline">세트 수(지문/단일 묶음)
           <input type="number" id="sel-count" min="1" step="1" value="10"/>
@@ -175,22 +237,21 @@
     const subjSel  = document.getElementById('sel-subject');
     const msgEl    = document.getElementById('home-msg');
 
-    // 기본 옵션 (비어있을 때 메시지용)
     gradeSel.innerHTML = '<option value="">학년 선택</option>';
     subjSel.innerHTML  = '<option value="">과목 선택</option>';
 
-    // ===== 1) 시트에서 모든 문제 TSV 받아오기 =====
+    // 1) 시트 TSV 로드
     let text = '';
     try {
       if (!window.API || !window.API.problems) throw new Error('API.problems 미탑재');
-      text = await window.API.problems(); // config.js의 GOOGLE_SHEET_TSV 우선
+      text = await window.API.problems();
     } catch (e) {
       console.error('문제 로드 실패:', e);
       msgEl.textContent = '문제 목록을 불러오지 못했습니다. 인터넷/시트 공개 상태를 확인해주세요.';
       return;
     }
 
-    // ===== 2) 간단 파싱(탭/쉼표 자동 처리) =====
+    // 2) 파싱(탭/쉼표 자동)
     const raw = String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n');
     const lines = raw.split('\n').filter(l=>l.trim().length>0);
     if (!lines.length) { msgEl.textContent='시트가 비어 있습니다.'; return; }
@@ -216,28 +277,27 @@
       subjectsByGrade.get(g).add(s);
     }
 
-    // ===== 3) 학년 드롭다운 채우기 =====
+    // 3) 셀렉트 채우기
     const gradeList = [...grades].sort((a,b)=>a.localeCompare(b,'ko'));
     gradeSel.innerHTML = ['<option value="">학년 선택</option>']
       .concat(gradeList.map(g=>`<option value="${g}">${g}</option>`)).join('');
 
-    // ===== 4) 학년에 따라 과목 채우기 =====
     function fillSubjects(grade){
       const subs = subjectsByGrade.get(grade) ? [...subjectsByGrade.get(grade)] : [];
       subs.sort((a,b)=>a.localeCompare(b,'ko'));
       subjSel.innerHTML = ['<option value="">과목 선택</option>']
         .concat(subs.map(s=>`<option value="${s}">${s}</option>`)).join('');
     }
+
     gradeSel.addEventListener('change', ()=>{
       fillSubjects(gradeSel.value);
       localStorage.setItem('selectedGrade', gradeSel.value || '');
-      localStorage.setItem('selectedSubject',''); // 학년 바뀌면 과목 초기화
+      localStorage.setItem('selectedSubject','');
     });
     subjSel.addEventListener('change', ()=>{
       localStorage.setItem('selectedSubject', subjSel.value || '');
     });
 
-    // 이전 선택 복구
     const prevG = localStorage.getItem('selectedGrade');
     const prevS = localStorage.getItem('selectedSubject');
     if (prevG && gradeList.includes(prevG)) {
@@ -247,7 +307,7 @@
       fillSubjects(gradeSel.value);
     }
 
-    // ===== 5) 시작 버튼 =====
+    // 시작
     document.getElementById('btn-start').addEventListener('click', () => {
       const g = gradeSel.value.trim();
       const s = subjSel.value.trim();
@@ -256,19 +316,18 @@
 
       if (!g) { msgEl.textContent='학년을 선택해주세요.'; return; }
       if (!s) { msgEl.textContent='과목을 선택해주세요.'; return; }
+
       localStorage.setItem('selectedGrade', g);
       localStorage.setItem('selectedSubject', s);
       localStorage.setItem('selectedCount', String(Math.max(1, cnt)));
       localStorage.setItem('selectedTimer', String(Math.max(0, tmr)));
 
-      // 일반 모드
       localStorage.removeItem('isReviewMode');
       localStorage.removeItem('reviewProblems');
-
       location.href = 'quiz.html';
     });
 
-    // ===== 6) 오답 복습 =====
+    // 오답 복습
     document.getElementById('btn-review').addEventListener('click', () => {
       const user = localStorage.getItem('currentUser');
       try {
