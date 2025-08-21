@@ -1,55 +1,41 @@
-// js/header.js — 모바일 드로워 내비 완성본
-(function(){
-  function $(sel, root=document){ return root.querySelector(sel); }
-  function $all(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+<script>
+// js/header.js — 헤더 UI 업데이트 + 모바일 드로워
 
-  function openNav(){ document.body.classList.add('nav-open'); btn.setAttribute('aria-expanded','true'); }
-  function closeNav(){ document.body.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); }
-  function toggleNav(){ document.body.classList.contains('nav-open') ? closeNav() : openNav(); }
+function updateHeaderUI() {
+  const welcomeEl   = document.getElementById('welcome-message');
+  const logoutBtn   = document.getElementById('logout-button');
+  const pointsBadge = document.querySelector('[data-soi-points]');
 
-  let btn, nav;
+  const name    = (window.getCurrentUser && window.getCurrentUser()) || localStorage.getItem('currentUser') || '';
+  const points  = localStorage.getItem('soi:points') || '0';
 
-  document.addEventListener('DOMContentLoaded', () => {
-    btn = $('.mobile-menu-button');
-    nav = $('.main-nav ul');
-    if (!btn || !nav) return;
+  if (welcomeEl) {
+    welcomeEl.innerHTML = name ? `<small>${name}님 환영해요!</small>` : '';
+    welcomeEl.style.display = name ? 'inline' : 'none';
+  }
+  if (logoutBtn) {
+    logoutBtn.style.display = name ? 'inline' : 'none';
+  }
+  if (pointsBadge) pointsBadge.textContent = points;
+}
 
-    // 접근성 속성
-    btn.setAttribute('aria-controls', 'soi-main-nav');
-    btn.setAttribute('aria-expanded', 'false');
-    nav.id = 'soi-main-nav';
+document.addEventListener('DOMContentLoaded', () => {
+  // 초기 1회 렌더
+  updateHeaderUI();
 
-    // 토글
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleNav();
+  // 모바일 드로워
+  const mobileMenuButton = document.querySelector('.mobile-menu-button');
+  if (mobileMenuButton) {
+    mobileMenuButton.addEventListener('click', () => {
+      document.body.classList.toggle('nav-open');
     });
+  }
 
-    // 메뉴 항목 클릭 시 닫기
-    nav.addEventListener('click', (e) => {
-      const a = e.target.closest('a');
-      if (a) closeNav();
-    });
+  // 사용자 변경 이벤트 수신 → 즉시 갱신
+  window.addEventListener('user:changed', () => updateHeaderUI());
 
-    // 바깥(백드롭) 클릭 시 닫기
-    document.addEventListener('click', (e) => {
-      if (!document.body.classList.contains('nav-open')) return;
-      const insideMenu = e.target.closest('.main-nav');
-      const isButton = e.target.closest('.mobile-menu-button');
-      if (!insideMenu && !isButton) closeNav();
-    });
-
-    // ESC 닫기
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeNav();
-    });
-
-    // 리사이즈 시 데스크톱 뷰로 올라오면 강제 닫기
-    let lastW = window.innerWidth;
-    window.addEventListener('resize', () => {
-      const w = window.innerWidth;
-      if (lastW <= 860 && w > 860) closeNav();
-      lastW = w;
-    });
-  });
-})();
+  // 포인트가 변할 때도 갱신하고 싶다면, 포인트 변경 시
+  // window.dispatchEvent(new Event('points:changed')); 를 호출하고 여기서 수신:
+  window.addEventListener('points:changed', () => updateHeaderUI());
+});
+</script>
