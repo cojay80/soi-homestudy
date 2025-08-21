@@ -1,98 +1,103 @@
-// server.cjs — Render용 CommonJS 서버 (문제 프록시 + 사용자 데이터 저장)
+// server.cjs — Render 배포용 확정본
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
+const fetch = require('node-fetch');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 10000;
-const MONGODB_URI = process.env.MONGODB_URI || '';
-const GOOGLE_SHEET_TSV = process.env.GOOGLE_SHEET_TSV || ''; // 선택
 
+// ===== 환경변수 =====
+// Render 대시보드 > Environment에 넣어두면 서버 재시작 없이 사용
+const GOOGLE_SHEET_TSV =
+  process.env.GOOGLE_SHEET_TSV ||
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv";
+
+const MONGODB_URI =
+  process.env.MONGODB_URI ||
+  "mongodb+srv://soiuser:162wn4331@cluster0.dmtk0ea.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+// ===== 본문 파서 =====
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// 정적 파일 (repo 루트: index.html 등)
+// ===== 정적 파일 서빙 (핵심) =====
+// 루트 + /js /css /images 확실히 매핑해서 JS 404 시 HTML이 내려오는 문제 차단
 app.use(express.static(path.join(__dirname)));
+app.use('/js',     express.static(path.join(__dirname, 'js')));
+app.use('/css',    express.static(path.join(__dirname, 'css')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/sound',  express.static(path.join(__dirname, 'sound')));
 
 // 헬스체크
-app.get('/health', (req, res) => {
-  res.json({ ok: true, env: process.env.NODE_ENV || 'development' });
-});
+app.get('/health', (req, res) => res.json({ ok: true }));
 
-// ---- Mongo 연결 & 모델
-const userDataSchema = new mongoose.Schema(
-  {
-    user: { type: String, index: true, unique: true },
-    data: { type: Object, default: {} }, // studyData 전체 저장
-    updatedAt: { type: Date, default: Date.now },
-  },
-  { collection: 'user_data' }
-);
-const UserData = mongoose.model('UserData', userDataSchema);
-
-async function connectDB() {
-  if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI 환경변수가 없습니다. Render > Environment에 추가하세요.');
-    return;
-  }
-  try {
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-    console.log('✅ MongoDB 연결 성공');
-  } catch (err) {
-    console.error('❌ MongoDB 연결 실패:', err.message);
-  }
-}
-
-// ---- (선택) 문제 프록시
+// ===== Google Sheet 프록시 (프론트에서는 /api/problems 만 호출) =====
 app.get('/api/problems', async (req, res) => {
   try {
-    if (!GOOGLE_SHEET_TSV) {
-      // 서버 프록시 미사용: 프런트에서 직접 시트 URL을 쓰는 경우
-      res.status(200).type('text/plain').send('');
-      return;
-    }
-    const r = await fetch(GOOGLE_SHEET_TSV, { cache: 'no-store' });
-    if (!r.ok) throw new Error('Sheet fetch error: ' + r.status);
-    const text = await r.text();
-    res.status(200).type('text/plain').send(text);
+    const r = await fetch(GOOGLE_SHEET_TSV, { timeout: 10000 });
+    if (!r.ok) return res.status(502).send('Bad gateway: sheet');
+    const tsv = await r.text();
+    res.type('text/tab-separated-values').send(tsv);
   } catch (e) {
-    console.error('GET /api/problems error:', e.message);
-    res.status(500).json({ error: 'PROBLEMS_FETCH_FAILED' });
+    console.error('[sheet] error', e.message);
+    res.status(500).send('Sheet fetch error');
   }
 });
 
-// ---- 사용자 데이터 조회/저장
+// ===== Mongo 연결 & 사용자 학습데이터 저장 =====
+let UserData;
+async function connectDB() {
+  if (!MONGODB_URI) {
+    console.warn('[mongo] no MONGODB_URI');
+    return;
+  }
+  await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  const schema = new mongoose.Schema({
+    user: { type: String, index: true },
+    blob: { type: Object, default: {} },
+    updatedAt: { type: Date, default: Date.now }
+  });
+  UserData = mongoose.models.UserData || mongoose.model('UserData', schema);
+  console.log('✅ Mongo connected');
+}
+connectDB().catch(err => console.error('❌ Mongo error:', err.message));
+
+// GET: 사용자 데이터
 app.get('/api/data/:user', async (req, res) => {
   try {
-    const user = String(req.params.user || '').trim();
-    if (!user) return res.status(400).json({ error: 'NO_USER' });
-    const doc = await UserData.findOne({ user });
-    res.json(doc?.data || {});
+    if (!UserData) return res.json({});
+    const doc = await UserData.findOne({ user: req.params.user }).lean();
+    res.json(doc?.blob || {});
   } catch (e) {
-    console.error('GET /api/data error:', e.message);
-    res.status(500).json({ error: 'DATA_GET_FAILED' });
+    console.error('[data:get]', e.message);
+    res.json({});
   }
 });
 
+// POST: 사용자 데이터 저장(전체 덮어쓰기)
 app.post('/api/data/:user', async (req, res) => {
   try {
-    const user = String(req.params.user || '').trim();
-    if (!user) return res.status(400).json({ error: 'NO_USER' });
-    const data = req.body || {};
-    const doc = await UserData.findOneAndUpdate(
+    const user = req.params.user;
+    const blob = req.body || {};
+    if (!UserData) return res.status(200).json({ ok: true, memo: 'no-db-mode' });
+
+    await UserData.findOneAndUpdate(
       { user },
-      { $set: { data, updatedAt: new Date() } },
-      { upsert: true, new: true }
+      { $set: { blob, updatedAt: new Date() } },
+      { upsert: true }
     );
-    res.json({ ok: true, savedAt: doc.updatedAt });
+    res.json({ ok: true });
   } catch (e) {
-    console.error('POST /api/data error:', e.message);
-    res.status(500).json({ error: 'DATA_SAVE_FAILED' });
+    console.error('[data:post]', e.message);
+    res.status(500).json({ ok: false });
   }
 });
 
-// 서버 시작
-app.listen(PORT, () => {
-  console.log(`soi-homestudy running on port ${PORT}`);
-  connectDB();
+// ===== SPA 기본 라우팅(정적 파일과 충돌 없게 *마지막*에 배치) =====
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// ===== 서버 시작 =====
+app.listen(PORT, () => console.log(`soi-homestudy on :${PORT}`));
