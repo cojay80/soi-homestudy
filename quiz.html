@@ -6,72 +6,92 @@
   <title>문제 풀이 - 소이의 공부방</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="./css/style.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
-  <!-- 공통: 순서 유지 + defer (CONFIG가 반드시 최상단) -->
-  <script src="/js/config.js" defer></script>
-  <script src="/js/core-auth-store.js" defer></script>
-  <script src="/js/api-shim.js" defer></script>
+  <!-- 공통: 순서 + defer -->
+  <script src="./js/config.js" defer></script>
+  <script src="./js/core-auth-store.js" defer></script>
+  <script src="./js/api-shim.js" defer></script>
+  <script src="./js/soi-store.js" defer></script>
+  <script src="./js/header.js" defer></script>
 
-  <!-- (선택) 부가 스크립트 - 필요 없으면 주석/삭제 -->
-  <!-- <script src="/js/drop.js" defer></script> -->
+  <!-- 문제 불러오기(구글시트 파서 등) -->
+  <script src="./js/sheets.js" defer></script>
 
-  <!-- ✅ 정답 보상(포인트+랜덤드랍) 먼저 로드 -->
-  <script src="/js/rewards.js?v=RW1" defer></script>
+  <!-- (선택) 드롭 보상 연출 -->
+  <script src="./js/drop.js" defer></script>
+
+  <!-- 정답 보상(포인트+랜덤드랍) 먼저 로드 -->
+  <script src="./js/rewards.js?v=RW1" defer></script>
 </head>
 <body>
-  <div class="quiz-container">
-    <header class="quiz-header">
+  <header class="main-header">
+    <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">오늘의 학습</a></li>
+        <li><a href="report.html">학습 보고서</a></li>
+        <li><a href="goal.html">나의 목표</a></li>
+        <li><a href="record.html">상세 기록</a></li>
+        <li><a href="notes.html">오답 노트</a></li>
+        <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <a href="#" id="logout-button" style="display:none">(로그아웃)</a>
+    </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+  </header>
+
+  <div class="quiz-container" style="max-width:980px;margin:0 auto;padding:16px;">
+    <header class="quiz-header" style="display:flex;justify-content:space-between;align-items:center;">
       <h1>문제 쑥쑥! 🧠</h1>
       <div id="timer-display"></div>
     </header>
 
-    <div class="quiz-layout">
-      <div class="passage-area">
+    <div class="quiz-layout" style="display:flex;gap:12px;">
+      <div class="passage-area" style="display:none;flex:1;min-width:0;">
         <h2>📜 지문</h2>
-        <div id="passage-content"></div>
+        <div id="passage-content" class="card"></div>
       </div>
 
-      <div class="problem-area">
+      <div class="problem-area" style="flex:1.4;min-width:0;">
         <main class="quiz-main">
-          <div class="progress-bar">
-            <div class="progress"></div>
-          </div>
+          <div class="progress-bar"><div class="progress"></div></div>
           <p class="question-number">1 / 10</p>
 
-          <div class="question-box">
-            <img id="question-image" alt="문제 이미지" style="display:none;" />
-            <p class="question-text" aria-live="polite">문제를 불러오는 중입니다...</p>
+          <div class="question-box card">
+            <img id="question-image" alt="문제 이미지" style="display:none;max-width:100%;height:auto;" />
+            <p class="question-text">문제를 불러오는 중입니다...</p>
           </div>
 
-          <div class="answer-options">
-            <button class="option">1)</button>
-            <button class="option">2)</button>
-            <button class="option">3)</button>
-            <button class="option">4)</button>
+          <div class="answer-options" style="display:grid;gap:8px;">
+            <button class="option btn">1)</button>
+            <button class="option btn">2)</button>
+            <button class="option btn">3)</button>
+            <button class="option btn">4)</button>
           </div>
         </main>
       </div>
     </div>
 
-    <div id="results-container" style="display:none;">
+    <div id="results-container" style="display:none;" class="card">
       <h2>✨ 퀴즈 결과 ✨</h2>
       <p id="score-text"></p>
       <p id="message-text"></p>
-      <div class="result-buttons">
-        <button id="review-button" class="retry-button" disabled>저장 중...</button>
-        <a href="index.html" id="main-menu-button" class="retry-button disabled-link">메인으로 돌아가기</a>
+      <div class="result-buttons" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="review-button" class="btn" disabled>저장 중...</button>
+        <a href="index.html" id="main-menu-button" class="btn disabled-link">메인으로 돌아가기</a>
       </div>
     </div>
 
     <div id="toast-message"></div>
   </div>
 
-  <!-- 헤더(로그인 가드/로그아웃 링크 처리 등) -->
-  <script src="/js/header.js?v=HDR_MIN_1" defer></script>
-
-  <!-- ✅ 마지막에 퀴즈 로직. rewards.js 보다 “반드시 뒤에” -->
-  <script src="/js/quiz.js?v=QZ1" defer></script>
+  <!-- 퀴즈 로직(보상 스크립트 뒤에) -->
+  <script src="./js/quiz.js?v=QZ1" defer></script>
 </body>
 </html>
