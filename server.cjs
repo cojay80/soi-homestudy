@@ -1,19 +1,17 @@
-// server.js — Render용 최소 백엔드(문제 프록시 + 사용자 데이터 저장)
+// server.cjs — Render용 CommonJS 서버 (문제 프록시 + 사용자 데이터 저장)
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
-const fetch = require('node-fetch');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 10000;
 const MONGODB_URI = process.env.MONGODB_URI || '';
-// 시트 TSV를 서버에서 프록시하고 싶을 때(선택) — 없으면 프런트가 직접 읽음
-const GOOGLE_SHEET_TSV = process.env.GOOGLE_SHEET_TSV || '';
+const GOOGLE_SHEET_TSV = process.env.GOOGLE_SHEET_TSV || ''; // 선택
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// 정적 파일 (repo 루트)
+// 정적 파일 (repo 루트: index.html 등)
 app.use(express.static(path.join(__dirname)));
 
 // 헬스체크
@@ -25,8 +23,7 @@ app.get('/health', (req, res) => {
 const userDataSchema = new mongoose.Schema(
   {
     user: { type: String, index: true, unique: true },
-    // studyData 전체를 그대로 저장(프런트 구조 유지)
-    data: { type: Object, default: {} },
+    data: { type: Object, default: {} }, // studyData 전체 저장
     updatedAt: { type: Date, default: Date.now },
   },
   { collection: 'user_data' }
@@ -35,7 +32,7 @@ const UserData = mongoose.model('UserData', userDataSchema);
 
 async function connectDB() {
   if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI 환경변수가 없습니다. Render 대시보드 > Environment에서 설정하세요.');
+    console.error('❌ MONGODB_URI 환경변수가 없습니다. Render > Environment에 추가하세요.');
     return;
   }
   try {
@@ -46,17 +43,15 @@ async function connectDB() {
   }
 }
 
-// ---- API: 문제 프록시 (선택)
-// 프런트가 config.js의 GOOGLE_SHEET_TSV로 직접 불러오지만,
-// 보안/속도 때문에 서버로 우회하고 싶을 때 사용.
+// ---- (선택) 문제 프록시
 app.get('/api/problems', async (req, res) => {
   try {
-    const url = GOOGLE_SHEET_TSV || '';
-    if (!url) {
-      res.status(200).type('text/plain').send(''); // 서버 프록시 미사용
+    if (!GOOGLE_SHEET_TSV) {
+      // 서버 프록시 미사용: 프런트에서 직접 시트 URL을 쓰는 경우
+      res.status(200).type('text/plain').send('');
       return;
     }
-    const r = await fetch(url, { timeout: 10000 });
+    const r = await fetch(GOOGLE_SHEET_TSV, { cache: 'no-store' });
     if (!r.ok) throw new Error('Sheet fetch error: ' + r.status);
     const text = await r.text();
     res.status(200).type('text/plain').send(text);
@@ -66,9 +61,7 @@ app.get('/api/problems', async (req, res) => {
   }
 });
 
-// ---- API: 사용자 데이터 저장/조회 ----
-
-// 조회
+// ---- 사용자 데이터 조회/저장
 app.get('/api/data/:user', async (req, res) => {
   try {
     const user = String(req.params.user || '').trim();
@@ -81,7 +74,6 @@ app.get('/api/data/:user', async (req, res) => {
   }
 });
 
-// 저장(덮어쓰기)
 app.post('/api/data/:user', async (req, res) => {
   try {
     const user = String(req.params.user || '').trim();
