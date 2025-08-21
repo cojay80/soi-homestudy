@@ -10,7 +10,8 @@
 
   <style>
     :root{--page-w:980px;--card-b:#e5e5e5;--muted:#666;--bar:#7aa6ff}
-    *{box-sizing:border-box} body{margin:0;font-family:"Noto Sans KR",system-ui,Arial,sans-serif;background:#fafafa;color:#111}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Noto Sans KR",system-ui,Arial,sans-serif;background:#fafafa;color:#111}
     a{color:inherit;text-decoration:none}
     .container{max-width:var(--page-w);margin:0 auto;padding:16px}
 
@@ -55,10 +56,10 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-<div class="user-info">
-  <span id="welcome-message"></span>
-  <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
-</div>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
+    </div>
   </header>
 
   <!-- 본문 -->
@@ -160,9 +161,7 @@
     if (!u) { u = 'soi'; localStorage.setItem('currentUser', u); }
     return u;
   }
-  function pointsGet(){
-    return Number(localStorage.getItem('soi:points') || '0');
-  }
+  function pointsGet(){ return Number(localStorage.getItem('soi:points') || '0'); }
   function pointsAdd(delta){
     const v = pointsGet() + Number(delta||0);
     localStorage.setItem('soi:points', String(v));
@@ -177,9 +176,8 @@
     const m2 = n => String(n).padStart(2,'0');
     return `${d.getFullYear()}-${m2(d.getMonth()+1)}-${m2(d.getDate())}`;
   }
-  function weekKey(){
-    // ISO 주 번호 간단 버전(월요일 시작)
-    const d = new Date();
+  function weekKeyFromDate(dateStr){
+    const d = new Date(dateStr + 'T00:00:00');
     const day = (d.getDay() + 6) % 7; // 월=0
     const monday = new Date(d); monday.setDate(d.getDate() - day);
     const year = monday.getFullYear();
@@ -188,25 +186,28 @@
     const ww = Math.floor(diff/7)+1;
     return `${year}-W${String(ww).padStart(2,'0')}`;
   }
+  function thisWeekKey(){ return weekKeyFromDate(todayStr()); }
 
   // ========= header 표시/로그아웃 =========
-  (function headerPaint(){
+  function paintHeader(){
     const u = ensureUser();
     const w = document.getElementById('welcome-message');
     const lb = document.getElementById('logout-button');
     if (w) w.innerHTML = `<small>${u}님 환영해요!</small>`;
-    if (lb) {
+    if (lb && !lb.dataset.bound){
+      lb.dataset.bound = '1';
       lb.style.display = 'inline';
-      lb.addEventListener('click', () => {
+      lb.addEventListener('click', (e) => {
+        e.preventDefault();
         [
           'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
           'isReviewMode','reviewProblems','soi:points','soi:inventory'
         ].forEach(k=>localStorage.removeItem(k));
         location.href = 'index.html?ts=' + Date.now();
-      }, { once:true });
+      });
     }
     document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = pointsGet());
-  })();
+  }
 
   // ========= 목표 저장/복구 =========
   function goalLoad(){
@@ -244,10 +245,7 @@
       render(); // 즉시 반영
     });
     $('btn-goal-reset').addEventListener('click', () => {
-      localStorage.removeItem(GOAL_KEYS.dQ);
-      localStorage.removeItem(GOAL_KEYS.dP);
-      localStorage.removeItem(GOAL_KEYS.wS);
-      localStorage.removeItem(GOAL_KEYS.wA);
+      Object.values(GOAL_KEYS).forEach(k => localStorage.removeItem(k));
       bindGoalForm();
       render();
     });
@@ -255,7 +253,6 @@
 
   // ========= 데이터 집계 =========
   function parseScore(scoreStr){
-    // "8/10" -> {c:8,t:10}
     const m = String(scoreStr||'').match(/(\d+)\s*\/\s*(\d+)/);
     if (!m) return {c:0,t:0};
     return {c:Number(m[1]), t:Number(m[2])};
@@ -265,36 +262,18 @@
     const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
     const recs = sd?.[u]?.records || [];
     const today = todayStr();
-    const wk = weekKey();
+    const wk = thisWeekKey();
 
     const todayRecs = recs.filter(r => r.date === today);
-    const weekRecs = recs.filter(r => {
-      // 같은 주인지 확인: 간단히 weekKey 재계산
-      // 날짜 문자열을 Date로 변환
-      const d = new Date(r.date + 'T00:00:00');
-      const day = (d.getDay() + 6) % 7;
-      const monday = new Date(d); monday.setDate(d.getDate() - day);
-      const year = monday.getFullYear();
-      const first = new Date(year,0,1);
-      const diff = Math.floor((monday - first) / 86400000);
-      const ww = Math.floor(diff/7)+1;
-      const key = `${year}-W${String(ww).padStart(2,'0')}`;
-      return key === wk;
-    });
+    const weekRecs  = recs.filter(r => weekKeyFromDate(r.date) === wk);
 
     // 오늘 집계
     let tQ=0, tC=0;
-    todayRecs.forEach(r => {
-      const {c,t} = parseScore(r.score);
-      tQ += t; tC += c;
-    });
+    todayRecs.forEach(r => { const {c,t}=parseScore(r.score); tQ+=t; tC+=c; });
 
     // 주간 집계
     let wSess = weekRecs.length, wC=0, wT=0;
-    weekRecs.forEach(r => {
-      const {c,t} = parseScore(r.score);
-      wC += c; wT += t;
-    });
+    weekRecs.forEach(r => { const {c,t}=parseScore(r.score); wC+=c; wT+=t; });
     const wAcc = wT>0 ? Math.round((wC/wT)*100) : 0;
 
     return { todayQuestions:tQ, todayCorrect:tC, weekSessions:wSess, weekAcc:wAcc };
@@ -302,70 +281,45 @@
 
   // ========= 보상/달성 체크 =========
   function claimKeyDaily(kind){ return `reward:daily:${kind}:${todayStr()}`;}
-  function claimKeyWeekly(kind){ return `reward:weekly:${kind}:${weekKey()}`;}
+  function claimKeyWeekly(kind){ return `reward:weekly:${kind}:${thisWeekKey()}`;}
   function isClaimed(key){ return localStorage.getItem(key)==='1';}
   function setClaimed(key){ localStorage.setItem(key,'1'); }
 
   function checkAndReward(progress, goals){
-    // 상태 라벨
     const $ = id => document.getElementById(id);
 
-    // 1) 일일 문항
+    // 일일 문항
     const dQKey = claimKeyDaily('questions');
     if (goals.dQ>0 && progress.todayQuestions >= goals.dQ){
-      if (!isClaimed(dQKey)){
-        pointsAdd(REWARD.DAILY_QUESTIONS);
-        setClaimed(dQKey);
+      if (!isClaimed(dQKey)){ pointsAdd(REWARD.DAILY_QUESTIONS); setClaimed(dQKey);
         $('state-daily-questions').innerHTML = `일일 문항: <span class="ok">달성! +${REWARD.DAILY_QUESTIONS}p</span>`;
-      } else {
-        $('state-daily-questions').textContent = '일일 문항: 달성(보상 수령 완료)';
-      }
-    } else {
-      $('state-daily-questions').textContent = '일일 문항: 미달성';
-    }
+      } else $('state-daily-questions').textContent = '일일 문항: 달성(보상 수령 완료)';
+    } else $('state-daily-questions').textContent = '일일 문항: 미달성';
 
-    // 2) 일일 포인트(정답×1p 기준)
+    // 일일 포인트(정답×1p 기준)
     const todayPts = progress.todayCorrect * REWARD.POINTS_PER_CORRECT;
     const dPKey = claimKeyDaily('points');
     if (goals.dP>0 && todayPts >= goals.dP){
-      if (!isClaimed(dPKey)){
-        pointsAdd(REWARD.DAILY_POINTS);
-        setClaimed(dPKey);
+      if (!isClaimed(dPKey)){ pointsAdd(REWARD.DAILY_POINTS); setClaimed(dPKey);
         $('state-daily-points').innerHTML = `일일 포인트: <span class="ok">달성! +${REWARD.DAILY_POINTS}p</span>`;
-      } else {
-        $('state-daily-points').textContent = '일일 포인트: 달성(보상 수령 완료)';
-      }
-    } else {
-      $('state-daily-points').textContent = '일일 포인트: 미달성';
-    }
+      } else $('state-daily-points').textContent = '일일 포인트: 달성(보상 수령 완료)';
+    } else $('state-daily-points').textContent = '일일 포인트: 미달성';
 
-    // 3) 주간 세션
+    // 주간 세션
     const wSKey = claimKeyWeekly('sessions');
     if (goals.wS>0 && progress.weekSessions >= goals.wS){
-      if (!isClaimed(wSKey)){
-        pointsAdd(REWARD.WEEKLY_SESSIONS);
-        setClaimed(wSKey);
+      if (!isClaimed(wSKey)){ pointsAdd(REWARD.WEEKLY_SESSIONS); setClaimed(wSKey);
         $('state-week-sessions').innerHTML = `주간 세션: <span class="ok">달성! +${REWARD.WEEKLY_SESSIONS}p</span>`;
-      } else {
-        $('state-week-sessions').textContent = '주간 세션: 달성(보상 수령 완료)';
-      }
-    } else {
-      $('state-week-sessions').textContent = '주간 세션: 미달성';
-    }
+      } else $('state-week-sessions').textContent = '주간 세션: 달성(보상 수령 완료)';
+    } else $('state-week-sessions').textContent = '주간 세션: 미달성';
 
-    // 4) 주간 정답률
+    // 주간 정답률
     const wAKey = claimKeyWeekly('acc');
     if (goals.wA>0 && progress.weekAcc >= goals.wA){
-      if (!isClaimed(wAKey)){
-        pointsAdd(REWARD.WEEKLY_ACC);
-        setClaimed(wAKey);
+      if (!isClaimed(wAKey)){ pointsAdd(REWARD.WEEKLY_ACC); setClaimed(wAKey);
         $('state-week-acc').innerHTML = `주간 정답률: <span class="ok">달성! +${REWARD.WEEKLY_ACC}p</span>`;
-      } else {
-        $('state-week-acc').textContent = '주간 정답률: 달성(보상 수령 완료)';
-      }
-    } else {
-      $('state-week-acc').textContent = '주간 정답률: 미달성';
-    }
+      } else $('state-week-acc').textContent = '주간 정답률: 달성(보상 수령 완료)';
+    } else $('state-week-acc').textContent = '주간 정답률: 미달성';
   }
 
   // ========= 렌더 =========
@@ -374,34 +328,36 @@
     const goals = goalLoad();
     const prog = loadRecordsTodayWeek();
 
-    // 목표 수치 표시
     document.getElementById('today-questions-goal').textContent = goals.dQ;
     document.getElementById('today-points-goal').textContent = goals.dP;
     document.getElementById('week-sessions-goal').textContent = goals.wS;
     document.getElementById('week-acc-goal').textContent = goals.wA + '%';
 
-    // 현재 수치 표시
     document.getElementById('today-questions').textContent = prog.todayQuestions;
     const todayPts = prog.todayCorrect * REWARD.POINTS_PER_CORRECT;
     document.getElementById('today-points').textContent = todayPts;
     document.getElementById('week-sessions').textContent = prog.weekSessions;
     document.getElementById('week-acc').textContent = prog.weekAcc + '%';
 
-    // 진행바
     document.getElementById('bar-today-questions').style.width = pct(prog.todayQuestions, goals.dQ) + '%';
     document.getElementById('bar-today-points').style.width   = pct(todayPts, goals.dP) + '%';
     document.getElementById('bar-week-sessions').style.width  = pct(prog.weekSessions, goals.wS) + '%';
     document.getElementById('bar-week-acc').style.width       = pct(prog.weekAcc, goals.wA) + '%';
 
-    // 달성/보상 체크
     checkAndReward(prog, goals);
   }
 
   // ========= 시작 =========
-  document.addEventListener('DOMContentLoaded', () => {
+  function boot(){
+    paintHeader();
     bindGoalForm();
     render();
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
   </script>
 </body>
 </html>
