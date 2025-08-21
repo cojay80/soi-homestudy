@@ -1,59 +1,21 @@
-// js/logout.js — 로그아웃 후 로그인 페이지로 이동
-(function () {
-  function q(sel, root=document){ return root.querySelector(sel); }
-  function qa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+<script>
+// js/logout.js — ?reset=1 처리
+(function(){
+  function doLogout(){
+    // 필요한 키만 정리 (원하면 아래 주석 풀어서 전부 삭제 가능)
+    // localStorage.clear();
 
-  function clearUserScopedData(user) {
-    try {
-      const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
-      if (user && sd[user]) {
-        sd[user] = { incorrect: [], records: [] };
-        localStorage.setItem('studyData', JSON.stringify(sd));
-      }
-    } catch {
-      const sd = {}; if (user) sd[user] = { incorrect: [], records: [] };
-      localStorage.setItem('studyData', JSON.stringify(sd));
+    // 로그인만 초기화
+    localStorage.removeItem('currentUser');
+    // 페이지 이동
+    location.href = 'index.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const url = new URL(location.href);
+    if (url.searchParams.get('reset') === '1') {
+      doLogout();
     }
-  }
-
-  function logoutCore() {
-    const user = localStorage.getItem('currentUser');
-    clearUserScopedData(user);
-    try {
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('isReviewMode');
-      localStorage.removeItem('reviewProblems');
-      localStorage.setItem('soi:points', '0');
-      localStorage.setItem('soi:inventory', '{}');
-    } catch {}
-    qa('[data-soi-points]').forEach(el => el.textContent = '0');
-    const wm = q('#welcome-message'); if (wm) wm.textContent = '';
-  }
-
-  function gotoLogin() {
-    const back = encodeURIComponent('index.html'); // 원하면 location.pathname 사용
-    location.href = `login.html?next=${back}`;
-  }
-
-  function handleLogoutClick() {
-    logoutCore();
-    gotoLogin();
-  }
-
-  function maybeHandleResetParam() {
-    const params = new URLSearchParams(location.search);
-    if (params.get('reset') === '1') {
-      logoutCore();
-      gotoLogin();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const a = q('#logout-button');
-    if (a) a.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleLogoutClick();
-    });
-    maybeHandleResetParam();
   });
 })();
+</script>
