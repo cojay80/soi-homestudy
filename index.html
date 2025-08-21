@@ -7,18 +7,17 @@
 
   <!-- 폰트 / 공통 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml"/>
 
   <!-- 공통 스크립트 (반드시 이 순서, 모두 defer) -->
-  <script src="/js/config.js" defer></script>
-  <script src="/js/core-auth-store.js" defer></script>
-  <script src="/js/api-shim.js" defer></script>
-  <script src="/js/soi-store.js" defer></script>
-  <script src="/js/logout.js" defer></script>
-  <script src="/js/header.js" defer></script>
+  <script src="./js/config.js" defer></script>
+  <script src="./js/core-auth-store.js" defer></script>
+  <script src="./js/api-shim.js" defer></script>
+  <script src="./js/soi-store.js" defer></script>
+  <script src="./js/logout.js" defer></script>
+  <script src="./js/header.js" defer></script>
 
-  <!-- 페이지 전용 보조 스타일(필요 최소만) -->
   <style>
     .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
@@ -37,7 +36,6 @@
     .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
     .link-card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
     .link-card a{display:inline-block}
-    /* 모바일에서 로그인 문구 더 작게 */
     @media (max-width:860px){ .user-info small{font-size:12px;color:#666} }
   </style>
 </head>
@@ -138,12 +136,11 @@
     </section>
   </main>
 
-  <!-- 푸터 -->
   <footer class="main-footer">
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 시트 기반 드롭다운 + 시작/복습 로직 -->
+  <!-- 시트 기반 드롭다운 + 시작/복습 -->
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const gradeSel = document.getElementById('sel-grade');
@@ -154,7 +151,7 @@
     let text = '';
     try {
       if (!window.API || !window.API.problems) throw new Error('API.problems 미탑재');
-      text = await window.API.problems(); // config.js의 GOOGLE_SHEET_TSV 직결 또는 /api/problems
+      text = await window.API.problems(); // config.js의 GOOGLE_SHEET_TSV 또는 /api/problems
     } catch (e) {
       console.error('문제 로드 실패:', e);
       msgEl.textContent = '문제 목록을 불러오지 못했습니다. 인터넷/시트 공개 상태를 확인해주세요.';
@@ -241,7 +238,7 @@
 
     // 오답 복습
     document.getElementById('btn-review').addEventListener('click', () => {
-      const user = (window.getCurrentUser && window.getCurrentUser()) || localStorage.getItem('currentUser');
+      const user = localStorage.getItem('currentUser') || 'soi';
       try {
         const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
         const wrongs = sd?.[user]?.incorrect || [];
@@ -256,50 +253,34 @@
   });
   </script>
 
-  <!-- 로그인 환영문구/포인트 즉시 표시 부트스트랩 (의존 없이 안정 표시) -->
-  <script id="welcome-bootstrap">
+  <!-- 로그인/포인트 즉시 표기 부트스트랩 (경쟁상태 방지용) -->
+  <script>
   (function(){
     function getQueryUser(){
       try{
-        var m = location.search.match(/[?&]user=([^&]+)/);
+        const m = location.search.match(/[?&]user=([^&]+)/);
         return m && m[1] ? decodeURIComponent(m[1]) : null;
       }catch(e){ return null; }
     }
     function ensureUser(){
-      var fromUrl = getQueryUser();
-      var u = fromUrl || localStorage.getItem('currentUser') || 'soi';
+      const fromUrl = getQueryUser();
+      const u = fromUrl || localStorage.getItem('currentUser') || 'soi';
       localStorage.setItem('currentUser', u);
       return u;
     }
-    function readPoints(){
-      var v = localStorage.getItem('soi:points');
-      return v ? String(v) : '0';
-    }
     function paint(){
-      var u = ensureUser();
-      var welcomeEl = document.getElementById('welcome-message');
-      var logoutBtn = document.getElementById('logout-button');
-      if (welcomeEl){ welcomeEl.innerHTML = '<small>'+u+'님 환영해요!</small>'; welcomeEl.style.display='inline'; }
+      const u = ensureUser();
+      const welcomeEl = document.getElementById('welcome-message');
+      const logoutBtn = document.getElementById('logout-button');
+      if (welcomeEl){ welcomeEl.innerHTML = `<small>${u}님 환영해요!</small>`; welcomeEl.style.display='inline'; }
       if (logoutBtn){ logoutBtn.style.display='inline'; }
-      var p = readPoints();
-      document.querySelectorAll('[data-soi-points]').forEach(function(el){ el.textContent = p; });
+      const p = localStorage.getItem('soi:points') || '0';
+      document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
     }
-    // 첫 렌더
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', paint);
-    } else {
-      paint();
-    }
-    // 다른 스크립트가 덮어써도 짧게 재반영
-    setTimeout(paint, 800);
-    // 탭/창 사이 동기화
-    window.addEventListener('storage', function(ev){
-      if (ev.key === 'currentUser' || ev.key === 'soi:points') paint();
-    });
-    // 다른 코드가 알리면 즉시 반영
-    window.addEventListener('user:changed', paint);
-    window.addEventListener('points:changed', paint);
-    // 전역 노출(원하면 수동 호출)
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint);
+    else paint();
+    setTimeout(paint, 600);
+    window.addEventListener('storage', (ev)=>{ if (ev.key === 'currentUser' || ev.key === 'soi:points') paint(); });
     window.updateHeaderUI = paint;
   })();
   </script>
