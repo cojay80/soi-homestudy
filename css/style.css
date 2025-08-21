@@ -582,6 +582,84 @@ main.container {
     background: rgba(0,0,0,.35);
   }
 }
+/* ===== Header 공통 ===== */
+:root { --page-width: 980px; --header-pad-x: 16px; --header-pad-y: 12px; }
+
+.main-header{
+  position: relative;
+  background:#fff;
+  border-bottom:1px solid #e5e5e5;
+  padding: var(--header-pad-y) var(--header-pad-x);
+  z-index: 1000;
+}
+.main-header > .logo,
+.main-header > .main-nav,
+.main-header > .user-info{
+  max-width: var(--page-width);
+  margin: 0 auto;
+  text-align: center;
+}
+.main-nav ul{
+  display:flex; justify-content:center; align-items:center;
+  gap:18px; margin:0; padding:0; list-style:none;
+}
+.main-nav a{
+  display:inline-block; padding:8px 12px; border-radius:8px;
+  color:#333; text-decoration:none; font-weight:600;
+}
+.main-nav li.active a, .main-nav a:hover{ background:#eef4ff; color:#1f3b8f; }
+
+.user-info{ font-size:13px; color:#555; }
+.user-info a{ color:#555; margin-left:4px; text-decoration:none; }
+
+/* 햄버거 */
+.mobile-menu-button{
+  position:absolute; right:var(--header-pad-x); top:var(--header-pad-y);
+  border:1px solid #ddd; background:#fff; border-radius:10px; padding:6px 10px;
+  cursor:pointer; font-size:18px; line-height:1;
+}
+
+/* ===== 모바일 ===== */
+@media (max-width: 860px){
+  /* 내비게이션은 숨김 */
+  .main-header > .main-nav { display:none; }
+
+  /* 로그인 정보는 남기고, 햄버거 앞쪽에 작게 */
+  .main-header > .user-info{
+    display:block;
+    position:absolute;
+    right:54px; /* 햄버거 여백 */
+    top:var(--header-pad-y);
+    font-size:12px;
+    color:#444;
+  }
+  .main-header > .user-info a{ font-size:12px; }
+
+  .mobile-menu-button{ display:block; }
+
+  /* 드로워 메뉴 */
+  body.nav-open { overflow:hidden; }
+  body.nav-open .main-nav { display:block; }
+  body.nav-open .main-nav ul{
+    display:flex; flex-direction:column;
+    position:fixed; inset:0;
+    padding:72px 16px 24px;
+    background:#fff;
+    z-index:1200;
+    overflow-y:auto;
+  }
+  .main-nav a, .main-nav .badge{
+    display:block; width:100%;
+    padding:14px 12px; margin:6px 0;
+    border:1px solid #e5e5e5; border-radius:12px; background:#fff;
+  }
+  .main-nav li.active a, .main-nav a:hover{ background:#f7f9ff; }
+  .main-header::before{ content:""; display:none; }
+  body.nav-open .main-header::before{
+    display:block; position:fixed; inset:0; z-index:1100;
+    background:rgba(0,0,0,.35);
+  }
+}
 
 
 
