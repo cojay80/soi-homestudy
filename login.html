@@ -7,52 +7,101 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- config 먼저 로드 -->
+  <!-- 굳이 다른 공통 스크립트는 필요 없음. config만 필요하면 유지 -->
   <script src="/js/config.js" defer></script>
+
+  <style>
+    .login-wrap{max-width:420px;margin:40px auto;padding:16px}
+    .login-card{border:1px solid #e5e5e5;border-radius:12px;padding:16px;background:#fff}
+    .mini{color:#666;font-size:13px}
+    .inline{display:flex;align-items:center;gap:8px}
+    .btn{padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fafafa;cursor:pointer}
+    input[type=text]{flex:1;padding:10px;border:1px solid #ddd;border-radius:10px}
+  </style>
 </head>
 <body>
-  <main class="container" style="max-width:420px; margin:40px auto;">
-    <h1>소이의 공부방 로그인</h1>
-    <p class="mini">이름을 입력하고 시작하세요.</p>
+  <main class="container login-wrap">
+    <h1 style="margin:0 0 4px;">소이의 공부방 로그인</h1>
+    <p class="mini" style="margin:0 0 12px;">이름을 입력하고 시작하세요.</p>
 
-    <section class="card">
+    <section class="login-card">
       <label class="inline" style="width:100%;">
         이름
-        <input id="login-name" type="text" placeholder="예: 소이" style="flex:1" />
+        <input
+          id="login-name"
+          type="text"
+          placeholder="예: 소이"
+          inputmode="text"
+          autocomplete="username"
+          aria-label="사용자 이름"
+          maxlength="20"
+          required
+        />
       </label>
       <div style="margin-top:12px; display:flex; gap:8px;">
         <button id="btn-login" class="btn">시작하기</button>
+        <a class="btn" href="index.html" aria-label="메인으로 이동">메인으로</a>
       </div>
+      <p class="mini" style="margin-top:10px;">* 한글/영문/숫자/공백만 허용, 최대 20자</p>
     </section>
   </main>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(location.search);
-      const next = params.get('next') || 'index.html';
-      const input = document.getElementById('login-name');
-      const btn = document.getElementById('btn-login');
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const next = params.get('next') || 'index.html';
+    const input = document.getElementById('login-name');
+    const btn = document.getElementById('btn-login');
 
-      // 엔터로도 로그인
-      input.addEventListener('keyup', (e) => { if (e.key === 'Enter') btn.click(); });
+    // 자동 포커스
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => input.focus());
+    } else {
+      input.focus();
+    }
 
-      btn.addEventListener('click', () => {
-        const name = input.value.trim();
-        if (!name) { alert('이름을 입력해주세요.'); input.focus(); return; }
-        localStorage.setItem('currentUser', name);
-        // 초기 구조 보정 (가벼운 최소치)
-        try {
-          const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
-          if (!sd[name]) sd[name] = { incorrect: [], records: [] };
-          localStorage.setItem('studyData', JSON.stringify(sd));
-        } catch {
-          const sd = {}; sd[name] = { incorrect: [], records: [] };
-          localStorage.setItem('studyData', JSON.stringify(sd));
-        }
-        location.href = next;
-      });
+    // 이름 정리/검사
+    function normalizeName(raw){
+      // 허용: 한글/영문/숫자/공백
+      const cleaned = String(raw).replace(/[^0-9A-Za-z가-힣\s]/g, '');
+      // 연속 공백 1칸으로, 앞뒤 공백 제거
+      return cleaned.replace(/\s+/g, ' ').trim().slice(0, 20);
+    }
+
+    function saveAndGo(name){
+      // currentUser 저장
+      localStorage.setItem('currentUser', name);
+
+      // studyData 기본 구조 보정
+      let sd = {};
+      try { sd = JSON.parse(localStorage.getItem('studyData') || '{}') || {}; } catch {}
+      if (!sd[name]) sd[name] = { incorrect: [], records: [] };
+      localStorage.setItem('studyData', JSON.stringify(sd));
+
+      // 뱃지/헤더 갱신 알림(다른 탭/페이지 동기화)
+      window.dispatchEvent(new Event('user:changed'));
+
+      // 다음 페이지로 이동
+      location.href = next;
+    }
+
+    btn.addEventListener('click', () => {
+      const norm = normalizeName(input.value);
+      if (!norm) { alert('이름을 입력해주세요.'); input.focus(); return; }
+      if (norm.length < 1) { alert('이름이 너무 짧습니다.'); input.focus(); return; }
+      saveAndGo(norm);
     });
+
+    // 엔터로도 로그인
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+  })();
   </script>
 </body>
 </html>
