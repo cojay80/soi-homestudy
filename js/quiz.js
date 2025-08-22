@@ -1,9 +1,9 @@
-// js/quiz.js — 최종본
+// js/quiz.js — 최종본 (saveUserData 호출로 수정 + 안정성 보강)
+//
 // - 문제 로드: window.API.problems() → CONFIG.GOOGLE_SHEET_TSV 직결 또는 /api/problems
 // - 포인트/보상: 정답당 +CONFIG.POINTS_PER_CORRECT, 랜덤 보상(소형/대형)
 // - 복습 모드: localStorage.isReviewMode / reviewProblems
-// - 결과 저장: window.API.dataPost(currentUser, myData) (실패해도 로컬 유지)
-// - 기존 마크업 훅을 그대로 사용(클래스/ID는 기존 코드와 동일)
+// - 결과 저장: window.API.saveUserData(currentUser, myData) (실패해도 로컬 유지)
 
 document.addEventListener('DOMContentLoaded', () => {
   // ----- DOM 훅 -----
@@ -41,13 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAnswered = false;
   let timerInterval;
 
-  // ===== 로컬 스토어 Fallback 유틸(soi-store.js 없을 때 대비) =====
+  // ===== 로컬 스토어 Fallback 유틸 =====
   const KEYS = { POINTS:'soi:points', INVENTORY:'soi:inventory' };
   const poiGet = window.soi_pointsGet || (() => Number(localStorage.getItem(KEYS.POINTS) || '0'));
   const poiAdd = window.soi_pointsAdd || ((delta) => {
     const v = poiGet() + Number(delta || 0);
     localStorage.setItem(KEYS.POINTS, String(v));
     document.querySelectorAll('[data-soi-points]').forEach(el => (el.textContent = v));
+    window.dispatchEvent(new Event('points:changed'));
     return v;
   });
   const invGet = window.soi_inventoryGet || (() => safeJSON(localStorage.getItem(KEYS.INVENTORY)) || {});
@@ -57,13 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function awardOnCorrectSafe() {
     try {
       if (window.SOI_awardOnCorrect && typeof window.SOI_awardOnCorrect === 'function') {
-        await window.SOI_awardOnCorrect(); // 커스텀 보상 로직이 있으면 그걸 우선
+        await window.SOI_awardOnCorrect();
         return;
       }
     } catch (e) {
       console.warn('[awardOnCorrectSafe] custom award skipped:', e);
     }
-    // 기본 정책 (config.js)
     const per = Number(CONFIG.POINTS_PER_CORRECT || 1);
     poiAdd(per);
 
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadProblem() {
     isAnswered = false;
     clearInterval(timerInterval);
-    timerDisplay.textContent = '';
+    if (timerDisplay) timerDisplay.textContent = '';
 
     answerOptions.forEach(btn => btn.classList.remove('correct-answer', 'incorrect-answer', 'selected'));
 
@@ -161,29 +161,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 지문
     if (currentSet.type === 'passage') {
-      passageArea.style.display = 'block';
-      problemArea.style.width = '60%';
-      if (currentQuestionInSetIndex === 0) {
+      if (passageArea) passageArea.style.display = 'block';
+      if (problemArea) problemArea.style.width = '60%';
+      if (currentQuestionInSetIndex === 0 && passageContent) {
         passageContent.textContent = currentSet.questions[0]['지문'] || '';
       }
     } else {
-      passageArea.style.display = 'none';
-      problemArea.style.width = '100%';
+      if (passageArea) passageArea.style.display = 'none';
+      if (problemArea) problemArea.style.width = '100%';
     }
 
     // 이미지
-    if (currentQ.이미지 && currentQ.이미지.trim() !== '') {
-      questionImage.src = currentQ.이미지;
-      questionImage.style.display = 'block';
-    } else {
-      questionImage.style.display = 'none';
+    if (questionImage) {
+      if (currentQ.이미지 && currentQ.이미지.trim() !== '') {
+        questionImage.src = currentQ.이미지;
+        questionImage.style.display = 'block';
+      } else {
+        questionImage.style.display = 'none';
+      }
     }
 
     // 질문/보기
-    questionText.textContent = `[${currentQ.과목}] ${currentQ.질문}`;
+    if (questionText) questionText.textContent = `[${currentQ.과목}] ${currentQ.질문}`;
     const options = [currentQ.보기1, currentQ.보기2, currentQ.보기3, currentQ.보기4]
       .filter(Boolean)
       .sort(() => Math.random() - 0.5);
+
     for (let i=0; i<answerOptions.length; i++) {
       answerOptions[i].textContent = options[i] || '';
     }
@@ -193,8 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const solvedSoFar = problemSets.slice(0, currentProblemSetIndex)
       .reduce((s, set) => s + set.questions.length, 0) + currentQuestionInSetIndex + 1;
 
-    questionNumber.textContent = `${solvedSoFar} / ${totalQuestions}`;
-    progress.style.width = `${(solvedSoFar / totalQuestions) * 100}%`;
+    if (questionNumber) questionNumber.textContent = `${solvedSoFar} / ${totalQuestions}`;
+    if (progress) progress.style.width = `${(solvedSoFar / totalQuestions) * 100}%`;
 
     // 타이머
     if (selectedTimer > 0 && !isReviewMode) startTimer(selectedTimer);
@@ -204,22 +207,27 @@ document.addEventListener('DOMContentLoaded', () => {
   answerOptions.forEach(btn => {
     btn.addEventListener('click', async (e) => {
       if (isAnswered) return;
+      const label = (e.target.textContent || '').trim();
+      if (!label) return; // 빈 보기 클릭 무시
       isAnswered = true;
       clearInterval(timerInterval);
 
-      const selected = e.target;
       const currentQ = problemSets[currentProblemSetIndex].questions[currentQuestionInSetIndex];
-      const isCorrect = (selected.textContent === currentQ.정답);
+      const isCorrect = (label === String(currentQ.정답 || '').trim());
 
       if (isCorrect) {
         score++;
-        selected.classList.add('correct-answer');
+        e.target.classList.add('correct-answer');
         showToast('정답입니다! 🎉', true);
         await awardOnCorrectSafe();
       } else {
         incorrectProblems.push(currentQ);
-        selected.classList.add('incorrect-answer');
-        answerOptions.forEach(b => { if (b.textContent === currentQ.정답) b.classList.add('correct-answer'); });
+        e.target.classList.add('incorrect-answer');
+        answerOptions.forEach(b => {
+          if ((b.textContent || '').trim() === String(currentQ.정답 || '').trim()) {
+            b.classList.add('correct-answer');
+          }
+        });
         showToast('아쉬워요, 다음 문제로 넘어갑니다.', false);
       }
       setTimeout(goToNextQuestion, 1500);
@@ -244,8 +252,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== 결과 =====
   async function showResults() {
-    quizLayout.style.display = 'none';
-    resultsContainer.style.display = 'block';
+    if (quizLayout) quizLayout.style.display = 'none';
+    if (resultsContainer) resultsContainer.style.display = 'block';
 
     const scoreText   = document.getElementById('score-text');
     const messageText = document.getElementById('message-text');
@@ -282,11 +290,11 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.removeItem('reviewProblems');
     }
 
-    // 저장 시도 (서버 실패해도 로컬 유지)
+    // 저장 시도 (서버 실패해도 로컬 유지) — ✅ saveUserData로 수정
     try {
       const myData = studyData[currentUser] || {};
-      if (API.dataPost) {
-        await API.dataPost(currentUser, myData);
+      if (API.saveUserData) {
+        await API.saveUserData(currentUser, myData);
       } else {
         await fetch(`/api/data/${encodeURIComponent(currentUser)}`, {
           method: 'POST',
@@ -300,43 +308,49 @@ document.addEventListener('DOMContentLoaded', () => {
       // 로컬 백업 업데이트
       localStorage.setItem('studyData', JSON.stringify(studyData));
       // 버튼/복습 상태
-      mainMenuBtn.textContent = '메인으로 돌아가기';
-      mainMenuBtn.classList.remove('disabled-link');
+      if (mainMenuBtn) {
+        mainMenuBtn.textContent = '메인으로 돌아가기';
+        mainMenuBtn.classList.remove('disabled-link');
+      }
 
       const savedIncorrect = studyData[currentUser]?.incorrect || [];
-      if (savedIncorrect.length > 0 && !isReviewMode) {
-        reviewButton.textContent = '틀린 문제 다시 풀기';
-        reviewButton.disabled = false;
-      } else {
-        reviewButton.style.display = 'none';
+      if (reviewButton) {
+        if (savedIncorrect.length > 0 && !isReviewMode) {
+          reviewButton.textContent = '틀린 문제 다시 풀기';
+          reviewButton.disabled = false;
+          reviewButton.addEventListener('click', () => {
+            const wrongs = studyData[currentUser]?.incorrect || [];
+            if (!wrongs.length) return;
+            localStorage.setItem('isReviewMode', 'true');
+            localStorage.setItem('reviewProblems', JSON.stringify(wrongs));
+            location.href = 'quiz.html';
+          });
+        } else {
+          reviewButton.style.display = 'none';
+        }
       }
+      if (mainMenuBtn) mainMenuBtn.addEventListener('click', () => location.href = 'index.html');
     }
 
     // 메시지
-    scoreText.textContent = `총 ${totalQuestions}문제 중 ${score}개를 맞혔어요!`;
+    if (scoreText) {
+      scoreText.textContent = `총 ${totalQuestions}문제 중 ${score}개를 맞혔어요!`;
+    }
     const pct = totalQuestions > 0 ? (score / totalQuestions) * 100 : 100;
-    if (pct >= 80) messageText.textContent = '정말 대단해요! 훌륭한 실력이에요. 🏆';
-    else if (pct >= 50) messageText.textContent = '잘했어요! 조금만 더 노력해봐요. 😊';
-    else messageText.textContent = '아쉬워요, 다시 한번 도전해볼까요? 💪';
-
-    // 버튼 동작
-    reviewButton?.addEventListener('click', () => {
-      const wrongs = studyData[currentUser]?.incorrect || [];
-      if (!wrongs.length) return;
-      localStorage.setItem('isReviewMode', 'true');
-      localStorage.setItem('reviewProblems', JSON.stringify(wrongs));
-      location.href = 'quiz.html';
-    });
-    mainMenuBtn?.addEventListener('click', () => location.href = 'index.html');
+    if (messageText) {
+      if (pct >= 80) messageText.textContent = '정말 대단해요! 훌륭한 실력이에요. 🏆';
+      else if (pct >= 50) messageText.textContent = '잘했어요! 조금만 더 노력해봐요. 😊';
+      else messageText.textContent = '아쉬워요, 다시 한번 도전해볼까요? 💪';
+    }
   }
 
   // ===== 타이머 =====
   function startTimer(seconds) {
     let timeLeft = seconds;
-    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+    if (timerDisplay) timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
     timerInterval = setInterval(() => {
       timeLeft--;
-      timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+      if (timerDisplay) timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
         isAnswered = true;
@@ -363,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== 안전 JSON =====
   function safeJSON(s) { try { return JSON.parse(s || ''); } catch { return null; } }
 
-  // ===== 강화된 TSV/CSV 파서 =====
+  // ===== TSV/CSV 파서 =====
   function parseTsv(text) {
     if (!text) return [];
     const raw = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -383,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let i=0; i<line.length; i++) {
         const ch = line[i];
         if (ch === '"') {
-          if (inQ && line[i+1] === '"') { buf += '"'; i++; } // "" → "
+          if (inQ && line[i+1] === '"') { buf += '"'; i++; }
           else inQ = !inQ;
         } else if (ch === delim && !inQ) {
           out.push(buf); buf = '';
