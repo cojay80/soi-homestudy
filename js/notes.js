@@ -1,5 +1,5 @@
-// js/notes.js — 오답 노트 최종본
-// 데이터 출처: quiz.js가 저장한 localStorage.studyData[currentUser].incorrect 배열
+// js/notes.js — 오답 노트 최종본 (API 래퍼/안전 가드 반영)
+// 데이터 출처: quiz.js가 저장한 localStorage.studyData[currentUser].incorrect
 // 기능: 목록/체크박스/선택·전체 복습, 선택·개별·전체 삭제, 서버 동기화
 
 (function(){
@@ -21,8 +21,9 @@
   function setStudyData(sd) {
     localStorage.setItem('studyData', JSON.stringify(sd));
   }
-
-  function getUser() { return localStorage.getItem('currentUser'); }
+  function getUser() {
+    return localStorage.getItem('currentUser') || '';
+  }
 
   function getWrongs() {
     const sd = getStudyData();
@@ -31,7 +32,7 @@
     const arr = (sd[u] && Array.isArray(sd[u].incorrect)) ? sd[u].incorrect : [];
     // 중복 제거(질문 텍스트 기준)
     const m = new Map();
-    arr.forEach(p => m.set(p.질문, p));
+    arr.forEach(p => m.set(p.질문 || p.question, p));
     return Array.from(m.values());
   }
 
@@ -44,24 +45,37 @@
     setStudyData(sd);
   }
 
-  function postSync() {
+  // ✅ 서버 동기화: 해당 유저의 blob만 저장 (API 래퍼 사용)
+  async function postSync() {
     const u = getUser();
-    if(!u) return Promise.resolve();
-    return fetch(`/api/data/${u}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(getStudyData())
-    }).catch(e => console.warn('서버 동기화 실패(무시):', e));
+    if (!u) return;
+    try {
+      const sd = getStudyData();
+      const blob = sd[u] || { incorrect: [], records: [] };
+      if (window.API?.saveUserData) {
+        await window.API.saveUserData(u, blob);
+      } else {
+        // 폴백 (래퍼가 없을 때만): 그래도 user만 전송
+        await fetch(`/api/data/${encodeURIComponent(u)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(blob)
+        });
+      }
+    } catch (e) {
+      console.warn('서버 동기화 실패(무시):', e);
+    }
   }
 
   function render() {
     const wrongs = getWrongs();
     const n = wrongs.length;
-    countLabel.textContent = `총 ${n}문항`;
+    if (countLabel) countLabel.textContent = `총 ${n}문항`;
 
+    if (!box) return;
     if (!n) {
       box.innerHTML = `<div class="empty">오답이 없습니다. 퀴즈를 풀고 다시 와주세요.</div>`;
-      cbAll.checked = false;
+      if (cbAll) cbAll.checked = false;
       return;
     }
 
@@ -96,10 +110,11 @@
       `;
     }).join('');
 
-    cbAll.checked = false;
+    if (cbAll) cbAll.checked = false;
   }
 
   function selectedIndexes() {
+    if (!box) return [];
     return $$('.cb-item', box).reduce((arr, cb, i) => {
       if (cb.checked) arr.push(i);
       return arr;
@@ -113,20 +128,19 @@
     }
     localStorage.setItem('isReviewMode', 'true');
     localStorage.setItem('reviewProblems', JSON.stringify(problems));
-    // quiz.js가 reviewProblems를 받아 복습 모드로 실행
-    window.location.href = 'quiz.html';
+    window.location.href = 'quiz.html'; // quiz.js가 reviewProblems를 읽어 복습 모드로 실행
   }
 
   // --- 이벤트 바인딩 ---
   document.addEventListener('DOMContentLoaded', () => {
-    // 포인트 뱃지 즉시 반영
+    // 포인트 뱃지 즉시 반영(있으면)
     document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = localStorage.getItem('soi:points') || '0');
 
-    // 렌더
     render();
 
     // 전체선택
     cbAll?.addEventListener('change', () => {
+      if (!box) return;
       $$('.cb-item', box).forEach(cb => cb.checked = cbAll.checked);
     });
 
@@ -166,9 +180,9 @@
       render();
     });
 
-    // 개별 삭제(카드 내부 버튼)
-    box.addEventListener('click', async (e) => {
-      const btn = e.target.closest('.btn-del-one');
+    // 개별 삭제
+    box?.addEventListener('click', async (e) => {
+      const btn = e.target.closest?.('.btn-del-one');
       if (!btn) return;
       const card = e.target.closest('.card');
       const idx = Number(card?.getAttribute('data-idx'));
