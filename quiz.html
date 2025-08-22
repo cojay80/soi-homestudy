@@ -102,17 +102,6 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 모바일 메뉴 토글 (공통) -->
-  <script>
-    (function(){
-      const btn = document.querySelector('.mobile-menu-button');
-      const nav = document.querySelector('.main-header .main-nav');
-      if (!btn || !nav) return;
-      const close = () => { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); };
-      btn.addEventListener('click', () => { document.body.classList.toggle('nav-open'); nav.classList.toggle('is-open'); });
-      nav.addEventListener('click', e => { if (e.target.closest('a')) close(); });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-    })();
-  </script>
 </body>
 </html>
+
