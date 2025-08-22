@@ -6,94 +6,70 @@
   --text:#111827; --muted:#6b7280;
   --brand:#4f46e5; --brand-2:#4338ca;
 }
-
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 img,video{max-width:100%;height:auto;display:block}
-body{
-  min-width:320px;background:var(--bg);color:var(--text);
-  font-family:'Noto Sans KR',system-ui,Segoe UI,Roboto,Arial,sans-serif
-}
+body{min-width:320px;background:var(--bg);color:var(--text);
+  font-family:'Noto Sans KR',system-ui,Segoe UI,Roboto,Arial,sans-serif}
 
 /* ========== Common ========== */
 .container{max-width:var(--page-width);margin:0 auto;padding:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
-.btn{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fafafa;cursor:pointer;transition:.15s}
+.btn{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fafafa;cursor:pointer;transition:.15s; text-decoration:none;}
 .btn:hover{background:#f3f4f6;transform:translateY(-1px)}
 .btn-primary{background:var(--brand);color:#fff;border-color:transparent}
 .btn-primary:hover{background:var(--brand-2)}
 .mini{color:var(--muted);font-size:13px}
-.badge,[data-soi-points]{font-weight:600}
+.badge{padding:.2rem .5rem;border:1px solid var(--line);border-radius:999px;font-weight:600;background:#fff}
 .barwrap{background:#f3f3f3;border-radius:8px;overflow:hidden;height:12px}
 .bar{height:100%;background:#7aa6ff}
 
-/* ========== Header (공통 레이아웃) ========== */
+/* ========== Header (Desktop) ========== */
 .main-header{
   position:relative; z-index:1000;
   background:#fff; border-bottom:1px solid var(--line);
   padding:var(--pad-y) var(--pad-x);
   display:flex; align-items:center; gap:10px; flex-wrap:wrap;
 }
-.main-header .logo{font-weight:800}
-.main-header .logo a{display:inline-block;padding:4px 0;text-decoration:none;color:#111;font-size:22px;letter-spacing:.2px}
+.main-header .logo{font-weight:800; flex:0 0 auto;}
+.main-header .logo a{display:inline-block;padding:4px 0; font-size:22px; text-decoration:none; color:inherit;}
 .main-nav{flex:1 1 auto}
-.main-nav ul{
-  display:flex;justify-content:center;align-items:center;gap:10px;
-  list-style:none;margin:0;padding:0;flex-wrap:wrap
-}
-.main-nav a{
-  display:inline-block;padding:6px 10px;border-radius:10px;font-size:14px;text-decoration:none;color:#111
-}
+.main-nav ul{display:flex;justify-content:center;align-items:center;gap:10px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.main-nav a{display:inline-block;padding:6px 10px;border-radius:10px;font-size:14px;text-decoration:none;color:#111}
 .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
+.user-info{margin-left:auto;display:flex;align-items:center;gap:8px;color:#666; font-size:12px; white-space:nowrap;}
+#welcome-message{font-size:12px;color:#666}
+#logout-button{padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:#fafafa;cursor:pointer;font-size:12px}
+.mobile-menu-button{display:none;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 10px;cursor:pointer; font-size:20px; line-height:1}
 
-/* 로그인 영역(우측, 작게) */
-.user-info{
-  margin-left:auto;display:flex;align-items:center;gap:8px;color:#666;white-space:nowrap
-}
-#welcome-message small{font-size:12px;color:#666}
-#logout-button{
-  padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:#fafafa;cursor:pointer;font-size:12px;
-  position:relative; z-index:1300; /* 메뉴와 겹침 방지 */
-}
-
-/* 햄버거 버튼(맨 오른쪽 / 항상 최상단) */
-.mobile-menu-button{
-  border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 10px;cursor:pointer;
-  font-size:20px;line-height:1; margin-left:8px;
-  position:relative; z-index:1400;  /* 🔧 오버레이보다 위에서 클릭 보장 */
-}
-
-/* ========== Header (모바일 ≤860px) ========== */
-/* 구조: [로고] [작은 user-info] [햄버거] 1줄 → 햄버거 누르면 드로워(풀스크린) */
+/* ========== Header (Mobile ≤860px) ========== */
 @media (max-width:860px){
   .main-header{gap:8px}
-  .main-header .logo{order:0}
-  .user-info{order:1;font-size:12px}
-  .mobile-menu-button{order:2}
-  .main-nav{display:none}              /* 기본 숨김: 드로워로만 표시 */
-  .main-nav.is-open{display:block}
+  .mobile-menu-button{display:inline-block;margin-left:8px}
+  .main-nav{display:none}                 /* 기본 숨김 */
 
   /* 드로워(풀스크린) */
+  .main-nav.is-open{display:block}
   .main-nav.is-open ul{
-    position:fixed; inset:0; z-index:1200;
+    position:fixed; inset:0; z-index:1000;       /* ← 네비가 가장 위 */
     display:flex; flex-direction:column; align-items:stretch; gap:0;
     padding:72px 16px 24px; background:#fff; overflow-y:auto;
+    margin:0; list-style:none;
   }
   .main-nav.is-open li a, .main-nav.is-open .badge{
     display:block; width:100%; margin:6px 0; padding:12px 12px;
     border:1px solid var(--line); border-radius:12px; font-size:15px; background:#fff;
   }
 
-  /* 백드롭 */
-  body.nav-open{overflow:hidden}
-  body.nav-open::before{
-    content:""; position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.35);
+  /* 클릭 가능한 백드롭(네비보다 낮은 z-index) */
+  #nav-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.35);
+    z-index:900; display:none;
   }
-}
+  body.nav-open #nav-backdrop{ display:block; }
 
-/* ========== Desktop(>860px) 보정 ========== */
-@media (min-width:861px){
-  .mobile-menu-button{display:none}
+  /* 모바일에서 user-info는 헤더 안 오른쪽 작게 */
+  .user-info{order:2}
 }
 
 /* ========== Tables / Quiz bits ========== */
@@ -121,170 +97,3 @@ th button{background:none;border:none;font-weight:700;cursor:pointer}
 
 /* ========== Footer ========== */
 .main-footer{border-top:1px solid var(--line);color:var(--muted);text-align:center;padding:20px 12px;background:#fff;margin-top:24px}
-
-/* 버튼 스타일 */
-.btn {
-  display: inline-block;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  background: #4CAF50;
-  color: #fff;
-  font-size: 14px;
-  text-decoration: none;   /* ✅ a태그 밑줄 제거 */
-  cursor: pointer;
-  text-align: center;
-  transition: background 0.2s;
-}
-
-.btn:hover {
-  background: #43a047;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* === Mobile drawer click-block fix === */
-
-/* 백드롭은 시각 효과만 — 클릭 막지 않음 */
-body.nav-open::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  z-index:1100;           /* 드로워보다 낮게 */
-  pointer-events:none;    /* ✅ 클릭/터치 통과 */
-}
-
-/* 혹시 페이지에 따라 .main-header::before 를 쓰는 경우도 무력화 */
-.main-header::before{
-  pointer-events:none !important;
-}
-
-/* 드로워 메뉴는 백드롭보다 위 */
-.main-header .main-nav.is-open ul,
-.main-nav.is-open ul{
-  position:fixed;
-  inset:0;
-  padding:72px 16px 24px;
-  overflow:auto;
-  background:#fff;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  z-index:1300;           /* ✅ 백드롭(1100)보다 큼 */
-}
-
-/* 메뉴 항목은 확실히 클릭 가능하게 */
-.main-nav.is-open a{
-  display:block;
-  width:100%;
-  padding:14px 12px;
-  border:1px solid #e5e5e5;
-  border-radius:12px;
-  background:#fff;
-  font-size:14px;
-  pointer-events:auto;    /* ✅ 안전핀 */
-}
-
-/* (선택) 로그아웃/버튼 등 헤더 컨트롤은 드로워보다 위에 있을 필요 없음 */
-#logout-button,
-.mobile-menu-button{
-  position:relative;
-  z-index:1400;           /* 햄버거는 항상 최상단(선택) */
-}
-
-/* 데스크톱에서는 드로워 강제 해제 */
-@media (min-width:861px){
-  body.nav-open::before{ content:none; }
-  .main-nav.is-open ul{ position:static; inset:auto; z-index:auto; }
-}
-
-/* --- Mobile drawer: cross-page force open & layering fix --- */
-@media (max-width: 860px){
-  /* 기본은 닫힘 */
-  .main-header .main-nav{ display:none; }
-
-  /* 어떤 페이지 CSS가 .main-header > .main-nav {display:none} 해도 이걸 이김 */
-  .main-header .main-nav.is-open{ display:block !important; }
-
-  /* 드로워(UL)를 최상단으로 */
-  .main-header .main-nav.is-open ul{
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 72px 16px 24px;
-    background: #fff;
-    overflow-y: auto;
-
-    z-index: 1300;           /* 메뉴가 최상단 */
-    pointer-events: auto;
-    margin: 0;
-    list-style: none;
-  }
-
-  .main-header .main-nav.is-open a,
-  .main-header .main-nav.is-open .badge{
-    display:block; width:100%;
-    padding:12px;
-    border:1px solid #e5e5e5;
-    border-radius:12px;
-    background:#fff;
-    font-size:14px;
-  }
-
-  /* 백드롭은 메뉴 뒤쪽 */
-  body.nav-open::before{
-    content:"";
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.35);
-    z-index: 1200;           /* 메뉴(1300)보다 낮게 */
-    pointer-events: auto;    /* 백그라운드 탭으로 닫기 용도 */
-  }
-}
-/* === Drawer 강제 표시 + 레이어 고정 (모든 페이지 공통) === */
-@media (max-width: 860px){
-  .main-header .main-nav { display: none; }
-
-  /* 어떤 페이지 CSS가 display:none을 해도 이 규칙이 이김 */
-  .main-header .main-nav.is-open { display: block !important; }
-
-  .main-header .main-nav.is-open ul{
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 72px 16px 24px;
-    background: #fff;
-    overflow-y: auto;
-
-    z-index: 1300;         /* 메뉴가 최상단 */
-    pointer-events: auto;
-    margin: 0;
-    list-style: none;
-  }
-
-  .main-header .main-nav.is-open a,
-  .main-header .main-nav.is-open .badge{
-    display:block; width:100%;
-    padding:12px;
-    border:1px solid #e5e5e5;
-    border-radius:12px;
-    background:#fff;
-    font-size:14px;
-  }
-
-  /* 백드롭 (메뉴보다 아래 z-index) */
-  body.nav-open::before{
-    content:"";
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.35);
-    z-index: 1200;         /* 메뉴(1300)보다 낮게 */
-    pointer-events: auto;
-  }
-}
