@@ -1,5 +1,6 @@
-// js/record.js — 상세 기록(필터/정렬/페이지/삭제/CSV) 최종본
-// 데이터 출처: quiz.js가 저장한 localStorage.studyData[currentUser].records (date, grade, subject, score "x/y")
+// js/record.js — 상세 기록(필터/정렬/페이지/삭제/CSV) 최종본 (동기화 정정판)
+//
+// 데이터 출처: localStorage.studyData[currentUser].records (date, grade, subject, score "x/y")
 
 (function(){
   const $  = (id) => document.getElementById(id);
@@ -134,7 +135,7 @@
   }
 
   function selectedGlobalIndexes(){
-    return $$('.cb-row', body).reduce((arr, cb, i) => {
+    return $$('.cb-row', body).reduce((arr, cb) => {
       if (cb.checked) {
         const tr = cb.closest('tr');
         const gi = Number(tr?.getAttribute('data-gi'));
@@ -142,6 +143,24 @@
       }
       return arr;
     }, []);
+  }
+
+  async function syncToServer(currentUser, blobForUser){
+    const API = window.API || {};
+    try {
+      if (API.saveUserData) {
+        await API.saveUserData(currentUser, blobForUser);
+      } else {
+        await fetch(`/api/data/${encodeURIComponent(currentUser)}`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(blobForUser)
+        });
+      }
+    } catch (e) {
+      // 동기화 실패는 조용히 무시(로컬은 이미 반영됨)
+      console.warn('[record] sync fail (ignored):', e);
+    }
   }
 
   function deleteRows(globalIndexes){
@@ -155,21 +174,21 @@
 
     // dataAll에서 제거
     dataAll = dataAll.filter(r => !keysToDelete.has(`${r.date}|${r.grade}|${r.subject}|${r.score}`));
-    // 저장
+
+    // 저장 + 서버 동기화
     const currentUser = localStorage.getItem('currentUser');
     const sd = getLSJSON('studyData', {});
     if (currentUser){
       if (!sd[currentUser]) sd[currentUser] = { incorrect: [], records: [] };
       sd[currentUser].records = dataAll;
       setLSJSON('studyData', sd);
-      // 서버 동기화(실패 무시)
-      fetch(`/api/data/${currentUser}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(sd) })
-        .catch(()=>{});
+      // ✅ 해당 유저 blob만 전송
+      syncToServer(currentUser, sd[currentUser]);
     }
   }
 
   function exportCSV(rows){
-    // BOM 포함(엑셀에서 한글 깨짐 방지)
+    // BOM 포함(엑셀 한글 깨짐 방지)
     const bom = '\uFEFF';
     const head = ['날짜','학년','과목','점수','정답수','총문항','정답률(%)'];
     const lines = [head.join(',')];
@@ -227,15 +246,14 @@
       if (!dataAll.length) { alert('삭제할 기록이 없습니다.'); return; }
       if (!confirm('모든 학습 기록을 삭제할까요?')) return;
       dataAll = [];
-      // 저장
+      // 저장 + 서버 동기화
       const currentUser = localStorage.getItem('currentUser');
       const sd = getLSJSON('studyData', {});
       if (currentUser){
         if (!sd[currentUser]) sd[currentUser] = { incorrect: [], records: [] };
         sd[currentUser].records = [];
         setLSJSON('studyData', sd);
-        fetch(`/api/data/${currentUser}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(sd) })
-          .catch(()=>{});
+        syncToServer(currentUser, sd[currentUser]);
       }
       applyFilters();
     });
