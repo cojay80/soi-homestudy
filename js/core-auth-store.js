@@ -52,6 +52,22 @@
     localStorage.setItem(USER_KEY, u);
     ensureStudyDataFor(u);
     window.dispatchEvent(new Event('user:changed'));
+    // 서버에 저장된 공부 데이터를 불러와 병합
+    try {
+      fetch(`/api/data/${encodeURIComponent(u)}`)
+        .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+        .then((remote) => {
+          if (!remote || typeof remote !== 'object') return;
+          const raw = localStorage.getItem(SD_KEY);
+          const sd = raw ? JSON.parse(raw) : {};
+          const local = sd[u] || {};
+          sd[u] = { ...local, ...remote };
+          localStorage.setItem(SD_KEY, JSON.stringify(sd));
+        })
+        .catch((err) => console.warn('studyData fetch failed', err));
+    } catch (err) {
+      console.warn('studyData fetch failed', err);
+    }
     return u;
   }
 
