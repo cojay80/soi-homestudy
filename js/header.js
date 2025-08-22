@@ -1,93 +1,115 @@
-// /js/header.js — 최종 (유저 이름 표시 + 드로워 공통 토글)
+// /js/header.js — 공통 헤더 UI + 모바일 드로워 (모든 페이지 동일 동작)
 (function () {
   const BREAKPOINT = 860;
-  const K = { USER: 'currentUser', POINTS: 'soi:points' };
+  const STORAGE = { USER: 'currentUser', POINTS: 'soi:points' };
+
+  // 필요할 때마다 최신 DOM을 다시 잡는다 (페이지마다 헤더 구조 차이 안전)
+  function getEls() {
+    return {
+      welcomeEl: document.getElementById('welcome-message'),
+      logoutBtn: document.getElementById('logout-button'),
+      mobileBtn: document.querySelector('.mobile-menu-button'),
+      mainNav  : document.querySelector('.main-nav'),
+      body     : document.body,
+      backdrop : document.getElementById('nav-backdrop')
+    };
+  }
+
+  function ensureBackdrop() {
+    let bd = document.getElementById('nav-backdrop');
+    if (!bd) {
+      bd = document.createElement('div');
+      bd.id = 'nav-backdrop';
+      document.body.appendChild(bd);
+    }
+    return bd;
+  }
 
   function paintHeader() {
     try {
-      const name = (localStorage.getItem(K.USER) || '').trim();
-      const loggedIn = !!name;
+      const { welcomeEl, logoutBtn } = getEls();
+      const name = (localStorage.getItem(STORAGE.USER) || '').trim();
+      const isLoggedIn = !!name;
 
-      document.querySelectorAll('#welcome-message').forEach(el => {
-        el.textContent = loggedIn ? name : '';
-        el.style.display = loggedIn ? 'inline' : 'none';
-      });
-      document.querySelectorAll('#logout-button').forEach(el => {
-        el.style.display = loggedIn ? 'inline' : 'none';
-      });
+      if (welcomeEl) {
+        welcomeEl.textContent = isLoggedIn ? name : '';
+        welcomeEl.style.display = isLoggedIn ? 'inline' : 'none';
+      }
+      if (logoutBtn) {
+        logoutBtn.style.display = isLoggedIn ? 'inline' : 'none';
+      }
 
-      const pRaw = Number(localStorage.getItem(K.POINTS) || '0');
-      const p = Number.isFinite(pRaw) && pRaw >= 0 ? pRaw.toLocaleString() : '0';
-      document.querySelectorAll('[data-soi-points]').forEach(el => (el.textContent = p));
-    } catch (e) { console.warn('[Header] paint error:', e); }
+      const points = Number(localStorage.getItem(STORAGE.POINTS) || '0').toLocaleString();
+      document.querySelectorAll('[data-soi-points]').forEach((el) => { el.textContent = points; });
+    } catch (e) {
+      console.warn('[header] paint error:', e);
+    }
   }
 
-  function setMenuOpen(headerEl, isOpen) {
-    const nav = headerEl?.querySelector('.main-nav');
-    const btn = headerEl?.querySelector('.mobile-menu-button');
-    if (!nav || !btn) return;
-    nav.classList.toggle('is-open', isOpen);
-    document.body.classList.toggle('nav-open', isOpen);
-    btn.setAttribute('aria-expanded', String(isOpen));
-    btn.setAttribute('aria-label', isOpen ? '메뉴 닫기' : '메뉴 열기');
-  }
+  function setupMobileMenu() {
+    const { mobileBtn, mainNav, body } = getEls();
+    if (!mobileBtn || !mainNav) return;
+    if (mobileBtn.dataset.bound === '1') return;
+    mobileBtn.dataset.bound = '1';
 
-  function closeAll() {
-    document.querySelectorAll('.main-nav.is-open').forEach(nav => {
-      const header = nav.closest('.main-header');
-      setMenuOpen(header, false);
+    const backdrop = ensureBackdrop();
+
+    const setOpen = (open) => {
+      mainNav.classList.toggle('is-open', open);
+      body.classList.toggle('nav-open', open);
+      mobileBtn.setAttribute('aria-expanded', String(open));
+    };
+
+    setOpen(false);
+
+    // 햄버거 버튼
+    mobileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const open = mainNav.classList.contains('is-open');
+      setOpen(!open);
+    });
+
+    // 메뉴 항목 클릭 → 모바일에서 닫기
+    mainNav.addEventListener('click', (e) => {
+      if (window.innerWidth > BREAKPOINT) return;
+      if (e.target.closest('a')) setOpen(false);
+    });
+
+    // 백드롭 클릭 → 닫기
+    backdrop.addEventListener('click', () => setOpen(false));
+
+    // Esc 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && body.classList.contains('nav-open')) setOpen(false);
+    });
+
+    // 리사이즈 시 데스크톱 폭이면 닫기
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > BREAKPOINT) setOpen(false);
     });
   }
 
   function init() {
     paintHeader();
+    setupMobileMenu();
 
-    // 햄버거 클릭 위임 (모든 페이지 공통)
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.mobile-menu-button');
-      if (!btn) return;
-      const header = btn.closest('.main-header');
-      const nav = header?.querySelector('.main-nav');
-      if (!header || !nav) return;
-      e.preventDefault();
-      const willOpen = !nav.classList.contains('is-open');
-      closeAll();
-      setMenuOpen(header, willOpen);
-    });
-
-    // 드로워 안 링크 클릭 -> 모바일에서만 닫기
-    document.addEventListener('click', (e) => {
-      const a = e.target.closest('.main-nav.is-open a');
-      if (!a) return;
-      if (window.innerWidth <= BREAKPOINT) {
-        const header = a.closest('.main-header');
-        setMenuOpen(header, false);
-      }
-    });
-
-    // 백드롭 탭/ESC로 닫기
-    document.addEventListener('click', (e) => {
-      if (!document.body.classList.contains('nav-open')) return;
-      const inDrawer = e.target.closest('.main-nav.is-open ul') || e.target.closest('.mobile-menu-button');
-      if (!inDrawer) closeAll();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.body.classList.contains('nav-open')) closeAll();
-    });
-
-    // 데스크톱으로 리사이즈 시 닫기
-    window.addEventListener('resize', () => { if (window.innerWidth > BREAKPOINT) closeAll(); });
-
-    // 상태 반영
     window.addEventListener('user:changed', paintHeader);
     window.addEventListener('points:changed', paintHeader);
     window.addEventListener('storage', (e) => {
-      if (e.key === K.USER || e.key === K.POINTS) paintHeader();
+      if (e.key === STORAGE.USER || e.key === STORAGE.POINTS) paintHeader();
     });
+
+    // 혹시 헤더가 동적으로 바뀌어도 다시 바인딩
+    const mo = new MutationObserver(() => setupMobileMenu());
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+
+    // 외부에서 수동 호출용
+    window.updateHeaderUI = paintHeader;
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-
-  window.updateHeaderUI = paintHeader;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
