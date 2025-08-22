@@ -1,4 +1,4 @@
-// /js/header.js — 최종본 (UI 렌더링 + 모바일 메뉴 + 접근성)
+// /js/header.js — UI 렌더링 + 모바일 메뉴 (유저 이름만)
 (function () {
   const BREAKPOINT = 860;
   const STORAGE_KEYS = {
@@ -6,7 +6,6 @@
     POINTS: 'soi:points'
   };
 
-  // 캐시
   const welcomeEl = document.getElementById('welcome-message');
   const logoutBtn = document.getElementById('logout-button');
   const mobileMenuBtn = document.querySelector('.mobile-menu-button');
@@ -19,7 +18,7 @@
       const isLoggedIn = !!name;
 
       if (welcomeEl) {
-        welcomeEl.innerHTML = isLoggedIn ? `<small>${name}님 환영해요!</small>` : '';
+        welcomeEl.textContent = isLoggedIn ? name : '';
         welcomeEl.style.display = isLoggedIn ? 'inline' : 'none';
       }
       if (logoutBtn) {
@@ -35,8 +34,6 @@
 
   function setupMobileMenu() {
     if (!mobileMenuBtn || !mainNav) return;
-
-    // 중복 바인딩 방지
     if (mobileMenuBtn.dataset.boundMenu === '1') return;
     mobileMenuBtn.dataset.boundMenu = '1';
 
@@ -47,10 +44,8 @@
       mobileMenuBtn.setAttribute('aria-label', isOpen ? '메뉴 닫기' : '메뉴 열기');
     };
 
-    // 초기 상태
     setMenuOpen(false);
 
-    // 햄버거 클릭
     mobileMenuBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -58,18 +53,15 @@
       setMenuOpen(!isOpen);
     });
 
-    // 메뉴 안 링크 클릭 시(모바일일 때만) 닫기
     mainNav.addEventListener('click', (e) => {
       if (window.innerWidth > BREAKPOINT) return;
       if (e.target.closest('a')) setMenuOpen(false);
     });
 
-    // ESC로 닫기
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && body.classList.contains('nav-open')) setMenuOpen(false);
     });
 
-    // 리사이즈 시 데스크톱 폭이면 강제 닫기
     window.addEventListener('resize', () => {
       if (window.innerWidth > BREAKPOINT) setMenuOpen(false);
     });
@@ -92,6 +84,5 @@
     init();
   }
 
-  // 외부 수동 호출용
   window.updateHeaderUI = paintHeader;
 })();
