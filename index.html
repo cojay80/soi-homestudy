@@ -10,40 +10,19 @@
   <link rel="stylesheet" href="./css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- 공통 스크립트 (순서/캐시안정: 모두 defer) -->
+  <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
   <script src="/js/core-auth-store.js" defer></script>
   <script src="/js/api-shim.js" defer></script>
   <script src="/js/soi-store.js" defer></script>
   <script src="/js/header.js" defer></script>
   <script src="/js/logout.js" defer></script>
-
-  <!-- 페이지 전용 소량 스타일 -->
-  <style>
-    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-    .card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;background:#fff}
-    .mini{color:#666;font-size:13px}
-    .kpi{font-size:24px;font-weight:700}
-    label.inline{display:flex;align-items:center;gap:8px}
-    input[type=number], select{padding:8px;border:1px solid #ddd;border-radius:10px;background:#fff}
-    button.btn{padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fafafa;cursor:pointer;transition:.15s}
-    .btn:hover{background:#f3f4f6;transform:translateY(-1px)}
-    .cta{display:flex;gap:8px;flex-wrap:wrap}
-    .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    @media (max-width:640px){ .quick{grid-template-columns:1fr} }
-    .barwrap{background:#f3f3f3;border-radius:8px;overflow:hidden;height:12px}
-    .bar{height:100%;background:#7aa6ff}
-    .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-    .link-card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
-    .link-card a{display:inline-block}
-    @media (max-width:860px){ .user-info small{font-size:12px;color:#666} }
-  </style>
 </head>
 <body>
   <!-- 헤더 -->
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
+
     <nav class="main-nav">
       <ul>
         <li class="active"><a href="index.html">오늘의 학습</a></li>
@@ -55,22 +34,24 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
+
     <div class="user-info">
       <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
     </div>
+
     <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
 
   <!-- 본문 -->
-  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+  <main class="container">
     <h1>오늘의 학습 ✨</h1>
     <p class="mini">학년/과목을 고르고 바로 시작! 정답을 맞히면 포인트와 보상을 얻을 수 있어요.</p>
 
     <!-- 빠른 시작 -->
-    <section class="card" style="margin:12px 0;">
+    <section class="card">
       <h2 style="margin:0 0 8px;">빠른 시작</h2>
-      <div class="quick">
+      <div class="quick" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <label class="inline">학년
           <select id="sel-grade"><option value="">학년 선택</option></select>
         </label>
@@ -84,7 +65,7 @@
           <input type="number" id="sel-timer" min="0" step="10" value="0"/>
         </label>
       </div>
-      <div class="cta" style="margin-top:10px;">
+      <div class="cta" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="btn-start">시작하기 ▶</button>
         <button class="btn" id="btn-review" title="오답이 있으면 복습 모드로 이동">오답 복습</button>
         <a class="btn" href="shop.html">상점 가기</a>
@@ -92,8 +73,8 @@
       <div id="home-msg" class="mini" style="margin-top:6px;color:#d33;"></div>
     </section>
 
-    <!-- 오늘 진행(선택) -->
-    <section class="grid" style="margin:12px 0;">
+    <!-- 오늘 진행 -->
+    <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
       <article class="card">
         <div class="mini">오늘 푼 문항</div>
         <div class="kpi"><span id="today-total">0</span></div>
@@ -111,23 +92,23 @@
     </section>
 
     <!-- 바로가기 -->
-    <section class="links" style="margin:12px 0;">
-      <div class="link-card">
+    <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <div class="card">
         <h3 style="margin:0;">학습 보고서</h3>
         <p class="mini">최근 7일 성과를 한눈에</p>
         <a class="btn" href="report.html">보고서 보기</a>
       </div>
-      <div class="link-card">
+      <div class="card">
         <h3 style="margin:0;">오답 노트</h3>
         <p class="mini">틀린 문제 복습/정리</p>
         <a class="btn" href="notes.html">오답 보러가기</a>
       </div>
-      <div class="link-card">
+      <div class="card">
         <h3 style="margin:0;">상세 기록</h3>
         <p class="mini">모든 세션을 필터/정렬</p>
         <a class="btn" href="record.html">기록 관리</a>
       </div>
-      <div class="link-card">
+      <div class="card">
         <h3 style="margin:0;">상점</h3>
         <p class="mini">포인트로 보상을 받자!</p>
         <a class="btn" href="shop.html">상점으로</a>
@@ -140,7 +121,7 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 시트 기반 드롭다운 + 시작/복습 -->
+  <!-- 홈 전용 스크립트: 시트에서 학년/과목 채우기 & 시작/복습 -->
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const gradeSel = document.getElementById('sel-grade');
@@ -216,18 +197,14 @@
       const s = (subjSel.value  || '').trim();
       const cnt = parseInt(document.getElementById('sel-count').value || '10', 10);
       const tmr = parseInt(document.getElementById('sel-timer').value || '0', 10);
-
       if (!g) { msgEl.textContent='학년을 선택해주세요.'; return; }
       if (!s) { msgEl.textContent='과목을 선택해주세요.'; return; }
-
       localStorage.setItem('selectedGrade', g);
       localStorage.setItem('selectedSubject', s);
       localStorage.setItem('selectedCount', String(Math.max(1, cnt)));
       localStorage.setItem('selectedTimer', String(Math.max(0, tmr)));
-
       localStorage.removeItem('isReviewMode');
       localStorage.removeItem('reviewProblems');
-
       location.href = 'quiz.html';
     });
 
@@ -247,45 +224,19 @@
   });
   </script>
 
-  <!-- 헤더 부트스트랩(환영문구/포인트/로그아웃: 단일 소스) -->
+  <!-- 헤더: 햄버거 드로워 토글 (공용, 페이지당 1회만) -->
   <script>
   (function(){
-    function ensureUser(){
-      let u = localStorage.getItem('currentUser');
-      if (!u) { u = 'soi'; localStorage.setItem('currentUser', u); }
-      return u;
+    const btn = document.querySelector('.mobile-menu-button');
+    const nav = document.querySelector('.main-header .main-nav');
+    function close(){ document.body.classList.remove('nav-open'); }
+    if (btn && nav) {
+      btn.addEventListener('click', () => {
+        document.body.classList.toggle('nav-open');
+      });
+      nav.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     }
-    function syncPointsBadge(){
-      const p = localStorage.getItem('soi:points') || '0';
-      document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
-    }
-    function paintHeader(){
-      const u = ensureUser();
-      const welcomeEl = document.getElementById('welcome-message');
-      const logoutBtn = document.getElementById('logout-button');
-      if (welcomeEl){ welcomeEl.innerHTML = '<small>'+u+'님 환영해요!</small>'; welcomeEl.style.display='inline'; }
-      if (logoutBtn && !logoutBtn.dataset.bound){
-        logoutBtn.dataset.bound = '1';
-        logoutBtn.style.display='inline';
-        logoutBtn.addEventListener('click', function(e){
-          e.preventDefault();
-          [
-            'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
-            'isReviewMode','reviewProblems','soi:points','soi:inventory'
-          ].forEach(k=>localStorage.removeItem(k));
-          location.href = 'index.html?ts=' + Date.now(); // 캐시 무시
-        });
-      }
-      syncPointsBadge();
-    }
-    // 첫 렌더 + 약간의 지연 후 재도색 + 탭간 동기화
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paintHeader); else paintHeader();
-    setTimeout(paintHeader, 500);
-    window.addEventListener('storage', (ev)=>{ if (ev.key==='currentUser' || ev.key==='soi:points') paintHeader(); });
-    window.addEventListener('user:changed', paintHeader);
-    window.addEventListener('points:changed', paintHeader);
-    // 전역 수동 호출용
-    window.updateHeaderUI = paintHeader;
   })();
   </script>
 </body>
