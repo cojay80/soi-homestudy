@@ -780,6 +780,101 @@ main.container {
   .main-nav.is-open { display: block; }
   .main-header .main-nav ul { flex-direction: column; padding: 8px 0; }
 }
+/* ===== 헤더 레이아웃 기본 ===== */
+.main-header{
+  background:#fff;
+  border-bottom:1px solid #eee;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;            /* 줄바꿈 허용 */
+}
+.main-header .logo{font-weight:800}
+.main-header .logo a{display:inline-block; padding:4px 0}
+
+/* 네비게이션: 간격/폰트 축소 */
+.main-nav ul{
+  display:flex;
+  gap:8px;                   /* ⬅️ 간격 축소 */
+  list-style:none;
+  margin:0;
+  padding:0;
+  flex-wrap:wrap;
+}
+.main-nav li a{
+  display:inline-block;
+  padding:6px 10px;          /* ⬅️ 패딩 축소 */
+  border-radius:10px;
+  font-size:14px;            /* ⬅️ 글자 축소 */
+  line-height:1.2;
+}
+.main-nav li.active a,
+.main-nav li a:hover{
+  background:#eef4ff;
+  color:#1f3b8f;
+}
+
+/* 유저영역(환영문구/로그아웃) */
+.user-info{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#666;
+  margin-left:auto;          /* 데스크탑에선 우측 정렬 */
+  position:relative;
+  z-index:1;                 /* 메뉴와 겹침 방지 */
+}
+#logout-button{
+  padding:4px 8px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  background:#fafafa;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* 모바일 메뉴 버튼 */
+.mobile-menu-button{
+  border:1px solid #ddd;
+  border-radius:8px;
+  background:#fafafa;
+  padding:6px 10px;
+  cursor:pointer;
+}
+
+/* ===== 반응형: 모바일(<=860px)에서 세로 스택 ===== */
+@media (max-width: 860px){
+  /* 버튼 표시, 메뉴는 토글 */
+  .mobile-menu-button{ display:inline-block; margin-left:auto; }
+  .main-nav{ width:100%; display:none; }          /* 기본 숨김 */
+  .main-nav.is-open{ display:block; }             /* 토글로 표시 */
+
+  /* 모바일 메뉴는 세로 정렬 + 더 촘촘 */
+  .main-nav ul{
+    flex-direction:column;
+    gap:4px;                                      /* ⬅️ 더 축소 */
+  }
+  .main-nav li a{
+    padding:8px 10px;
+    font-size:14px;                                /* 모바일도 작게 */
+  }
+
+  /* 유저영역은 메뉴 아래 한 줄 전체 차지 */
+  .user-info{
+    order: 3;                                      /* 메뉴 뒤로 */
+    width:100%;
+    justify-content:flex-end;                      /* 우측 정렬 */
+    margin-left:0;
+    padding-top:4px;
+  }
+}
+
+/* 데스크탑(>860px) 기본값 */
+@media (min-width: 861px){
+  .mobile-menu-button{ display:none; }
+  .main-nav{ display:block; }
+}
 
 
 
