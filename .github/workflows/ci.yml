@@ -1,0 +1,11 @@
+name: ci
+
+on:
+  workflow_dispatch: {}   # 버튼으로 수동 실행 가능
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Hello GitHub Actions!"
