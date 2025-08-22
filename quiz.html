@@ -6,7 +6,7 @@
   <title>문제 풀이 - 소이의 공부방</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 (순서 + defer) -->
@@ -17,19 +17,20 @@
   <script src="/js/header.js" defer></script>
   <script src="/js/logout.js" defer></script>
 
-  <!-- 문제 불러오기(구글시트 파서 등) -->
-  <script src="./js/sheets.js" defer></script>
+  <!-- 문제 로딩/보상/연출 -->
+  <script src="/js/sheets.js" defer></script>
+  <script src="/js/rewards.js?v=RW1" defer></script>
+  <script src="/js/drop.js" defer></script>
 
-  <!-- (선택) 드롭 보상 연출 -->
-  <script src="./js/drop.js" defer></script>
-
-  <!-- 정답 보상(포인트+랜덤드랍) 먼저 로드 -->
-  <script src="./js/rewards.js?v=RW1" defer></script>
+  <!-- 퀴즈 로직 (맨 뒤) -->
+  <script src="/js/quiz.js?v=QZ1" defer></script>
 </head>
 <body>
+  <!-- 공통 헤더 -->
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
-    <nav class="main-nav">
+
+    <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li><a href="index.html">오늘의 학습</a></li>
         <li><a href="report.html">학습 보고서</a></li>
@@ -40,101 +41,78 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
+
     <div class="user-info">
       <span id="welcome-message"></span>
-      <!-- a 대신 button 사용: JS로 처리 -->
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
     </div>
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+
+    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
   </header>
 
-  <div class="quiz-container" style="max-width:980px;margin:0 auto;padding:16px;">
-    <header class="quiz-header" style="display:flex;justify-content:space-between;align-items:center;">
+  <!-- 본문 -->
+  <main class="container">
+    <header class="quiz-header" style="display:flex;justify-content:space-between;align-items:center">
       <h1>문제 쑥쑥! 🧠</h1>
-      <div id="timer-display"></div>
+      <div id="timer-display" class="mini"></div>
     </header>
 
-    <div class="quiz-layout" style="display:flex;gap:12px;">
-      <div class="passage-area" style="display:none;flex:1;min-width:0;">
-        <h2>📜 지문</h2>
-        <div id="passage-content" class="card"></div>
-      </div>
+    <section class="quiz-layout" style="display:flex;gap:12px">
+      <!-- 지문 영역(지문형일 때만 JS가 표시) -->
+      <aside class="passage-area card" style="display:none;flex:1;min-width:0">
+        <h2 style="margin-top:0">📜 지문</h2>
+        <div id="passage-content"></div>
+      </aside>
 
-      <div class="problem-area" style="flex:1.4;min-width:0;">
-        <main class="quiz-main">
-          <div class="progress-bar"><div class="progress"></div></div>
-          <p class="question-number">1 / 10</p>
+      <!-- 문제 영역 -->
+      <section class="problem-area" style="flex:1.4;min-width:0">
+        <div class="progress-bar" aria-hidden="true"><div class="progress" style="width:0%"></div></div>
+        <p class="question-number mini" style="margin:8px 0 12px">1 / 10</p>
 
-          <div class="question-box card">
-            <img id="question-image" alt="문제 이미지" style="display:none;max-width:100%;height:auto;" />
-            <p class="question-text">문제를 불러오는 중입니다...</p>
-          </div>
+        <div class="question-box card">
+          <img id="question-image" alt="문제 이미지" style="display:none" />
+          <p class="question-text">문제를 불러오는 중입니다...</p>
+        </div>
 
-          <div class="answer-options" style="display:grid;gap:8px;">
-            <button class="option btn">1)</button>
-            <button class="option btn">2)</button>
-            <button class="option btn">3)</button>
-            <button class="option btn">4)</button>
-          </div>
-        </main>
-      </div>
-    </div>
+        <div class="answer-options" role="group" aria-label="선택지">
+          <button class="option btn" data-idx="1">1)</button>
+          <button class="option btn" data-idx="2">2)</button>
+          <button class="option btn" data-idx="3">3)</button>
+          <button class="option btn" data-idx="4">4)</button>
+        </div>
+      </section>
+    </section>
 
-    <div id="results-container" style="display:none;" class="card">
-      <h2>✨ 퀴즈 결과 ✨</h2>
+    <!-- 결과 -->
+    <section id="results-container" class="card" style="display:none">
+      <h2 style="margin-top:0">✨ 퀴즈 결과 ✨</h2>
       <p id="score-text"></p>
-      <p id="message-text"></p>
-      <div class="result-buttons" style="display:flex;gap:8px;flex-wrap:wrap;">
+      <p id="message-text" class="mini"></p>
+      <div class="result-buttons" style="display:flex;gap:8px;flex-wrap:wrap">
         <button id="review-button" class="btn" disabled>저장 중...</button>
-        <a href="index.html" id="main-menu-button" class="btn disabled-link">메인으로 돌아가기</a>
+        <a href="index.html" id="main-menu-button" class="btn">메인으로 돌아가기</a>
       </div>
-    </div>
+    </section>
 
+    <!-- 정답/오답 토스트 -->
     <div id="toast-message"></div>
-  </div>
+  </main>
 
-  <!-- 퀴즈 로직(보상 스크립트 뒤에) -->
-  <script src="./js/quiz.js?v=QZ1" defer></script>
+  <footer class="main-footer">
+    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  </footer>
 
-  <!-- 헤더 환영문구/포인트 즉시 표기 (안전 부트스트랩) -->
+  <!-- 모바일 메뉴 토글 (공통) -->
   <script>
-  (function(){
-    function user(){ return localStorage.getItem('currentUser') || 'soi'; }
-    function paint(){
-      const u = user();
-      const welcomeEl = document.getElementById('welcome-message');
-      const logoutBtn = document.getElementById('logout-button');
-      if (welcomeEl){ welcomeEl.innerHTML = '<small>'+u+'님 환영해요!</small>'; welcomeEl.style.display='inline'; }
-      if (logoutBtn){ logoutBtn.style.display='inline'; }
-      const p = localStorage.getItem('soi:points') || '0';
-      document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint); else paint();
-    setTimeout(paint, 600);
-    window.addEventListener('points:changed', paint);
-    window.addEventListener('user:changed', paint);
-  })();
-  </script>
-
-  <!-- 로그아웃 버튼 동작(한 번만 바인딩) -->
-  <script>
-  (function(){
-    var l = document.getElementById('logout-button');
-    if(!l) return;
-    l.style.display = 'inline';
-    l.addEventListener('click', function(e){
-      e.preventDefault();
-      [
-        'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
-        'isReviewMode','reviewProblems','soi:points','soi:inventory'
-      ].forEach(k=>localStorage.removeItem(k));
-      // 다른 탭/페이지 동기화
-      window.dispatchEvent(new Event('user:changed'));
-      window.dispatchEvent(new Event('points:changed'));
-      // 캐시 무시하고 홈으로
-      location.href = 'index.html?ts=' + Date.now();
-    }, { once:true });
-  })();
+    (function(){
+      const btn = document.querySelector('.mobile-menu-button');
+      const nav = document.querySelector('.main-header .main-nav');
+      if (!btn || !nav) return;
+      const close = () => { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); };
+      btn.addEventListener('click', () => { document.body.classList.toggle('nav-open'); nav.classList.toggle('is-open'); });
+      nav.addEventListener('click', e => { if (e.target.closest('a')) close(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    })();
   </script>
 </body>
 </html>
