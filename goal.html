@@ -248,17 +248,6 @@
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
   </script>
 
-  <!-- 모바일 드로워 토글 (공통) -->
-  <script>
-    (function(){
-      const btn = document.querySelector('.mobile-menu-button');
-      const nav = document.querySelector('.main-header .main-nav');
-      if (!btn || !nav) return;
-      function toggle(){ document.body.classList.toggle('nav-open'); nav.classList.toggle('is-open'); }
-      btn.addEventListener('click', toggle);
-      nav.addEventListener('click', e => { if (e.target.closest('a')) { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); } });
-      document.addEventListener('keydown', e => { if (e.key==='Escape'){ document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); }});
-    })();
-  </script>
+
 </body>
 </html>
