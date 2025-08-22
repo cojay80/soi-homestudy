@@ -201,3 +201,48 @@ body.nav-open::before{
   body.nav-open::before{ content:none; }
   .main-nav.is-open ul{ position:static; inset:auto; z-index:auto; }
 }
+
+/* --- Mobile drawer: cross-page force open & layering fix --- */
+@media (max-width: 860px){
+  /* 기본은 닫힘 */
+  .main-header .main-nav{ display:none; }
+
+  /* 어떤 페이지 CSS가 .main-header > .main-nav {display:none} 해도 이걸 이김 */
+  .main-header .main-nav.is-open{ display:block !important; }
+
+  /* 드로워(UL)를 최상단으로 */
+  .main-header .main-nav.is-open ul{
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 72px 16px 24px;
+    background: #fff;
+    overflow-y: auto;
+
+    z-index: 1300;           /* 메뉴가 최상단 */
+    pointer-events: auto;
+    margin: 0;
+    list-style: none;
+  }
+
+  .main-header .main-nav.is-open a,
+  .main-header .main-nav.is-open .badge{
+    display:block; width:100%;
+    padding:12px;
+    border:1px solid #e5e5e5;
+    border-radius:12px;
+    background:#fff;
+    font-size:14px;
+  }
+
+  /* 백드롭은 메뉴 뒤쪽 */
+  body.nav-open::before{
+    content:"";
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 1200;           /* 메뉴(1300)보다 낮게 */
+    pointer-events: auto;    /* 백그라운드 탭으로 닫기 용도 */
+  }
+}
