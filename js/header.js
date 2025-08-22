@@ -1,11 +1,11 @@
-// /js/header.js — 유저이름만 표시 + 전 페이지 공통 드로워 토글
+// /js/header.js — 최종 (유저 이름 표시 + 드로워 공통 토글)
 (function () {
   const BREAKPOINT = 860;
-  const STORAGE_KEYS = { USER: 'currentUser', POINTS: 'soi:points' };
+  const K = { USER: 'currentUser', POINTS: 'soi:points' };
 
   function paintHeader() {
     try {
-      const name = (localStorage.getItem(STORAGE_KEYS.USER) || '').trim();
+      const name = (localStorage.getItem(K.USER) || '').trim();
       const loggedIn = !!name;
 
       document.querySelectorAll('#welcome-message').forEach(el => {
@@ -16,9 +16,9 @@
         el.style.display = loggedIn ? 'inline' : 'none';
       });
 
-      const p = Number(localStorage.getItem(STORAGE_KEYS.POINTS) || '0');
-      const pt = Number.isFinite(p) && p >= 0 ? p.toLocaleString() : '0';
-      document.querySelectorAll('[data-soi-points]').forEach(el => (el.textContent = pt));
+      const pRaw = Number(localStorage.getItem(K.POINTS) || '0');
+      const p = Number.isFinite(pRaw) && pRaw >= 0 ? pRaw.toLocaleString() : '0';
+      document.querySelectorAll('[data-soi-points]').forEach(el => (el.textContent = p));
     } catch (e) { console.warn('[Header] paint error:', e); }
   }
 
@@ -42,7 +42,7 @@
   function init() {
     paintHeader();
 
-    // 햄버거 클릭(위임) — 모든 페이지 공통
+    // 햄버거 클릭 위임 (모든 페이지 공통)
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('.mobile-menu-button');
       if (!btn) return;
@@ -55,7 +55,7 @@
       setMenuOpen(header, willOpen);
     });
 
-    // 드로워 링크 클릭 시(모바일에서만) 닫기
+    // 드로워 안 링크 클릭 -> 모바일에서만 닫기
     document.addEventListener('click', (e) => {
       const a = e.target.closest('.main-nav.is-open a');
       if (!a) return;
@@ -75,14 +75,14 @@
       if (e.key === 'Escape' && document.body.classList.contains('nav-open')) closeAll();
     });
 
-    // 데스크탑으로 리사이즈 시 닫기
+    // 데스크톱으로 리사이즈 시 닫기
     window.addEventListener('resize', () => { if (window.innerWidth > BREAKPOINT) closeAll(); });
 
     // 상태 반영
     window.addEventListener('user:changed', paintHeader);
     window.addEventListener('points:changed', paintHeader);
     window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEYS.USER || e.key === STORAGE_KEYS.POINTS) paintHeader();
+      if (e.key === K.USER || e.key === K.POINTS) paintHeader();
     });
   }
 
