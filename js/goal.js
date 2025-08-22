@@ -133,10 +133,19 @@
     });
 
     $('btn-goal-reset').addEventListener('click', () => {
-      g.daily = { questions:20, points:10, lastDate:null, achieved:{questions:false, points:false} };
-      g.weekly = { sessions:7, acc:70, weekKey:null, achieved:{sessions:false, acc:false} };
+      // 🔧 리스너 중복 방지를 위해 bindUI() 재호출 대신 값만 재설정 + 재집계
+      g.daily  = { questions:20, points:10, lastDate:null, achieved:{questions:false, points:false} };
+      g.weekly = { sessions:7,  acc:70,   weekKey:null,  achieved:{sessions:false, acc:false} };
       saveGoals(wrap);
-      bindUI(); // 다시 채우기 + 집계
+
+      // 입력값만 갱신
+      $('goal-daily-questions').value = g.daily.questions;
+      $('goal-daily-points').value    = g.daily.points;
+      $('goal-weekly-sessions').value = g.weekly.sessions;
+      $('goal-weekly-acc').value      = g.weekly.acc;
+
+      // 화면 수치 재계산
+      computeAndRender();
     });
 
     // 초기 집계
@@ -169,7 +178,7 @@
 
     // 오늘 집계
     let todayQuestions = 0;
-    let todayCorrectSum = 0; // 정답수 == 포인트(+1/정답) 정책을 그대로 따른 근사값
+    let todayCorrectSum = 0; // 정답수 == 포인트(+1/정답) 정책 기준
     // 주간 집계
     let weekSessions = 0;
     let weekTotal = 0;
@@ -263,13 +272,10 @@
     }
 
     // 저장 + 알림 + 상단 뱃지 동기화
+    saveGoals(wrap);
     if (awardedMsgs.length){
-      saveGoals(wrap);
       $$('[data-soi-points]').forEach(el => el.textContent = soiPoints());
       alert('축하합니다! 🎉\n' + awardedMsgs.join('\n'));
-    } else {
-      // 상태 변경만 있을 수 있으니 저장
-      saveGoals(wrap);
     }
   }
 
