@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- 공통 스크립트 (순서 유지 + 모두 defer) -->
+  <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
   <script src="/js/core-auth-store.js" defer></script>
   <script src="/js/api-shim.js" defer></script>
@@ -19,15 +19,12 @@
   <script src="/js/logout.js" defer></script>
 
   <!-- 오답 전용 -->
-  <script src="/js/notes.js?v=NOTES_1" defer></script>
+  <script src="/js/notes.js?v=NOTES_FINAL" defer></script>
 </head>
 <body>
-  <!-- 헤더: 왼쪽 큰 제목, 오른쪽(작은 로그인 정보) + 맨 끝 햄버거 -->
+  <!-- 헤더 -->
   <header class="main-header">
-    <div class="logo">
-      <a href="index.html" aria-label="메인으로">소이의 공부방 🎨</a>
-    </div>
-
+    <div class="logo"><a href="index.html" aria-label="메인으로">소이의 공부방 🎨</a></div>
     <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li><a href="index.html">오늘의 학습</a></li>
@@ -39,34 +36,30 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-
-    <!-- 로그인 정보: 글자 작게(스타일에서 제어), 로그아웃 동작은 logout.js가 바인딩 -->
     <div class="user-info">
       <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
     </div>
-
-    <!-- 맨 오른쪽 햄버거 -->
     <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
   </header>
 
   <!-- 본문 -->
-  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+  <main class="container">
     <h1>오답 노트 📝</h1>
 
     <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0">
       <label class="mini"><input type="checkbox" id="cb-all"> 전체선택</label>
       <button class="btn" id="btn-review-selected">선택 복습하기</button>
       <button class="btn" id="btn-review-all">전체 복습하기</button>
-      <div class="spacer" style="flex:1"></div>
+      <span style="flex:1"></span>
       <button class="btn danger" id="btn-delete-selected">선택 삭제</button>
       <button class="btn danger" id="btn-delete-all">전체 삭제</button>
     </div>
 
     <div class="mini" id="count-label">총 0문항</div>
 
-    <section id="wrongs-box" class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-      <div class="empty" style="border:1px dashed #ddd;border-radius:12px;padding:16px;text-align:center;color:#888">
+    <section id="wrongs-box" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+      <div class="card empty" style="border-style:dashed;color:#888;text-align:center">
         오답이 없습니다. 퀴즈를 풀고 다시 와주세요.
       </div>
     </section>
@@ -77,26 +70,17 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 모바일 메뉴 토글(아주 얇게) -->
+  <!-- 모바일 드로워 토글 (공통) -->
   <script>
-  (function(){
-    const btn = document.querySelector('.mobile-menu-button');
-    const nav = document.querySelector('.main-nav');
-    if (!btn || !nav) return;
-
-    btn.addEventListener('click', () => {
-      nav.classList.toggle('is-open');        // css/style.css에 모바일에서 .is-open만 표시
-      document.body.classList.toggle('nav-open');
-    });
-
-    // 메뉴 항목 터치 시 닫기(모바일 UX)
-    nav.addEventListener('click', (e) => {
-      const a = e.target.closest('a');
-      if (!a) return;
-      nav.classList.remove('is-open');
-      document.body.classList.remove('nav-open');
-    });
-  })();
+    (function(){
+      const btn = document.querySelector('.mobile-menu-button');
+      const nav = document.querySelector('.main-header .main-nav');
+      if (!btn || !nav) return;
+      function toggle(){ document.body.classList.toggle('nav-open'); nav.classList.toggle('is-open'); }
+      btn.addEventListener('click', toggle);
+      nav.addEventListener('click', e => { if (e.target.closest('a')) { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); } });
+      document.addEventListener('keydown', e => { if (e.key==='Escape'){ document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); }});
+    })();
   </script>
 </body>
 </html>
