@@ -774,6 +774,12 @@ main.container {
 .btn.btn-primary{background:#f5f7ff;border-color:#cdd8ff}
 .btn.btn-primary:not([disabled]):hover{background:#eaf0ff}
 
+/* 모바일 네비 토글 */
+@media (max-width: 860px) {
+  .main-nav { display: none; }
+  .main-nav.is-open { display: block; }
+  .main-header .main-nav ul { flex-direction: column; padding: 8px 0; }
+}
 
 
 
