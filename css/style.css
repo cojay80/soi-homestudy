@@ -145,3 +145,59 @@ th button{background:none;border:none;font-weight:700;cursor:pointer}
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* === Mobile drawer click-block fix === */
+
+/* 백드롭은 시각 효과만 — 클릭 막지 않음 */
+body.nav-open::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:1100;           /* 드로워보다 낮게 */
+  pointer-events:none;    /* ✅ 클릭/터치 통과 */
+}
+
+/* 혹시 페이지에 따라 .main-header::before 를 쓰는 경우도 무력화 */
+.main-header::before{
+  pointer-events:none !important;
+}
+
+/* 드로워 메뉴는 백드롭보다 위 */
+.main-header .main-nav.is-open ul,
+.main-nav.is-open ul{
+  position:fixed;
+  inset:0;
+  padding:72px 16px 24px;
+  overflow:auto;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:1300;           /* ✅ 백드롭(1100)보다 큼 */
+}
+
+/* 메뉴 항목은 확실히 클릭 가능하게 */
+.main-nav.is-open a{
+  display:block;
+  width:100%;
+  padding:14px 12px;
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  background:#fff;
+  font-size:14px;
+  pointer-events:auto;    /* ✅ 안전핀 */
+}
+
+/* (선택) 로그아웃/버튼 등 헤더 컨트롤은 드로워보다 위에 있을 필요 없음 */
+#logout-button,
+.mobile-menu-button{
+  position:relative;
+  z-index:1400;           /* 햄버거는 항상 최상단(선택) */
+}
+
+/* 데스크톱에서는 드로워 강제 해제 */
+@media (min-width:861px){
+  body.nav-open::before{ content:none; }
+  .main-nav.is-open ul{ position:static; inset:auto; z-index:auto; }
+}
