@@ -9,12 +9,13 @@
   <link rel="stylesheet" href="./css/style.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
-<script src="/js/config.js" defer></script>
-<script src="/js/core-auth-store.js" defer></script>
-<script src="/js/api-shim.js" defer></script>
-<script src="/js/soi-store.js" defer></script>
-<script src="/js/header.js" defer></script>
-<script src="/js/logout.js" defer></script>
+  <!-- 공통 스크립트 (순서 + defer) -->
+  <script src="/js/config.js" defer></script>
+  <script src="/js/core-auth-store.js" defer></script>
+  <script src="/js/api-shim.js" defer></script>
+  <script src="/js/soi-store.js" defer></script>
+  <script src="/js/header.js" defer></script>
+  <script src="/js/logout.js" defer></script>
 
   <!-- 문제 불러오기(구글시트 파서 등) -->
   <script src="./js/sheets.js" defer></script>
@@ -39,11 +40,11 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-<div class="user-info">
-  <span id="welcome-message"></span>
-  <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
-</div>
-
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <!-- a 대신 button 사용: JS로 처리 -->
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
+    </div>
     <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
 
@@ -94,23 +95,46 @@
 
   <!-- 퀴즈 로직(보상 스크립트 뒤에) -->
   <script src="./js/quiz.js?v=QZ1" defer></script>
-<script>
-(function(){
-  var l = document.getElementById('logout-button');
-  if(!l) return;
-  l.style.display = 'inline';
-  l.addEventListener('click', function(e){
-    e.preventDefault();
-    ['currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer','isReviewMode','reviewProblems','soi:points','soi:inventory'].forEach(k=>localStorage.removeItem(k));
-    location.href = 'index.html?ts=' + Date.now(); // 캐시무시 새로고침
-  }, { once:true });
-})();
-</script>
 
+  <!-- 헤더 환영문구/포인트 즉시 표기 (안전 부트스트랩) -->
+  <script>
+  (function(){
+    function user(){ return localStorage.getItem('currentUser') || 'soi'; }
+    function paint(){
+      const u = user();
+      const welcomeEl = document.getElementById('welcome-message');
+      const logoutBtn = document.getElementById('logout-button');
+      if (welcomeEl){ welcomeEl.innerHTML = '<small>'+u+'님 환영해요!</small>'; welcomeEl.style.display='inline'; }
+      if (logoutBtn){ logoutBtn.style.display='inline'; }
+      const p = localStorage.getItem('soi:points') || '0';
+      document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint); else paint();
+    setTimeout(paint, 600);
+    window.addEventListener('points:changed', paint);
+    window.addEventListener('user:changed', paint);
+  })();
+  </script>
+
+  <!-- 로그아웃 버튼 동작(한 번만 바인딩) -->
+  <script>
+  (function(){
+    var l = document.getElementById('logout-button');
+    if(!l) return;
+    l.style.display = 'inline';
+    l.addEventListener('click', function(e){
+      e.preventDefault();
+      [
+        'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
+        'isReviewMode','reviewProblems','soi:points','soi:inventory'
+      ].forEach(k=>localStorage.removeItem(k));
+      // 다른 탭/페이지 동기화
+      window.dispatchEvent(new Event('user:changed'));
+      window.dispatchEvent(new Event('points:changed'));
+      // 캐시 무시하고 홈으로
+      location.href = 'index.html?ts=' + Date.now();
+    }, { once:true });
+  })();
+  </script>
 </body>
 </html>
-
-
-
-
-
