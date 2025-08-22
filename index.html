@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>소이의 공부방</title>
 
@@ -23,7 +23,7 @@
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
 
-    <nav class="main-nav">
+    <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li class="active"><a href="index.html">오늘의 학습</a></li>
         <li><a href="report.html">학습 보고서</a></li>
@@ -40,7 +40,7 @@
       <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
     </div>
 
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
   </header>
 
   <!-- 본문 -->
@@ -51,67 +51,71 @@
     <!-- 빠른 시작 -->
     <section class="card">
       <h2>빠른 시작</h2>
-      <div class="quick" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <label class="inline">학년
-          <select id="sel-grade"><option value="">학년 선택</option></select>
+
+      <div>
+        <label>학년
+          <select id="sel-grade">
+            <option value="">학년 선택</option>
+          </select>
         </label>
-        <label class="inline">과목
-          <select id="sel-subject"><option value="">과목 선택</option></select>
+      </div>
+
+      <div>
+        <label>과목
+          <select id="sel-subject">
+            <option value="">과목 선택</option>
+          </select>
         </label>
-        <label class="inline">세트 수(지문/단일 묶음)
+      </div>
+
+      <div>
+        <label>세트 수(지문/단일 묶음)
           <input type="number" id="sel-count" min="1" step="1" value="10"/>
         </label>
-        <label class="inline">문항 타이머(초, 0=무제한)
+      </div>
+
+      <div>
+        <label>문항 타이머(초, 0=무제한)
           <input type="number" id="sel-timer" min="0" step="10" value="0"/>
         </label>
       </div>
-      <div class="cta" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="btn-start">시작하기 ▶</button>
         <button class="btn" id="btn-review" title="오답이 있으면 복습 모드로 이동">오답 복습</button>
         <a class="btn" href="shop.html">상점 가기</a>
       </div>
-      <div id="home-msg" class="mini" style="margin-top:6px;color:#d33"></div>
+
+      <div id="home-msg" class="mini"></div>
     </section>
 
     <!-- 오늘 진행 -->
-    <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
-      <article class="card">
-        <div class="mini">오늘 푼 문항</div>
-        <div class="kpi"><span id="today-total">0</span></div>
-        <div class="barwrap"><div id="bar-today" class="bar" style="width:0%"></div></div>
-        <div class="mini">* 목표 대비 진행률은 <a href="goal.html">나의 목표</a>에서 확인/설정</div>
-      </article>
-      <article class="card">
-        <div class="mini">오늘 정답 수(=획득 포인트)</div>
-        <div class="kpi"><span id="today-correct">0</span>p</div>
-      </article>
-      <article class="card">
-        <div class="mini">최근 세션</div>
-        <div id="recent-session" class="mini">—</div>
-      </article>
+    <section class="card">
+      <div class="mini">오늘 푼 문항</div>
+      <div class="kpi"><span id="today-total">0</span></div>
+      <div class="barwrap"><div id="bar-today" class="bar" style="width:0%"></div></div>
+      <div class="mini">* 목표 대비 진행률은 <a href="goal.html">나의 목표</a>에서 확인/설정</div>
+    </section>
+
+    <section class="card">
+      <div class="mini">오늘 정답 수(=획득 포인트)</div>
+      <div class="kpi"><span id="today-correct">0</span>p</div>
+    </section>
+
+    <section class="card">
+      <div class="mini">최근 세션</div>
+      <div id="recent-session" class="mini">—</div>
     </section>
 
     <!-- 바로가기 -->
-    <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
-      <div class="card">
-        <h3>학습 보고서</h3>
-        <p class="mini">최근 7일 성과를 한눈에</p>
-        <a class="btn" href="report.html">보고서 보기</a>
-      </div>
-      <div class="card">
-        <h3>오답 노트</h3>
-        <p class="mini">틀린 문제 복습/정리</p>
-        <a class="btn" href="notes.html">오답 보러가기</a>
-      </div>
-      <div class="card">
-        <h3>상세 기록</h3>
-        <p class="mini">모든 세션을 필터/정렬</p>
-        <a class="btn" href="record.html">기록 관리</a>
-      </div>
-      <div class="card">
-        <h3>상점</h3>
-        <p class="mini">포인트로 보상을 받자!</p>
-        <a class="btn" href="shop.html">상점으로</a>
+    <section class="card">
+      <h2>바로가기</h2>
+      <p class="mini">필요한 곳으로 바로 이동해요.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <a class="btn" href="report.html">학습 보고서</a>
+        <a class="btn" href="notes.html">오답 노트</a>
+        <a class="btn" href="record.html">상세 기록</a>
+        <a class="btn" href="shop.html">상점</a>
       </div>
     </section>
   </main>
@@ -121,7 +125,7 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 홈 전용: 시트에서 학년/과목 채우기 & 시작/복습 -->
+  <!-- 홈 전용 스크립트: 시트에서 학년/과목 채우기 & 시작/복습 -->
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const gradeSel = document.getElementById('sel-grade');
@@ -144,9 +148,10 @@
 
     const head  = lines[0];
     const delim = (head.match(/\t/g)||[]).length >= (head.match(/,/g)||[]).length ? '\t' : ',';
-    const H = head.split(delim).map(h=>h.trim().toLowerCase());
-    const gi = H.findIndex(h => h==='학년' || h==='grade');
-    const si = H.findIndex(h => h==='과목' || h==='subject');
+    const H = head.split(delim).map(h=>h.trim());
+    const norm = s => (s||'').toLowerCase().replace(/\s+/g,' ').trim();
+    const gi = H.findIndex(h => ['학년','grade'].includes(norm(h)));
+    const si = H.findIndex(h => ['과목','subject'].includes(norm(h)));
     if (gi < 0 || si < 0) { msgEl.textContent='헤더에 "학년/과목" 열이 필요합니다.'; return; }
 
     const grades = new Set();
@@ -196,14 +201,18 @@
       const s = (subjSel.value  || '').trim();
       const cnt = parseInt(document.getElementById('sel-count').value || '10', 10);
       const tmr = parseInt(document.getElementById('sel-timer').value || '0', 10);
+
       if (!g) { msgEl.textContent='학년을 선택해주세요.'; return; }
       if (!s) { msgEl.textContent='과목을 선택해주세요.'; return; }
+
       localStorage.setItem('selectedGrade', g);
       localStorage.setItem('selectedSubject', s);
       localStorage.setItem('selectedCount', String(Math.max(1, cnt)));
       localStorage.setItem('selectedTimer', String(Math.max(0, tmr)));
+
       localStorage.removeItem('isReviewMode');
       localStorage.removeItem('reviewProblems');
+
       location.href = 'quiz.html';
     });
 
@@ -223,20 +232,17 @@
   });
   </script>
 
-  <!-- 헤더: 모바일 드로워 토글 -->
+  <!-- 모바일 메뉴 토글 (공통, 아주 얇게) -->
   <script>
-  (function(){
-    const btn = document.querySelector('.mobile-menu-button');
-    const nav = document.querySelector('.main-header .main-nav');
-    if (!btn || !nav) return;
-    function toggle(){
-      document.body.classList.toggle('nav-open');
-      nav.classList.toggle('is-open');
-    }
-    btn.addEventListener('click', toggle);
-    nav.addEventListener('click', (e)=>{ if(e.target.closest('a')) { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); } });
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); }});
-  })();
+    (function(){
+      const btn = document.querySelector('.mobile-menu-button');
+      const nav = document.querySelector('.main-header .main-nav');
+      if (!btn || !nav) return;
+      function toggle(){ document.body.classList.toggle('nav-open'); nav.classList.toggle('is-open'); }
+      btn.addEventListener('click', toggle);
+      nav.addEventListener('click', e => { if (e.target.closest('a')) { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); } });
+      document.addEventListener('keydown', e => { if (e.key==='Escape'){ document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); }});
+    })();
   </script>
 </body>
 </html>
