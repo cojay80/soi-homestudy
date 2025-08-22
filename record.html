@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- 공통 스크립트 -->
   <script src="/js/config.js" defer></script>
   <script src="/js/core-auth-store.js" defer></script>
   <script src="/js/api-shim.js" defer></script>
@@ -17,16 +16,38 @@
   <script src="/js/header.js" defer></script>
   <script src="/js/logout.js" defer></script>
 
-  <!-- 기록 전용 -->
-  <script src="/js/record.js?v=RECORD_1" defer></script>
+  <script src="/js/record.js?v=RECORD_FINAL" defer></script>
 
   <style>
-    .container{max-width:980px;margin:0 auto;padding:16px}
+    /* 헤더 오버라이드 동일 적용 */
+    .main-header{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #eee;background:#fff;position:relative}
+    .main-header .logo a{font-weight:800;font-size:22px}
+    .main-header .spacer{flex:1}
+    .main-header .user-info{display:flex;align-items:center;gap:8px;color:#666;z-index:2}
+    #logout-button{padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;font-size:12px;cursor:pointer}
+    .mobile-menu-button{border:1px solid #ddd;border-radius:8px;background:#fafafa;padding:6px 10px;cursor:pointer}
+    .main-nav ul{display:flex;gap:10px;list-style:none;margin:0;padding:0}
+    .main-nav a{display:inline-block;padding:6px 10px;border-radius:8px;font-size:14px}
+    .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
+    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
+    @media (max-width:860px){
+      .main-header .user-info{font-size:12px}
+      .main-nav ul{display:none}
+      body.nav-open .main-nav ul{
+        display:flex;flex-direction:column;position:fixed;inset:0;z-index:1200;padding:72px 16px 24px;background:#fff;gap:6px;overflow-y:auto
+      }
+      body.nav-open{overflow:hidden}
+      .main-nav a,.main-nav .badge{display:block;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#fff}
+      .mobile-menu-button{display:inline-block}
+    }
+    @media (min-width:861px){ .mobile-menu-button{display:none} }
+
+    /* 페이지 UI */
     .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
     .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
     .toolbar .spacer{flex:1}
     .mini{color:#666;font-size:13px}
-    table{width:100%;border-collapse:collapse;background:#fff}
+    table{width:100%;border-collapse:collapse}
     th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:14px;white-space:nowrap}
     th button{background:none;border:none;cursor:pointer;font-weight:700}
     .pagination{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:10px}
@@ -34,27 +55,18 @@
     input,select{padding:6px;border:1px solid #ddd;border-radius:8px}
     .sum{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:8px 0}
     .sum .k{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:8px 10px}
-    /* 헤더 정렬 */
-    .main-header{display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;background:#fff;padding:10px 12px}
-    .main-header .logo{font-weight:800;font-size:20px}
-    .user-info{margin-left:auto;display:flex;align-items:center;gap:8px;color:#666;font-size:12px}
-    #logout-button{padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;font-size:12px}
-    .mobile-menu-button{margin-left:8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;padding:6px 10px;cursor:pointer}
-    .main-nav ul{display:flex;gap:8px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
-    .main-nav a{display:inline-block;padding:6px 10px;border-radius:10px;font-size:14px}
-    .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
-    @media (max-width:860px){
-      .main-nav{display:none;width:100%}
-      .main-nav.is-open{display:block}
-      .main-nav ul{flex-direction:column;padding:8px 0}
-      .mobile-menu-button{display:inline-block}
-    }
   </style>
 </head>
 <body>
-  <!-- 헤더 -->
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
+      <span class="badge">포인트: <b data-soi-points>0</b>p</span>
+    </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
     <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li><a href="index.html">오늘의 학습</a></li>
@@ -63,38 +75,25 @@
         <li class="active"><a href="record.html">상세 기록</a></li>
         <li><a href="notes.html">오답 노트</a></li>
         <li><a href="shop.html">상점</a></li>
-        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-    <div class="user-info">
-      <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
-    </div>
-    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
   </header>
 
-  <!-- 본문 -->
-  <main class="container">
+  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
     <h1>상세 기록 📒</h1>
     <p class="mini">퀴즈 종료 시 저장된 모든 세션을 확인하고 관리합니다.</p>
 
-    <!-- 필터/도구 -->
     <section class="toolbar">
       <label class="mini">시작일 <input type="date" id="f-start"></label>
       <label class="mini">종료일 <input type="date" id="f-end"></label>
-      <label class="mini">학년
-        <select id="f-grade"><option value="">전체</option></select>
-      </label>
-      <label class="mini">과목
-        <select id="f-subject"><option value="">전체</option></select>
-      </label>
+      <label class="mini">학년 <select id="f-grade"><option value="">전체</option></select></label>
+      <label class="mini">과목 <select id="f-subject"><option value="">전체</option></select></label>
       <div class="spacer"></div>
       <button id="btn-export" title="현재 필터 결과를 CSV로 저장">CSV 내보내기</button>
       <button id="btn-del-selected" class="danger" title="선택된 행 삭제">선택 삭제</button>
       <button id="btn-del-all" class="danger" title="모든 세션 삭제">전체 삭제</button>
     </section>
 
-    <!-- 합계 -->
     <section class="sum">
       <div class="k mini">세션 수: <b id="sum-sessions">0</b></div>
       <div class="k mini">총 문항: <b id="sum-total">0</b></div>
@@ -102,7 +101,6 @@
       <div class="k mini">평균 정답률: <b id="sum-acc">0%</b></div>
     </section>
 
-    <!-- 표 -->
     <section class="table-wrap">
       <table>
         <thead>
@@ -125,9 +123,7 @@
         <span class="mini" id="p-info">1 / 1</span>
         <button id="p-next">다음</button>
         <label class="mini">페이지당
-          <select id="p-size">
-            <option>10</option><option selected>20</option><option>50</option>
-          </select>
+          <select id="p-size"><option>10</option><option selected>20</option><option>50</option></select>
         </label>
       </div>
     </section>
@@ -135,14 +131,11 @@
 
   <footer class="main-footer"><p>&copy; 2025 소이를 위한 아빠의 선물</p></footer>
 
-  <!-- 모바일 메뉴 토글 -->
   <script>
-  (function(){
-    const btn=document.querySelector('.mobile-menu-button');
-    const nav=document.querySelector('.main-nav');
-    btn?.addEventListener('click',()=>nav.classList.toggle('is-open'));
-    nav?.addEventListener('click',e=>{if(e.target.closest('a')) nav.classList.remove('is-open');});
-  })();
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.querySelector('.mobile-menu-button');
+      btn?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+    });
   </script>
 </body>
 </html>
