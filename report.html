@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>학습 보고서 - 소이의 공부방</title>
 
-  <!-- 폰트 / 공통 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
-  <!-- 공통 스크립트 (순서 + defer) -->
+  <!-- 공통 스크립트 -->
   <script src="/js/config.js" defer></script>
   <script src="/js/core-auth-store.js" defer></script>
   <script src="/js/api-shim.js" defer></script>
@@ -19,31 +18,42 @@
   <script src="/js/logout.js" defer></script>
 
   <!-- 리포트 전용 -->
-  <script src="/js/report.js" defer></script>
+  <script src="/js/report.js?v=REPORT_1" defer></script>
 
   <style>
-    .badge { padding:.2rem .5rem; border:1px solid #ddd; border-radius:999px; font-weight:600 }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px }
-    .card { border:1px solid #e5e5e5; border-radius:12px; padding:12px; background:#fff }
-    .kpi { font-size:26px; font-weight:700 }
-    .mini { color:#666; font-size:13px }
-    .barwrap { background:#f3f3f3; border-radius:8px; overflow:hidden; height:12px }
-    .bar { height:100%; background:#7aa6ff }
-    table { width:100%; border-collapse:collapse; }
-    th,td { padding:8px; border-bottom:1px solid #eee; text-align:left; font-size:14px }
-    th { background:#fafafa }
+    .container{max-width:980px;margin:0 auto;padding:16px}
+    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;background:#fff}
+    .kpi{font-size:26px;font-weight:700}
+    .mini{color:#666;font-size:13px}
+    .barwrap{background:#f3f3f3;border-radius:8px;overflow:hidden;height:12px}
+    .bar{height:100%;background:#7aa6ff}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+    th{background:#fafafa}
+    /* 헤더 정렬 */
+    .main-header{display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;background:#fff;padding:10px 12px}
+    .main-header .logo{font-weight:800;font-size:20px}
+    .user-info{margin-left:auto;display:flex;align-items:center;gap:8px;color:#666;font-size:12px}
+    #logout-button{padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;font-size:12px}
+    .mobile-menu-button{margin-left:8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;padding:6px 10px;cursor:pointer}
+    .main-nav ul{display:flex;gap:8px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+    .main-nav a{display:inline-block;padding:6px 10px;border-radius:10px;font-size:14px}
+    .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
+    @media (max-width:860px){
+      .main-nav{display:none;width:100%}
+      .main-nav.is-open{display:block}
+      .main-nav ul{flex-direction:column;padding:8px 0}
+      .mobile-menu-button{display:inline-block}
+    }
   </style>
 </head>
 <body>
-  <!-- 헤더 (공통 규격) -->
+  <!-- 헤더 -->
   <header class="main-header">
-    <!-- 왼쪽: 큰 로고(제목은 크게 보이도록) -->
-    <div class="logo">
-      <a href="index.html" style="font-size:20px; font-weight:800;">소이의 공부방 🎨</a>
-    </div>
-
-    <!-- 중앙: 내비게이션 -->
-    <nav class="main-nav">
+    <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
+    <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li><a href="index.html">오늘의 학습</a></li>
         <li class="active"><a href="report.html">학습 보고서</a></li>
@@ -54,42 +64,28 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-
-    <!-- 오른쪽: 작게 로그인 정보 + 햄버거 버튼 -->
-    <div class="user-info" style="font-size:12px;">
+    <div class="user-info">
       <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
     </div>
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
   </header>
 
   <!-- 본문 -->
-  <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
+  <main class="container">
     <h1>학습 보고서 📊</h1>
     <p class="mini">최근 <b>7일</b> 기준 요약입니다. (퀴즈 종료 시 저장된 기록 기준)</p>
 
     <!-- KPI -->
-    <section class="grid" style="margin:12px 0;">
-      <article class="card">
-        <div class="mini">총 푼 문항(7일)</div>
-        <div id="kpi-total" class="kpi">0</div>
-      </article>
-      <article class="card">
-        <div class="mini">정답률(7일)</div>
-        <div id="kpi-acc" class="kpi">0%</div>
-      </article>
-      <article class="card">
-        <div class="mini">획득 포인트(누적)</div>
-        <div id="kpi-points" class="kpi">0p</div>
-      </article>
-      <article class="card">
-        <div class="mini">학습 세션 수(7일)</div>
-        <div id="kpi-sessions" class="kpi">0</div>
-      </article>
+    <section class="grid">
+      <article class="card"><div class="mini">총 푼 문항(7일)</div><div id="kpi-total" class="kpi">0</div></article>
+      <article class="card"><div class="mini">정답률(7일)</div><div id="kpi-acc" class="kpi">0%</div></article>
+      <article class="card"><div class="mini">획득 포인트(누적)</div><div id="kpi-points" class="kpi">0p</div></article>
+      <article class="card"><div class="mini">학습 세션 수(7일)</div><div id="kpi-sessions" class="kpi">0</div></article>
     </section>
 
-    <!-- 과목/학년 분포 -->
-    <section class="grid" style="margin:12px 0;">
+    <!-- 분포 -->
+    <section class="grid">
       <article class="card">
         <h2 style="margin:0 0 8px;">과목별 정답률</h2>
         <div id="subject-bars" class="mini">데이터 없음</div>
@@ -100,20 +96,15 @@
       </article>
     </section>
 
-    <!-- 최근 세션 목록 -->
-    <section class="card" style="margin:12px 0;">
+    <!-- 최근 세션 -->
+    <section class="card">
       <h2 style="margin:0 0 8px;">최근 세션 기록</h2>
       <div class="mini" id="range-label">기간: -</div>
       <div class="table-wrap" style="margin-top:8px;">
         <table>
           <thead>
             <tr>
-              <th>날짜</th>
-              <th>학년</th>
-              <th>과목</th>
-              <th>점수</th>
-              <th>정답수/총문항</th>
-              <th>정답률</th>
+              <th>날짜</th><th>학년</th><th>과목</th><th>점수</th><th>정답수/총문항</th><th>정답률</th>
             </tr>
           </thead>
           <tbody id="session-body">
@@ -124,25 +115,16 @@
     </section>
   </main>
 
-  <!-- 푸터 -->
-  <footer class="main-footer">
-    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
-  </footer>
+  <footer class="main-footer"><p>&copy; 2025 소이를 위한 아빠의 선물</p></footer>
 
-  <!-- 모바일 드로워 토글(충돌 없는 초경량) -->
+  <!-- 모바일 메뉴 토글 -->
   <script>
-    (function(){
-      const btn = document.querySelector('.mobile-menu-button');
-      const nav = document.querySelector('.main-header .main-nav');
-      function close(){ document.body.classList.remove('nav-open'); }
-      if (btn && nav) {
-        btn.addEventListener('click', () => {
-          document.body.classList.toggle('nav-open');
-        });
-        nav.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-      }
-    })();
+  (function(){
+    const btn=document.querySelector('.mobile-menu-button');
+    const nav=document.querySelector('.main-nav');
+    btn?.addEventListener('click',()=>nav.classList.toggle('is-open'));
+    nav?.addEventListener('click',e=>{ if(e.target.closest('a')) nav.classList.remove('is-open'); });
+  })();
   </script>
 </body>
 </html>
