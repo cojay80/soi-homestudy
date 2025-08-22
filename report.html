@@ -19,7 +19,7 @@
   <script src="/js/logout.js" defer></script>
 
   <!-- 리포트 전용 -->
-  <script src="/js/report.js?v=REPORT_1" defer></script>
+  <script src="/js/report.js" defer></script>
 
   <style>
     .badge { padding:.2rem .5rem; border:1px solid #ddd; border-radius:999px; font-weight:600 }
@@ -35,11 +35,14 @@
   </style>
 </head>
 <body>
-  <!-- 고정 헤더 -->
+  <!-- 헤더 (공통 규격) -->
   <header class="main-header">
+    <!-- 왼쪽: 큰 로고(제목은 크게 보이도록) -->
     <div class="logo">
-      <a href="index.html">소이의 공부방 🎨</a>
+      <a href="index.html" style="font-size:20px; font-weight:800;">소이의 공부방 🎨</a>
     </div>
+
+    <!-- 중앙: 내비게이션 -->
     <nav class="main-nav">
       <ul>
         <li><a href="index.html">오늘의 학습</a></li>
@@ -51,12 +54,12 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-    <div class="user-info">
-      <span id="welcome-message"></span>
-      <!-- a 대신 button: 클릭만 하고 JS가 처리 -->
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
-    </div>
 
+    <!-- 오른쪽: 작게 로그인 정보 + 햄버거 버튼 -->
+    <div class="user-info" style="font-size:12px;">
+      <span id="welcome-message"></span>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
+    </div>
     <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
 
@@ -126,43 +129,20 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 헤더 환영문구/포인트 즉시 표기 (안전 부트스트랩) -->
+  <!-- 모바일 드로워 토글(충돌 없는 초경량) -->
   <script>
-  (function(){
-    function user(){ return localStorage.getItem('currentUser') || 'soi'; }
-    function paint(){
-      const u = user();
-      const welcomeEl = document.getElementById('welcome-message');
-      const logoutBtn = document.getElementById('logout-button');
-      if (welcomeEl){ welcomeEl.innerHTML = '<small>'+u+'님 환영해요!</small>'; welcomeEl.style.display='inline'; }
-      if (logoutBtn){ logoutBtn.style.display='inline'; }
-      const p = localStorage.getItem('soi:points') || '0';
-      document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint); else paint();
-    setTimeout(paint, 600);
-    window.addEventListener('points:changed', paint);
-    window.addEventListener('user:changed', paint);
-  })();
-  </script>
-
-  <!-- 로그아웃 버튼 동작(한 번만 바인딩) -->
-  <script>
-  (function(){
-    var l = document.getElementById('logout-button');
-    if(!l) return;
-    l.style.display = 'inline';
-    l.addEventListener('click', function(e){
-      e.preventDefault();
-      [
-        'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
-        'isReviewMode','reviewProblems','soi:points','soi:inventory'
-      ].forEach(k=>localStorage.removeItem(k));
-      window.dispatchEvent(new Event('user:changed'));
-      window.dispatchEvent(new Event('points:changed'));
-      location.href = 'index.html?ts=' + Date.now(); // 캐시 무시 새로고침
-    }, { once:true });
-  })();
+    (function(){
+      const btn = document.querySelector('.mobile-menu-button');
+      const nav = document.querySelector('.main-header .main-nav');
+      function close(){ document.body.classList.remove('nav-open'); }
+      if (btn && nav) {
+        btn.addEventListener('click', () => {
+          document.body.classList.toggle('nav-open');
+        });
+        nav.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      }
+    })();
   </script>
 </body>
 </html>
