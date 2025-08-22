@@ -246,3 +246,45 @@ body.nav-open::before{
     pointer-events: auto;    /* 백그라운드 탭으로 닫기 용도 */
   }
 }
+/* === Drawer 강제 표시 + 레이어 고정 (모든 페이지 공통) === */
+@media (max-width: 860px){
+  .main-header .main-nav { display: none; }
+
+  /* 어떤 페이지 CSS가 display:none을 해도 이 규칙이 이김 */
+  .main-header .main-nav.is-open { display: block !important; }
+
+  .main-header .main-nav.is-open ul{
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 72px 16px 24px;
+    background: #fff;
+    overflow-y: auto;
+
+    z-index: 1300;         /* 메뉴가 최상단 */
+    pointer-events: auto;
+    margin: 0;
+    list-style: none;
+  }
+
+  .main-header .main-nav.is-open a,
+  .main-header .main-nav.is-open .badge{
+    display:block; width:100%;
+    padding:12px;
+    border:1px solid #e5e5e5;
+    border-radius:12px;
+    background:#fff;
+    font-size:14px;
+  }
+
+  /* 백드롭 (메뉴보다 아래 z-index) */
+  body.nav-open::before{
+    content:"";
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 1200;         /* 메뉴(1300)보다 낮게 */
+    pointer-events: auto;
+  }
+}
