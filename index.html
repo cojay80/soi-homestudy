@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>소이의 공부방</title>
 
   <!-- 폰트 / 공통 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="./css/style.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
@@ -17,45 +17,13 @@
   <script src="/js/soi-store.js" defer></script>
   <script src="/js/header.js" defer></script>
   <script src="/js/logout.js" defer></script>
-
-  <!-- 이 페이지용 헤더 오버라이드 (제목 왼쪽 크게 / 우측 햄버거 / 그 왼쪽에 로그인정보 작게) -->
-  <style>
-    .main-header{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #eee;background:#fff;position:relative}
-    .main-header .logo a{font-weight:800;font-size:22px;line-height:1}
-    .main-header .spacer{flex:1}
-    .main-header .user-info{display:flex;align-items:center;gap:8px;color:#666;font-size:12px;z-index:2}
-    #logout-button{padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;font-size:12px;cursor:pointer}
-    .mobile-menu-button{border:1px solid #ddd;border-radius:8px;background:#fafafa;padding:6px 10px;cursor:pointer;line-height:1}
-    /* 데스크톱 메뉴 */
-    .main-nav ul{display:flex;gap:10px;list-style:none;margin:0;padding:0}
-    .main-nav a{display:inline-block;padding:6px 10px;border-radius:8px;font-size:14px}
-    .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
-    /* 모바일: 드로워 */
-    @media (max-width:860px){
-      .main-nav ul{display:none}
-      body.nav-open .main-nav ul{
-        display:flex;flex-direction:column;position:fixed;inset:0;z-index:1200;
-        padding:72px 16px 24px;background:#fff;gap:6px;overflow-y:auto
-      }
-      .main-nav a,.main-nav .badge{display:block;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#fff}
-      .mobile-menu-button{display:inline-block}
-    }
-    @media (min-width:861px){ .mobile-menu-button{display:none} }
-    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
-  </style>
 </head>
 <body>
-  <!-- 헤더 (통일 마크업: logo → spacer → user-info → hamburger → nav) -->
+  <!-- 헤더 -->
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
-    <div class="spacer"></div>
-    <div class="user-info">
-      <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
-      <span class="badge">포인트: <b data-soi-points>0</b>p</span>
-    </div>
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
-    <nav class="main-nav" aria-label="주 메뉴">
+
+    <nav class="main-nav">
       <ul>
         <li class="active"><a href="index.html">오늘의 학습</a></li>
         <li><a href="report.html">학습 보고서</a></li>
@@ -63,8 +31,16 @@
         <li><a href="record.html">상세 기록</a></li>
         <li><a href="notes.html">오답 노트</a></li>
         <li><a href="shop.html">상점</a></li>
+        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
+
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
+    </div>
+
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
 
   <!-- 본문 -->
@@ -74,7 +50,7 @@
 
     <!-- 빠른 시작 -->
     <section class="card">
-      <h2 style="margin:0 0 8px;">빠른 시작</h2>
+      <h2>빠른 시작</h2>
       <div class="quick" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <label class="inline">학년
           <select id="sel-grade"><option value="">학년 선택</option></select>
@@ -89,12 +65,12 @@
           <input type="number" id="sel-timer" min="0" step="10" value="0"/>
         </label>
       </div>
-      <div class="cta" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <div class="cta" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button class="btn" id="btn-start">시작하기 ▶</button>
         <button class="btn" id="btn-review" title="오답이 있으면 복습 모드로 이동">오답 복습</button>
         <a class="btn" href="shop.html">상점 가기</a>
       </div>
-      <div id="home-msg" class="mini" style="margin-top:6px;color:#d33;"></div>
+      <div id="home-msg" class="mini" style="margin-top:6px;color:#d33"></div>
     </section>
 
     <!-- 오늘 진행 -->
@@ -118,22 +94,22 @@
     <!-- 바로가기 -->
     <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
       <div class="card">
-        <h3 style="margin:0;">학습 보고서</h3>
+        <h3>학습 보고서</h3>
         <p class="mini">최근 7일 성과를 한눈에</p>
         <a class="btn" href="report.html">보고서 보기</a>
       </div>
       <div class="card">
-        <h3 style="margin:0;">오답 노트</h3>
+        <h3>오답 노트</h3>
         <p class="mini">틀린 문제 복습/정리</p>
         <a class="btn" href="notes.html">오답 보러가기</a>
       </div>
       <div class="card">
-        <h3 style="margin:0;">상세 기록</h3>
+        <h3>상세 기록</h3>
         <p class="mini">모든 세션을 필터/정렬</p>
         <a class="btn" href="record.html">기록 관리</a>
       </div>
       <div class="card">
-        <h3 style="margin:0;">상점</h3>
+        <h3>상점</h3>
         <p class="mini">포인트로 보상을 받자!</p>
         <a class="btn" href="shop.html">상점으로</a>
       </div>
@@ -145,7 +121,7 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 홈 전용 스크립트: 시트에서 학년/과목 채우기 & 시작/복습 -->
+  <!-- 홈 전용: 시트에서 학년/과목 채우기 & 시작/복습 -->
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const gradeSel = document.getElementById('sel-grade');
@@ -168,10 +144,9 @@
 
     const head  = lines[0];
     const delim = (head.match(/\t/g)||[]).length >= (head.match(/,/g)||[]).length ? '\t' : ',';
-    const H = head.split(delim).map(h=>h.trim());
-    const norm = s => (s||'').toLowerCase().replace(/\s+/g,' ').trim();
-    const gi = H.findIndex(h => ['학년','grade'].includes(norm(h)));
-    const si = H.findIndex(h => ['과목','subject'].includes(norm(h)));
+    const H = head.split(delim).map(h=>h.trim().toLowerCase());
+    const gi = H.findIndex(h => h==='학년' || h==='grade');
+    const si = H.findIndex(h => h==='과목' || h==='subject');
     if (gi < 0 || si < 0) { msgEl.textContent='헤더에 "학년/과목" 열이 필요합니다.'; return; }
 
     const grades = new Set();
@@ -248,16 +223,20 @@
   });
   </script>
 
-  <!-- 모바일 메뉴 토글 (공용, 헤더 겹침/가림 방지) -->
+  <!-- 헤더: 모바일 드로워 토글 -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.querySelector('.mobile-menu-button');
-      const nav = document.querySelector('.main-header .main-nav');
-      function close(){ document.body.classList.remove('nav-open'); }
-      btn?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
-      nav?.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-    });
+  (function(){
+    const btn = document.querySelector('.mobile-menu-button');
+    const nav = document.querySelector('.main-header .main-nav');
+    if (!btn || !nav) return;
+    function toggle(){
+      document.body.classList.toggle('nav-open');
+      nav.classList.toggle('is-open');
+    }
+    btn.addEventListener('click', toggle);
+    nav.addEventListener('click', (e)=>{ if(e.target.closest('a')) { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); } });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); }});
+  })();
   </script>
 </body>
 </html>
