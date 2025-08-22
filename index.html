@@ -36,11 +36,14 @@
     </nav>
 
     <div class="user-info">
+      <!-- ✅ 이름만 표시 (header.js가 currentUser로 채움) -->
       <span id="welcome-message"></span>
+      <!-- 동작은 /js/logout.js 가 바인딩 -->
       <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
     </div>
 
-    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
+    <!-- 햄버거: 토글은 /js/header.js 가 처리 -->
+    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button" aria-expanded="false">☰</button>
   </header>
 
   <!-- 본문 -->
@@ -230,19 +233,6 @@
       }
     });
   });
-  </script>
-
-  <!-- 모바일 메뉴 토글 (공통, 아주 얇게) -->
-  <script>
-    (function(){
-      const btn = document.querySelector('.mobile-menu-button');
-      const nav = document.querySelector('.main-header .main-nav');
-      if (!btn || !nav) return;
-      function toggle(){ document.body.classList.toggle('nav-open'); nav.classList.toggle('is-open'); }
-      btn.addEventListener('click', toggle);
-      nav.addEventListener('click', e => { if (e.target.closest('a')) { document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); } });
-      document.addEventListener('keydown', e => { if (e.key==='Escape'){ document.body.classList.remove('nav-open'); nav.classList.remove('is-open'); }});
-    })();
   </script>
 </body>
 </html>
