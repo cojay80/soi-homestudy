@@ -18,30 +18,17 @@
   <script src="/js/header.js" defer></script>
   <script src="/js/logout.js" defer></script>
 
-  <!-- 오답 전용 (반드시 defer) -->
+  <!-- 오답 전용 -->
   <script src="/js/notes.js?v=NOTES_1" defer></script>
-
-  <style>
-    .badge { padding:.2rem .5rem; border:1px solid #ddd; border-radius:999px; font-weight:600 }
-    .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0 }
-    .toolbar .spacer { flex:1 }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px }
-    .card { border:1px solid #e5e5e5; border-radius:12px; padding:12px; background:#fff; display:flex; flex-direction:column; gap:8px }
-    .mini { color:#666; font-size:13px }
-    .choices label { display:block; margin:.2rem 0 }
-    .img { width:100%; max-height:180px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fafafa }
-    button.btn { padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fafafa; cursor:pointer }
-    button.danger { border-color:#f1b3b3; background:#ffecec }
-    .empty { border:1px dashed #ddd; border-radius:12px; padding:16px; text-align:center; color:#888 }
-  </style>
 </head>
 <body>
-  <!-- 고정 헤더 -->
+  <!-- 헤더: 왼쪽 큰 제목, 오른쪽(작은 로그인 정보) + 맨 끝 햄버거 -->
   <header class="main-header">
     <div class="logo">
-      <a href="index.html">소이의 공부방 🎨</a>
+      <a href="index.html" aria-label="메인으로">소이의 공부방 🎨</a>
     </div>
-    <nav class="main-nav">
+
+    <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li><a href="index.html">오늘의 학습</a></li>
         <li><a href="report.html">학습 보고서</a></li>
@@ -52,30 +39,36 @@
         <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
+
+    <!-- 로그인 정보: 글자 작게(스타일에서 제어), 로그아웃 동작은 logout.js가 바인딩 -->
     <div class="user-info">
       <span id="welcome-message"></span>
       <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">(로그아웃)</button>
     </div>
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+
+    <!-- 맨 오른쪽 햄버거 -->
+    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button">☰</button>
   </header>
 
   <!-- 본문 -->
   <main class="container" style="max-width:980px;margin:0 auto;padding:16px;">
     <h1>오답 노트 📝</h1>
 
-    <div class="toolbar">
+    <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0">
       <label class="mini"><input type="checkbox" id="cb-all"> 전체선택</label>
       <button class="btn" id="btn-review-selected">선택 복습하기</button>
       <button class="btn" id="btn-review-all">전체 복습하기</button>
-      <div class="spacer"></div>
+      <div class="spacer" style="flex:1"></div>
       <button class="btn danger" id="btn-delete-selected">선택 삭제</button>
       <button class="btn danger" id="btn-delete-all">전체 삭제</button>
     </div>
 
     <div class="mini" id="count-label">총 0문항</div>
 
-    <section id="wrongs-box" class="grid">
-      <div class="empty">오답이 없습니다. 퀴즈를 풀고 다시 와주세요.</div>
+    <section id="wrongs-box" class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+      <div class="empty" style="border:1px dashed #ddd;border-radius:12px;padding:16px;text-align:center;color:#888">
+        오답이 없습니다. 퀴즈를 풀고 다시 와주세요.
+      </div>
     </section>
   </main>
 
@@ -84,44 +77,25 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 헤더 환영문구/포인트 즉시 표기 (안전 부트스트랩) -->
+  <!-- 모바일 메뉴 토글(아주 얇게) -->
   <script>
   (function(){
-    function user(){ return localStorage.getItem('currentUser') || 'soi'; }
-    function paint(){
-      const u = user();
-      const welcomeEl = document.getElementById('welcome-message');
-      const logoutBtn = document.getElementById('logout-button');
-      if (welcomeEl){ welcomeEl.innerHTML = '<small>'+u+'님 환영해요!</small>'; welcomeEl.style.display='inline'; }
-      if (logoutBtn){ logoutBtn.style.display='inline'; }
-      const p = localStorage.getItem('soi:points') || '0';
-      document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint); else paint();
-    setTimeout(paint, 600);
-    window.addEventListener('points:changed', paint);
-    window.addEventListener('user:changed', paint);
-  })();
-  </script>
+    const btn = document.querySelector('.mobile-menu-button');
+    const nav = document.querySelector('.main-nav');
+    if (!btn || !nav) return;
 
-  <!-- 로그아웃 버튼 동작 -->
-  <script>
-  (function(){
-    var l = document.getElementById('logout-button');
-    if(!l) return;
-    l.style.display = 'inline';
-    l.addEventListener('click', function(e){
-      e.preventDefault();
-      [
-        'currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer',
-        'isReviewMode','reviewProblems','soi:points','soi:inventory'
-      ].forEach(k=>localStorage.removeItem(k));
-      // 다른 페이지/탭에 알림
-      window.dispatchEvent(new Event('user:changed'));
-      window.dispatchEvent(new Event('points:changed'));
-      // 캐시 무시 새로고침
-      location.href = 'index.html?ts=' + Date.now();
-    }, { once:true });
+    btn.addEventListener('click', () => {
+      nav.classList.toggle('is-open');        // css/style.css에 모바일에서 .is-open만 표시
+      document.body.classList.toggle('nav-open');
+    });
+
+    // 메뉴 항목 터치 시 닫기(모바일 UX)
+    nav.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      nav.classList.remove('is-open');
+      document.body.classList.remove('nav-open');
+    });
   })();
   </script>
 </body>
