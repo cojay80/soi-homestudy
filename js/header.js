@@ -1,119 +1,121 @@
-// /js/header.js — 최종본 (하드닝 + 모바일 메뉴 토글)
-// 역할:
-//  - 환영 문구/포인트 뱃지 렌더
-//  - 로그아웃 버튼 표시(동작은 /js/logout.js 에서 처리)
-//  - 모바일 햄버거 버튼으로 .main-nav 토글
+// /js/header.js — 최종본 (UI 렌더링, 모바일 메뉴, 접근성 강화)
 
 (function () {
-  const BREAKPOINT = 860; // px (스타일과 맞춰 사용)
+  // --- 설정 및 상수 ---
+  const BREAKPOINT = 860; // CSS의 @media (max-width: 860px)와 일치
+  const STORAGE_KEYS = {
+    USER: 'currentUser',
+    POINTS: 'soi:points',
+    NAME: 'soi_name' // 이름 입력 시 사용하는 키
+  };
 
-  function readPoints() {
-    const raw = localStorage.getItem('soi:points');
-    const n = Number(raw);
-    return Number.isFinite(n) && n >= 0 ? String(n) : '0';
-  }
+  // --- DOM 요소 미리 찾아두기 (성능 향상) ---
+  const welcomeEl = document.getElementById('welcome-message');
+  const logoutBtn = document.getElementById('logout-button');
+  const mobileMenuBtn = document.querySelector('.mobile-menu-button');
+  const mainNav = document.querySelector('.main-nav');
+  const body = document.body;
 
+  /**
+   * 헤더의 환영 문구, 로그아웃 버튼, 포인트 뱃지를 현재 상태에 맞게 렌더링합니다.
+   */
   function paintHeader() {
     try {
-      const welcomeEl = document.getElementById('welcome-message');
-      const logoutBtn = document.getElementById('logout-button');
+      // 로그인 여부를 localStorage의 이름 정보로 판단
+      const name = localStorage.getItem(STORAGE_KEYS.NAME) || '';
+      const isLoggedIn = name.trim() !== '';
 
-      const name = (localStorage.getItem('currentUser') || '').trim();
-      const points = readPoints();
-
-      // 환영 문구
+      // 환영 문구 처리
       if (welcomeEl) {
-        if (name) {
-          welcomeEl.innerHTML = `<small>${name}님 환영해요!</small>`;
-          welcomeEl.style.display = 'inline';
-        } else {
-          welcomeEl.textContent = '';
-          welcomeEl.style.display = 'none';
-        }
+        welcomeEl.innerHTML = isLoggedIn ? `<small>${name}님 환영해요!</small>` : '';
+        welcomeEl.style.display = isLoggedIn ? 'inline' : 'none';
       }
 
-      // 로그아웃 버튼(표시만; 실제 동작은 /js/logout.js에서 바인딩)
+      // 로그아웃 버튼 표시 여부
       if (logoutBtn) {
-        logoutBtn.style.display = name ? 'inline' : 'none';
+        logoutBtn.style.display = isLoggedIn ? 'inline' : 'none';
       }
-
-      // 포인트 뱃지
+      
+      // 포인트 뱃지 처리
+      const points = Number(localStorage.getItem(STORAGE_KEYS.POINTS) || '0').toLocaleString();
       document.querySelectorAll('[data-soi-points]').forEach((el) => {
         el.textContent = points;
       });
+
     } catch (e) {
-      console.warn('[header] paint error:', e);
+      console.warn('[Header] UI 렌더링 중 오류 발생:', e);
     }
   }
 
-  // 모바일 메뉴 토글
+  /**
+   * 모바일 햄버거 메뉴의 모든 동작(토글, 외부 클릭, 키보드)을 설정합니다.
+   */
   function setupMobileMenu() {
-    const btn = document.querySelector('.mobile-menu-button');
-    const nav = document.querySelector('.main-nav');
-    if (!btn || !nav) return;
+    if (!mobileMenuBtn || !mainNav) return;
+    
+    // 메뉴 상태를 변경하는 중앙 함수
+    const setMenuOpen = (isOpen) => {
+      mainNav.classList.toggle('is-open', isOpen);
+      body.classList.toggle('nav-open', isOpen);
+      mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+    };
 
-    // 중복 바인딩 방지
-    if (btn.dataset.boundMenu === '1') return;
-    btn.dataset.boundMenu = '1';
+    // 햄버거 버튼 클릭 시 메뉴 토글
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // body의 클릭 이벤트로 전파되는 것을 막음
+      const isOpen = mainNav.classList.contains('is-open');
+      setMenuOpen(!isOpen);
+    });
 
-    function setOpen(open) {
-      if (open) {
-        nav.classList.add('is-open');
-        btn.setAttribute('aria-expanded', 'true');
-      } else {
-        nav.classList.remove('is-open');
-        btn.setAttribute('aria-expanded', 'false');
+    // 메뉴 안의 링크 클릭 시 메뉴 닫기 (모바일에서만)
+    mainNav.addEventListener('click', () => {
+      if (window.innerWidth <= BREAKPOINT) {
+        setMenuOpen(false);
       }
-    }
-
-    // 초기 상태
-    setOpen(false);
-
-    // 클릭 토글
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const open = !nav.classList.contains('is-open');
-      setOpen(open);
+    });
+    
+    // 키보드 Esc 키로 메뉴 닫기 (웹 접근성)
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && body.classList.contains('nav-open')) {
+            setMenuOpen(false);
+        }
     });
 
-    // 메뉴 항목 클릭 시 닫기(모바일 UX)
-    nav.addEventListener('click', (e) => {
-      const a = e.target.closest('a');
-      if (!a) return;
-      // 작은 화면에서만 닫기
-      if (window.innerWidth <= BREAKPOINT) setOpen(false);
-    });
-
-    // 화면 리사이즈 시 상태 리셋
+    // 화면 리사이즈 시 데스크톱 뷰로 돌아오면 메뉴 닫기
     window.addEventListener('resize', () => {
       if (window.innerWidth > BREAKPOINT) {
-        // 데스크탑 폭엔 항상 열림처럼 보이게 CSS에서 처리하므로 클래스 정리
-        nav.classList.remove('is-open');
-        btn.setAttribute('aria-expanded', 'false');
+        setMenuOpen(false);
       }
     });
   }
 
-  // 최초 렌더
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      paintHeader();
-      setupMobileMenu();
-    });
-  } else {
+  /**
+   * 스크립트 초기 실행 함수
+   */
+  function initialize() {
     paintHeader();
     setupMobileMenu();
+    
+    // --- 각종 이벤트 리스너 설정 ---
+    // 다른 스크립트에서 UI 업데이트를 요청할 때
+    window.addEventListener('user:changed', paintHeader);
+    window.addEventListener('points:changed', paintHeader);
+
+    // 다른 브라우저 탭에서 localStorage가 변경되었을 때
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEYS.USER || e.key === STORAGE_KEYS.POINTS || e.key === STORAGE_KEYS.NAME) {
+        paintHeader();
+      }
+    });
   }
 
-  // 이벤트 반영
-  window.addEventListener('user:changed', paintHeader);
-  window.addEventListener('points:changed', paintHeader);
+  // DOM이 준비되면 스크립트 실행
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
 
-  // 탭 간 동기화
-  window.addEventListener('storage', (ev) => {
-    if (ev.key === 'currentUser' || ev.key === 'soi:points') paintHeader();
-  });
-
-  // 수동 호출용
+  // 외부에서 헤더 UI를 수동으로 업데이트할 수 있는 함수 제공
   window.updateHeaderUI = paintHeader;
 })();
