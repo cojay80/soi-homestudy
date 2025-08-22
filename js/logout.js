@@ -1,46 +1,55 @@
-// /js/logout.js — 최종본 (서브경로 안전 리디렉트 + 중복바인딩 방지)
+// /js/logout.js — 로그아웃 후 login.html로 이동 (충돌 방지 포함)
 (function () {
   const KEYS = [
     'currentUser','studyData','selectedGrade','selectedSubject','selectedCount',
     'selectedTimer','isReviewMode','reviewProblems','soi:points','soi:inventory',
+    'soi_name' // 예전 키까지 정리
   ];
 
-  function clearSoiData() {
-    KEYS.forEach((k) => localStorage.removeItem(k));
-    window.dispatchEvent(new Event('user:changed'));
-    window.dispatchEvent(new Event('points:changed'));
+  function clearAll() {
+    try {
+      KEYS.forEach(k => localStorage.removeItem(k));
+      window.dispatchEvent(new Event('user:changed'));
+      window.dispatchEvent(new Event('points:changed'));
+    } catch (e) {
+      console.warn('[logout] clear fail', e);
+    }
+  }
+
+  function goLogin() {
+    // 현재 디렉터리 기준으로 login.html로 이동(서브경로 안전)
+    const base = location.pathname.replace(/[^/]+$/, '');
+    location.replace(`${base}login.html?ts=${Date.now()}`);
   }
 
   function doLogout() {
-    try { clearSoiData(); } catch (e) { console.warn('[logout] clear error:', e); }
-    // ✅ 서브경로 안전: 현재 디렉터리 기준으로 이동
-    const base = location.pathname.replace(/[^/]+$/, ''); // /repo/sub/  까지
-    const url  = `${base}index.html?ts=${Date.now()}`;    // 캐시 무력화
-    // replace/assign 아무거나 OK. assign은 히스토리 남겨도 무방.
-    location.assign(url);
-  }
-  window.forceLogout = doLogout;
-
-  function bindLogoutClick() {
-    const el = document.getElementById('logout-button');
-    if (!el || el.dataset.boundLogout === '1') return;
-    el.style.display = 'inline';
-    el.addEventListener('click', (e) => { e.preventDefault?.(); doLogout(); }, { once:false });
-    el.dataset.boundLogout = '1';
+    clearAll();
+    goLogin();
   }
 
-  // ?reset=1 지원
-  (function autoByQuery() {
-    try {
-      const u = new URL(location.href);
-      if (u.searchParams.get('reset') === '1') doLogout();
-    } catch {}
-  })();
+  function bind() {
+    const btn = document.getElementById('logout-button');
+    if (!btn || btn.dataset.boundLogout === '1') return;
+
+    btn.style.display = 'inline';
+    // ✅ 캡처 단계 + stopImmediatePropagation: 기존 인라인 리스너가 있어도 우리 동작이 우선
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      doLogout();
+    }, { capture: true });
+
+    btn.dataset.boundLogout = '1';
+  }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindLogoutClick);
+    document.addEventListener('DOMContentLoaded', bind);
   } else {
-    bindLogoutClick();
+    bind();
   }
-  new MutationObserver(bindLogoutClick).observe(document.documentElement, { childList:true, subtree:true });
+  // 동적 DOM에도 대응
+  new MutationObserver(bind).observe(document.documentElement, { childList: true, subtree: true });
+
+  // 필요시 콘솔에서 강제 호출 가능
+  window.forceLogout = doLogout;
 })();
