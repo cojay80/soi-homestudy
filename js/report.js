@@ -1,4 +1,4 @@
-// js/report.js — 최근 7일 리포트 최종본
+// js/report.js — 최근 7일 리포트 최종본 (하드닝 버전)
 // 데이터 출처:
 //  - quiz.js가 저장하는 localStorage.studyData[currentUser].records (date, grade, subject, score("x/y"))
 //  - 누적 포인트: localStorage['soi:points']
@@ -32,6 +32,7 @@
   }
 
   function renderBars(container, items, valueKey, labelKey, suffix='') {
+    if (!container) return;                // <-- 가드
     if(!items.length){ container.textContent = '데이터 없음'; return; }
     const max = Math.max(...items.map(it => it[valueKey] || 0), 1);
     container.innerHTML = items.map(it => {
@@ -78,11 +79,17 @@
 
     // DOM 반영
     const $ = (id) => document.getElementById(id);
-    $('kpi-total').textContent   = String(total);
-    $('kpi-acc').textContent     = fmtPct(acc);
-    $('kpi-points').textContent  = points + 'p';
-    $('kpi-sessions').textContent= String(sessions);
-    $('range-label').textContent = `기간: ${ymd(start)} ~ ${ymd(end)}`;
+    const kpiTotal = $('kpi-total');
+    const kpiAcc = $('kpi-acc');
+    const kpiPoints = $('kpi-points');
+    const kpiSessions = $('kpi-sessions');
+    const rangeLabel = $('range-label');
+
+    if (kpiTotal)   kpiTotal.textContent   = String(total);
+    if (kpiAcc)     kpiAcc.textContent     = fmtPct(acc);
+    if (kpiPoints)  kpiPoints.textContent  = points + 'p';
+    if (kpiSessions)kpiSessions.textContent= String(sessions);
+    if (rangeLabel) rangeLabel.textContent = `기간: ${ymd(start)} ~ ${ymd(end)}`;
 
     // 과목별 정답률
     const bySubject = {};
@@ -109,10 +116,11 @@
     const gradeArr = Object.values(byGrade).sort((a,b)=> b.count-a.count);
 
     renderBars($('subject-bars'), subjectArr, 'acc', 'subject', '%');
-    renderBars($('grade-bars'), gradeArr, 'count', 'grade', '문항');
+    renderBars($('grade-bars'),   gradeArr,   'count', 'grade',   '문항');
 
     // 세션 테이블
     const body = $('session-body');
+    if (!body) return;
     if (!within7d.length) {
       body.innerHTML = `<tr><td colspan="6" class="mini">기록이 없습니다.</td></tr>`;
     } else {
@@ -137,9 +145,17 @@
     }
   }
 
+  function paintPointsBadge() {
+    const p = localStorage.getItem('soi:points') || '0';
+    document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = p);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
-    // 포인트 뱃지 즉시 반영
-    document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = localStorage.getItem('soi:points') || '0');
+    paintPointsBadge();   // 초기 뱃지 반영
     buildReport();
   });
+
+  // 포인트 변경/사용자 변경 시 뱃지 자동 갱신
+  window.addEventListener('points:changed', paintPointsBadge);
+  window.addEventListener('user:changed', paintPointsBadge);
 })();
