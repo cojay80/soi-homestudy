@@ -17,13 +17,45 @@
   <script src="/js/soi-store.js" defer></script>
   <script src="/js/header.js" defer></script>
   <script src="/js/logout.js" defer></script>
+
+  <!-- 이 페이지용 헤더 오버라이드 (제목 왼쪽 크게 / 우측 햄버거 / 그 왼쪽에 로그인정보 작게) -->
+  <style>
+    .main-header{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #eee;background:#fff;position:relative}
+    .main-header .logo a{font-weight:800;font-size:22px;line-height:1}
+    .main-header .spacer{flex:1}
+    .main-header .user-info{display:flex;align-items:center;gap:8px;color:#666;font-size:12px;z-index:2}
+    #logout-button{padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fafafa;font-size:12px;cursor:pointer}
+    .mobile-menu-button{border:1px solid #ddd;border-radius:8px;background:#fafafa;padding:6px 10px;cursor:pointer;line-height:1}
+    /* 데스크톱 메뉴 */
+    .main-nav ul{display:flex;gap:10px;list-style:none;margin:0;padding:0}
+    .main-nav a{display:inline-block;padding:6px 10px;border-radius:8px;font-size:14px}
+    .main-nav li.active a,.main-nav a:hover{background:#eef4ff;color:#1f3b8f}
+    /* 모바일: 드로워 */
+    @media (max-width:860px){
+      .main-nav ul{display:none}
+      body.nav-open .main-nav ul{
+        display:flex;flex-direction:column;position:fixed;inset:0;z-index:1200;
+        padding:72px 16px 24px;background:#fff;gap:6px;overflow-y:auto
+      }
+      .main-nav a,.main-nav .badge{display:block;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#fff}
+      .mobile-menu-button{display:inline-block}
+    }
+    @media (min-width:861px){ .mobile-menu-button{display:none} }
+    .badge{padding:.2rem .5rem;border:1px solid #ddd;border-radius:999px;font-weight:600}
+  </style>
 </head>
 <body>
-  <!-- 헤더 -->
+  <!-- 헤더 (통일 마크업: logo → spacer → user-info → hamburger → nav) -->
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
-
-    <nav class="main-nav">
+    <div class="spacer"></div>
+    <div class="user-info">
+      <span id="welcome-message"></span>
+      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
+      <span class="badge">포인트: <b data-soi-points>0</b>p</span>
+    </div>
+    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
+    <nav class="main-nav" aria-label="주 메뉴">
       <ul>
         <li class="active"><a href="index.html">오늘의 학습</a></li>
         <li><a href="report.html">학습 보고서</a></li>
@@ -31,16 +63,8 @@
         <li><a href="record.html">상세 기록</a></li>
         <li><a href="notes.html">오답 노트</a></li>
         <li><a href="shop.html">상점</a></li>
-        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
       </ul>
     </nav>
-
-    <div class="user-info">
-      <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
-    </div>
-
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
   </header>
 
   <!-- 본문 -->
@@ -224,20 +248,16 @@
   });
   </script>
 
-  <!-- 헤더: 햄버거 드로워 토글 (공용, 페이지당 1회만) -->
+  <!-- 모바일 메뉴 토글 (공용, 헤더 겹침/가림 방지) -->
   <script>
-  (function(){
-    const btn = document.querySelector('.mobile-menu-button');
-    const nav = document.querySelector('.main-header .main-nav');
-    function close(){ document.body.classList.remove('nav-open'); }
-    if (btn && nav) {
-      btn.addEventListener('click', () => {
-        document.body.classList.toggle('nav-open');
-      });
-      nav.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.querySelector('.mobile-menu-button');
+      const nav = document.querySelector('.main-header .main-nav');
+      function close(){ document.body.classList.remove('nav-open'); }
+      btn?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+      nav?.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-    }
-  })();
+    });
   </script>
 </body>
 </html>
