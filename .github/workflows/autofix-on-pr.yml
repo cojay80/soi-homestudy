@@ -1,0 +1,76 @@
+name: autofix-on-pr
+
+on:
+  pull_request:
+    branches: ["main"]     # PR에서 자동 실행
+  workflow_dispatch:       # 수동 실행 시 헤드 브랜치 직접 지정 가능
+    inputs:
+      branch:
+        description: "PR head branch (manual run only, e.g. feature/foo)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: "autofix-on-pr-${{ github.event_name }}-${{ github.head_ref || inputs.branch || github.ref_name }}"
+  cancel-in-progress: true
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    env:
+      HEAD_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || inputs.branch || github.ref_name }}
+    steps:
+      - name: Show resolved head branch
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "HEAD_BRANCH=${HEAD_BRANCH}"
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure Git (safe)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps (never fail)
+        shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i || true
+          elif [ -f yarn.lock ]; then corepack enable && yarn i || true
+          elif [ -f package-lock.json ]; then npm ci || npm i || true
+          elif [ -f package.json ]; then npm i || true
+          else echo "no deps"; fi
+
+      - name: Auto-fix (Prettier/ESLint — safe)
+        shell: bash
+        run: |
+          npx --yes prettier . --write || true
+          npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
+
+      - name: Auto-commit back to PR branch
+        id: commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(autofix): apply automatic code fixes"
+          branch: ${{ env.HEAD_BRANCH }}
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Done (no changes)
+        if: steps.commit.outputs.changes_detected != 'true'
+        run: echo "No changes to commit."
