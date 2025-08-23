@@ -1,0 +1,62 @@
+/* 네이버 스타일 오버라이드 (index 전용) */
+:root{
+  --brand:#03c75a;
+  --brand-2:#02b053;
+}
+
+.main-header{
+  background:var(--brand);
+  color:#fff;
+}
+
+.main-header .logo a,
+.main-nav a,
+.user-info,
+#welcome-message{
+  color:#fff;
+}
+
+.main-nav li.active a,
+.main-nav a:hover{
+  background:rgba(0,0,0,0.1);
+  color:#fff;
+}
+
+#logout-button{
+  border-color:rgba(255,255,255,0.4);
+  background:rgba(255,255,255,0.2);
+  color:#fff;
+}
+
+.naver-search{
+  flex:1 1 auto;
+  max-width:400px;
+  display:flex;
+  align-items:center;
+}
+
+.naver-search input[type="text"]{
+  flex:1;
+  padding:6px 10px;
+  border:1px solid #ccc;
+  border-radius:16px 0 0 16px;
+  font-size:14px;
+}
+
+.naver-search button{
+  padding:6px 12px;
+  border:1px solid #ccc;
+  border-left:none;
+  border-radius:0 16px 16px 0;
+  background:#fff;
+  cursor:pointer;
+}
+
+@media (max-width:860px){
+  .naver-search{
+    order:3;
+    width:100%;
+    max-width:none;
+  }
+}
+

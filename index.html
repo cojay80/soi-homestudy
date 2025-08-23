@@ -8,6 +8,7 @@
   <!-- 폰트 / 공통 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/naver.css"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
@@ -22,6 +23,12 @@
   <!-- 헤더 -->
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
+
+    <!-- 네이버 스타일 검색창 -->
+    <form class="naver-search" role="search" onsubmit="return false;">
+      <input type="text" placeholder="검색어를 입력하세요" aria-label="검색"/>
+      <button type="submit">검색</button>
+    </form>
 
     <nav class="main-nav" aria-label="주 메뉴">
       <ul>
