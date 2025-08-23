@@ -1,0 +1,182 @@
+name: AI Apply Changes
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ai-apply-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    # PR의 댓글이면서 '/ai-apply'로 시작 + 작성자가 레포 소유자인 경우만 실행
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch') ||
+        (
+          github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request &&
+          startsWith(github.event.comment.body, '/ai-apply') &&
+          github.event.comment.user.login == 'cojay80'
+        )
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Extract prompt text
+        id: prompt
+        shell: bash
+        run: |
+          set -euo pipefail
+          BODY="${{ github.event.comment.body || '' }}"
+          if [[ -z "$BODY" ]]; then
+            echo "naver style homepage" > prompt.txt
+          else
+            echo "${BODY#/ai-apply }" > prompt.txt
+          fi
+          echo "Prompt: $(cat prompt.txt)"
+
+      - name: Generate changes with OpenAI (retry-safe)
+        id: ai
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, json, time, random, pathlib, urllib.request, urllib.error
+
+          api_key = os.environ["OPENAI_API_KEY"]
+          prompt = pathlib.Path("prompt.txt").read_text(encoding="utf-8").strip()
+
+          # 현재 파일 읽기 (없으면 빈 문자열)
+          def read(path):
+            p = pathlib.Path(path)
+            return p.read_text(encoding="utf-8", errors="ignore") if p.exists() else ""
+
+          index_html = read("index.html")
+          login_html = read("login.html")
+          styles_css = read("css/styles.css") or read("styles.css")
+
+          # 모델에게 '네이버 스타일' 같은 요구를 적용해 index.html과 CSS를 재작성하도록 지시
+          system = (
+            "You are a senior front-end engineer. Output ONLY valid files in JSON with keys: "
+            "index.html, css/naver.css. Modern, accessible, responsive. Korean site. No external images. "
+            "Use Noto Sans KR via Google Fonts. Primary color #03C75A (Naver-like), dark text, soft shadows."
+          )
+          user = f"""
+          내 사이트를 '{prompt}' 지시에 맞게 리디자인하라.
+          현재 index.html, (선택) styles.css, login.html 일부 구조는 유지해도 좋으나, 상단 GNB/검색바/콘텐츠 카드/푸터를 네이버 감성에 맞게 개편해라.
+          - 헤더: 좌측 로고 텍스트(소이의 공부방), 중앙 대형 검색창, 우측 로그인/마이 메뉴.
+          - 네비게이션 바: 홈, 카페, 뉴스, 쇼핑, 지식+ 예시 탭.
+          - 본문: 그리드 카드(뉴스/공지/자료실 더미 카드 6~8개), 모바일 1열/태블릿 2열/데스크탑 3~4열.
+          - 푸터: 간단 링크/카피라이트.
+          - 접근성: aria-label, :focus 스타일, 충분한 대비.
+          - index.html은 css/naver.css를 링크하도록 수정.
+          - 기존 콘텐츠/텍스트는 가능한 유지하되 레이아웃/스타일을 재배치.
+          - login.html로의 이동 링크/버튼을 헤더 우측에 배치.
+          현재 파일 스냅샷:
+          === index.html ===
+          {index_html[:15000]}
+
+          === styles.css ===
+          {styles_css[:15000]}
+
+          === login.html ===
+          {login_html[:8000]}
+          """
+
+          payload = {
+              "model": "gpt-4o-mini",
+              "temperature": 0.2,
+              "messages": [
+                  {"role":"system","content": system},
+                  {"role":"user","content": user},
+              ]
+          }
+
+          def call(payload):
+            req = urllib.request.Request(
+              "https://api.openai.com/v1/chat/completions",
+              data=json.dumps(payload).encode("utf-8"),
+              headers={"Authorization": f"Bearer {api_key}", "Content-Type":"application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=180) as r:
+              data = json.loads(r.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"]
+
+          # 429/5xx 재시도
+          max_attempts = 6
+          last = ""
+          for attempt in range(1, max_attempts+1):
+            try:
+              last = call(payload)
+              break
+            except urllib.error.HTTPError as e:
+              if e.code == 429 or (500 <= e.code < 600):
+                ra = 0
+                if e.headers and e.headers.get("Retry-After"):
+                  try: ra = int(e.headers.get("Retry-After"))
+                  except: ra = 0
+                sleep = max(ra, min(60, 2**attempt) + random.random())
+                print(f"HTTP {e.code}, retry {attempt}/{max_attempts} after {sleep:.1f}s")
+                time.sleep(sleep); continue
+              else:
+                raise
+            except Exception as e:
+              sleep = min(60, 2**attempt) + random.random()
+              print(f"Exception {e}, retry {attempt}/{max_attempts} after {sleep:.1f}s")
+              time.sleep(sleep); continue
+          else:
+            raise SystemExit("OpenAI failed repeatedly.")
+
+          # 모델 출력(JSON) 파싱
+          try:
+            # 모델이 코드블록에 JSON을 감싸는 경우 제거
+            text = last.strip()
+            if text.startswith("```"):
+              text = text.split("```",2)[1]
+              if text.startswith("json"): text = text[4:].lstrip()
+            obj = json.loads(text)
+          except Exception as e:
+            raise SystemExit("Model did not return valid JSON for files:\n"+last[:1000])
+
+          # 파일 쓰기
+          pathlib.Path("css").mkdir(parents=True, exist_ok=True)
+          pathlib.Path("index.html").write_text(obj.get("index.html",""), encoding="utf-8")
+          pathlib.Path("css/naver.css").write_text(obj.get("css/naver.css",""), encoding="utf-8")
+          print("WROTE index.html, css/naver.css")
+          PY
+
+      - name: Create branch, commit, push
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        shell: bash
+        run: |
+          set -euo pipefail
+          BR="ai/apply-$(date +%s)"
+          git switch -c "$BR"
+          git add index.html css/naver.css
+          git commit -m "[AI] Apply: $(cat prompt.txt)"
+          git push -u origin "$BR"
+
+      - name: Open PR
+        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh pr create \
+            --title "[AI] Apply: $(cat prompt.txt)" \
+            --body "Requested by @${{ github.event.comment.user.login || 'owner' }}\n\nPrompt:\n$(cat prompt.txt)"
