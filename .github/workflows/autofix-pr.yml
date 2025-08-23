@@ -1,13 +1,12 @@
 name: autofix-pr
 
 on:
-  workflow_dispatch: {}  # 수동 실행만
+  workflow_dispatch: {}
 
 permissions:
   contents: write
   pull-requests: write
 
-# 중복 실행 방지
 concurrency:
   group: "autofix"
   cancel-in-progress: true
@@ -19,10 +18,8 @@ jobs:
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
-          ref: main              # 기본 브랜치가 main이 아니면 여기/아래 base도 바꿔줘
+          ref: main
           fetch-depth: 0
-          persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git (safe)
         run: |
@@ -36,19 +33,16 @@ jobs:
           node-version: "20"
 
       - name: Install deps if package.json exists
-        shell: bash
         run: |
           if [ -f package.json ]; then
             npm ci || npm i
           fi
 
       - name: Auto-fix (JS) — safe mode
-        shell: bash
         run: |
           npx --yes prettier . --write || true
           npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
 
-      # 변경 유무만 보고, 반환코드로 실패하지 않도록 보호
       - name: Detect changes (never fail)
         id: detect
         shell: bash
@@ -64,20 +58,17 @@ jobs:
           fi
           exit 0
 
-      # 항상 같은 브랜치로 PR → PR 1개만 유지
       - name: Create Pull Request
         if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: main               # 기본 브랜치명이 다르면 여기 변경
-          branch: bot/autofix      # 고정 (branch-suffix 쓰지 말 것)
+          base: main
+          branch: bot/autofix            # 고정 (branch-suffix 쓰지 않기)
           commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
           delete-branch: true
-          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
 
       - name: Nothing to commit
         if: steps.detect.outputs.changed != 'true'
