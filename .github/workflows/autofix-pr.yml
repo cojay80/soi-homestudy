@@ -1,12 +1,13 @@
 name: autofix-pr
 
 on:
-  workflow_dispatch: {}  # 수동 실행만
+  workflow_dispatch: {}   # 수동 실행만
 
 permissions:
   contents: write
   pull-requests: write
 
+# 중복 실행 방지
 concurrency:
   group: "autofix"
   cancel-in-progress: true
@@ -18,7 +19,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: main              # 기본 브랜치 다르면 수정
           fetch-depth: 0
 
       - name: Configure Git (safe)
@@ -32,17 +33,26 @@ jobs:
         with:
           node-version: "20"
 
-      # 필요하면 의존성 설치 (실패해도 진행)
+      # 패키지 설치 (lockfile 있으면 ci, 없으면 i) - 실패해도 계속 진행
       - name: Install deps (never fail)
         shell: bash
         run: |
-          if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i || true
-          elif [ -f yarn.lock ]; then corepack enable && yarn i || true
-          elif [ -f package.json ]; then npm ci || npm i || true
-          else echo "no deps"; fi
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            pnpm install --frozen-lockfile || pnpm install || true
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile || yarn install || true
+          elif [ -f package-lock.json ]; then
+            npm ci || npm i || true
+          elif [ -f package.json ]; then
+            npm i || true
+          else
+            echo "No package.json; skipping install"
+          fi
 
-      # 실제 자동수정 (실패해도 진행)
-      - name: Auto-fix (JS) — safe mode
+      # 자동 포맷/린트 (설치 안돼도 npx로 시도, 실패해도 계속)
+      - name: Auto-fix (Prettier/ESLint — safe)
         shell: bash
         run: |
           npx --yes prettier . --write || true
@@ -69,8 +79,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          branch: bot/autofix          # 고정 → PR 1개만 유지
+          base: main                  # 목표 브랜치
+          branch: bot/autofix         # 고정 → PR 1개만 유지
           commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
