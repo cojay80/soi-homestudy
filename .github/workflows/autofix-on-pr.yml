@@ -1,0 +1,56 @@
+name: autofix-on-pr
+
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: "autofix-on-pr"
+  cancel-in-progress: true
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps (never fail)
+        shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i || true
+          elif [ -f yarn.lock ]; then corepack enable && yarn i || true
+          elif [ -f package-lock.json ]; then npm ci || npm i || true
+          elif [ -f package.json ]; then npm i || true
+          else echo "no deps"; fi
+
+      - name: Auto-fix (Prettier/ESLint — safe)
+        shell: bash
+        run: |
+          npx --yes prettier . --write || true
+          npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
+
+      - name: Auto-commit back to PR branch
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(autofix): apply automatic code fixes"
+          branch: ${{ github.head_ref }}
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Done (no changes)
+        if: steps.auto-commit.outputs.changes_detected != 'true'
+        run: echo "No changes to commit."
