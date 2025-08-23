@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: ci
 
 on:
@@ -12,4 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Hello GitHub Actions!"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: |
+          if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i
+          elif [ -f yarn.lock ]; then corepack enable && yarn i
+          elif [ -f package-lock.json ]; then npm ci
+          else npm i; fi
+      - name: Test
+        run: npm test --if-present
