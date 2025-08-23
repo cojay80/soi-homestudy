@@ -84,3 +84,4 @@ jobs:
       - name: Nothing to commit
         if: steps.detect.outputs.changed != 'true'
         run: echo "No changes to commit."
+
