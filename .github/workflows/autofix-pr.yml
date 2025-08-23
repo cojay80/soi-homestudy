@@ -1,7 +1,11 @@
 name: autofix-pr
 
 on:
-  workflow_dispatch: {}  # 수동 실행만
+  push:
+    branches: ["main"]        # 필요에 따라 브랜치 수정
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch: {}
 
 permissions:
   contents: write
