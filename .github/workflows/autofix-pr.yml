@@ -21,7 +21,7 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.AUTOFIX_PAT }}   # PAT 사용(권한 이슈 원천 차단)
 
       - name: Configure Git (safe)
         run: |
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: "20"
 
-      # 의존성 설치 (실패해도 계속 진행)
+      # 의존성 설치 (실패해도 계속)
       - name: Install deps (never fail)
         shell: bash
         run: |
@@ -44,7 +44,7 @@ jobs:
           elif [ -f package.json ]; then npm i || true
           else echo "No package.json"; fi
 
-      # 자동 포맷/린트 (실패해도 계속 진행)
+      # 자동 포맷/린트 (실패해도 계속)
       - name: Auto-fix (Prettier/ESLint — safe)
         shell: bash
         run: |
@@ -67,21 +67,27 @@ jobs:
           fi
           exit 0
 
+      # 디버그(충돌/원격 상태 확인용)
+      - name: Debug git state
+        run: |
+          git rev-parse --abbrev-ref HEAD
+          git status --porcelain || true
+          git ls-remote --heads origin bot/autofix || true
+
       - name: Create Pull Request (single rolling PR)
         if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.AUTOFIX_PAT }}     # PR 생성도 PAT로
           base: main
-          branch: bot/autofix          # 고정 → PR 1개만 유지
+          branch: bot/autofix                   # 기본 롤링 브랜치
+          branch-suffix: timestamp              # ✅ 1회 우회용(성공 확인 후 제거하세요)
           commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
           delete-branch: true
-          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          signoff: true                         # DCO 등 사인오프 요구 충족
 
       - name: Nothing to commit
         if: steps.detect.outputs.changed != 'true'
         run: echo "No changes to commit."
-
