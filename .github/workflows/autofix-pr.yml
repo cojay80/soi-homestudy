@@ -1,13 +1,12 @@
 name: autofix-pr
 
 on:
-  workflow_dispatch: {}   # 수동 실행만
+  workflow_dispatch: {}  # 수동 실행만
 
 permissions:
   contents: write
   pull-requests: write
 
-# 중복 실행 방지
 concurrency:
   group: "autofix"
   cancel-in-progress: true
@@ -19,29 +18,64 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: main          # 기본 브랜치가 다르면 여기/아래 base를 바꿔
+          ref: main
           fetch-depth: 0
 
-      - name: Configure Git
+      - name: Configure Git (safe)
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      # ✅ 강제로 아주 작은 변경을 만들어 항상 PR 생성 (파이프라인 확인용)
-      - name: Make tiny change (force PR)
-        run: |
-          echo "keepalive $(date +%s)" >> .autofix_keepalive
-          git add -A
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-      # ✅ 항상 같은 브랜치로만 PR → PR 1개(롤링) 유지
-      - name: Create Pull Request
+      # 필요하면 의존성 설치 (실패해도 진행)
+      - name: Install deps (never fail)
+        shell: bash
+        run: |
+          if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i || true
+          elif [ -f yarn.lock ]; then corepack enable && yarn i || true
+          elif [ -f package.json ]; then npm ci || npm i || true
+          else echo "no deps"; fi
+
+      # 실제 자동수정 (실패해도 진행)
+      - name: Auto-fix (JS) — safe mode
+        shell: bash
+        run: |
+          npx --yes prettier . --write || true
+          npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
+
+      # 변경 있을 때만 PR 생성
+      - name: Detect changes (never fail)
+        id: detect
+        shell: bash
+        run: |
+          set +e
+          git add -A
+          if git diff --staged --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Has changes"
+          fi
+          exit 0
+
+      - name: Create Pull Request (rolling one)
+        if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          branch: bot/autofix          # 고정 (branch-suffix 절대 쓰지 말기)
-          commit-message: "chore(autofix): keepalive"
-          title: "chore(autofix): keepalive"
-          body: "파이프라인 동작 확인용 자동 PR"
+          branch: bot/autofix          # 고정 → PR 1개만 유지
+          commit-message: "chore(autofix): apply automatic code fixes"
+          title: "chore(autofix): automatic code fixes"
+          body: "자동 포맷/린트 수정 PR입니다."
           delete-branch: true
+
+      - name: Nothing to commit
+        if: steps.detect.outputs.changed != 'true'
+        run: echo "No changes to commit."
