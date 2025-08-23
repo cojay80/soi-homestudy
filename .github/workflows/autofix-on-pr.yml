@@ -2,11 +2,11 @@ name: autofix-on-pr
 
 on:
   pull_request:
-    branches: ["main"]     # PR에서 자동 실행
-  workflow_dispatch:       # 수동 실행 시 헤드 브랜치 직접 지정 가능
+    branches: ["main"]        # PR 열리면 자동 실행
+  workflow_dispatch:          # 수동 실행 시 헤드 브랜치 입력
     inputs:
       branch:
-        description: "PR head branch (manual run only, e.g. feature/foo)"
+        description: "PR head branch (e.g. cojay80-patch-4 or feature/foo)"
         required: false
         type: string
 
@@ -22,19 +22,30 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     env:
-      HEAD_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || inputs.branch || github.ref_name }}
+      HEAD_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || inputs.branch }}
+      HEAD_REPO:   ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
     steps:
-      - name: Show resolved head branch
+      - name: Resolve head branch
         run: |
           echo "event=${{ github.event_name }}"
+          echo "HEAD_REPO=${HEAD_REPO}"
           echo "HEAD_BRANCH=${HEAD_BRANCH}"
+          if [ "${{ github.event_name }}" != "pull_request" ] && [ -z "${HEAD_BRANCH}" ]; then
+            echo "::error::Manual run: please provide 'branch' input (e.g. cojay80-patch-4)"
+            exit 1
+          fi
 
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:
+          repository: ${{ env.HEAD_REPO }}
           ref: ${{ env.HEAD_BRANCH }}
           fetch-depth: 0
           persist-credentials: true
+
+      - name: Verify branch exists (defensive)
+        run: |
+          git ls-remote --heads origin "${HEAD_BRANCH}" || true
 
       - name: Configure Git (safe)
         run: |
