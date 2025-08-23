@@ -1,178 +1,27 @@
-/* ========== Base / Tokens ========== */
-:root {
-  --page-width: 980px;
-  --pad-x: 16px;
-  --pad-y: 12px;
-  --naver-green: #03C75A;
-  --naver-dark: #1D1D1D;
-  --naver-light: #F5F6F7;
-  --text-dark: #1D1D1D;
-  --text-muted: #666666;
-  --line: #E5E7EB;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
+/* Naver-style buttons and typography */
+
+.button {
+    background-color: #1d9bf0;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 5px;
 }
 
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-img, video { max-width: 100%; height: auto; display: block; }
+.button:hover {
+    background-color: #0e7cc0;
+    color: white;
+}
+
 body {
-  min-width: 320px;
-  background: var(--bg);
-  color: var(--text-dark);
-  font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, "Apple SD Gothic Neo", sans-serif;
-}
-
-/* ========== Common ========== */
-.container {
-  max-width: var(--page-width);
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
-  transition: all 0.2s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.btn {
-  display: inline-block;
-  padding: 12px 24px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--naver-light);
-  color: var(--text-dark);
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.btn:hover {
-  background: var(--naver-green);
-  color: white;
-  border-color: var(--naver-green);
-}
-
-.btn-primary {
-  background: var(--naver-green);
-  color: white;
-  border-color: var(--naver-green);
-}
-
-.btn-primary:hover {
-  background: #02B350;
-  transform: translateY(-1px);
-}
-
-/* ========== Header ========== */
-.main-header {
-  position: relative;
-  z-index: 1000;
-  background: white;
-  border-bottom: 1px solid var(--line);
-  padding: var(--pad-y) var(--pad-x);
-}
-
-.main-header .logo {
-  font-weight: 800;
-  color: var(--naver-green);
-}
-
-.main-header .logo a {
-  display: inline-block;
-  padding: 4px 0;
-  font-size: 24px;
-  text-decoration: none;
-  color: inherit;
-}
-
-/* ========== Home Page ========== */
-.home-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.home-header h1 {
-  font-size: 2.5rem;
-  color: var(--naver-green);
-  margin-bottom: 0.5rem;
-}
-
-.home-header p {
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  margin-top: 0;
-}
-
-.menu-grid {
-  margin-top: 40px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 24px;
-  max-width: var(--page-width);
-  width: 100%;
-  padding: 0 20px;
-}
-
-.menu-item {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 24px;
-  text-decoration: none;
-  color: var(--text-dark);
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
-}
-
-.menu-item:hover {
-  border-color: var(--naver-green);
-  box-shadow: 0 8px 16px rgba(3, 199, 90, 0.12);
-  transform: translateY(-4px);
-}
-
-.menu-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
-}
-
-.menu-text {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-/* ========== Responsive Design ========== */
-@media (max-width: 768px) {
-  .home-header h1 {
-    font-size: 2rem;
-  }
-  
-  .home-header p {
-    font-size: 1rem;
-  }
-  
-  .menu-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .menu-item {
-    min-height: 140px;
-  }
+    font-family: 'Naver', sans-serif;
+    font-size: 16px;
+    color: #333;
 }
