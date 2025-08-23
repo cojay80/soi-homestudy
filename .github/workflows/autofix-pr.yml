@@ -1,0 +1,46 @@
+name: autofix-pr
+
+on:
+  workflow_dispatch: {}   # 수동 실행 버튼
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node (for prettier/eslint)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps if package.json exists
+        run: |
+          if [ -f package.json ]; then
+            npm ci || npm i
+          fi
+
+      - name: Auto-fix (JS) — safe mode
+        run: |
+          npx --yes prettier . --write || true
+          npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(autofix): apply automatic code fixes"
+          branch: bot/autofix-${{ github.run_id }}
+          title: "chore(autofix): automatic code fixes"
+          body: |
+            자동 포맷/린트 수정 PR입니다.
+            - 워크플로: autofix-pr
+          labels: autofix, bot
+          delete-branch: true
