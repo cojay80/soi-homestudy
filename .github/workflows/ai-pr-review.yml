@@ -24,16 +24,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Collect PR diff
+      # ✅ 1) PR diff를 GH CLI로 안전하게 수집 (원격 ref 문제 회피)
+      - name: Collect PR diff (safe via gh)
         id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
-          git fetch origin "${{ github.event.pull_request.head.ref }}" --depth=1
-          git diff --unified=0 "origin/${{ github.event.pull_request.base.ref }}"..."origin/${{ github.event.pull_request.head.ref }}" > pr.diff
-          wc -c pr.diff
+          gh pr diff ${{ github.event.pull_request.number }} > pr.diff
+          echo "Diff size: $(wc -c < pr.diff) bytes"
 
+      # ✅ 2) OpenAI 호출 (성공 시 review.md 생성)
       - name: Review with OpenAI (Korean)
         id: ai
         env:
@@ -42,9 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import os, json, sys
-          import urllib.request
-
+          import os, json, sys, urllib.request
           api_key = os.environ["OPENAI_API_KEY"]
 
           with open("pr.diff","r",encoding="utf-8",errors="ignore") as f:
@@ -54,7 +54,7 @@ jobs:
           if len(diff) > MAX:
               diff = diff[:MAX//2] + "\n...\n# (diff truncated)\n...\n" + diff[-MAX//2:]
 
-          system = "You are a senior full-stack engineer and security reviewer. Reply in Korean with concise bullets. Include a '제안 패치' section with unified diff examples and 3 test ideas. Label risk (Low/Med/High)."
+          system = "You are a senior full-stack engineer and security reviewer. Reply in Korean with concise bullets. Include a '제안 패치' (unified diff) and 3 test ideas. Label risk (Low/Med/High)."
           user = f"레포: cojay80/soi-homestudy 의 PR diff입니다.\n목표: 버그/보안/성능/스타일/접근성/테스트 관점 리뷰.\nPR Diff:\n{diff}"
 
           payload = {
@@ -69,10 +69,7 @@ jobs:
           req = urllib.request.Request(
               "https://api.openai.com/v1/chat/completions",
               data=json.dumps(payload).encode("utf-8"),
-              headers={
-                  "Authorization": f"Bearer {api_key}",
-                  "Content-Type": "application/json"
-              }
+              headers={"Authorization": f"Bearer {api_key}", "Content-Type":"application/json"}
           )
           with urllib.request.urlopen(req, timeout=120) as r:
               data = json.loads(r.read().decode("utf-8"))
@@ -80,10 +77,12 @@ jobs:
           review = data["choices"][0]["message"]["content"]
           with open("review.md","w",encoding="utf-8") as f:
               f.write(review)
-          print(review)
+          print("WROTE review.md")
           PY
 
-      - name: Post review to PR
+      # ✅ 3) review.md가 있을 때만 PR 코멘트 달기
+      - name: Post review to PR (only if review exists)
+        if: ${{ success() && hashFiles('review.md') != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -91,8 +90,9 @@ jobs:
           set -euo pipefail
           gh pr comment ${{ github.event.pull_request.number }} --body-file review.md
 
-      - name: Add risk label
-        if: always()
+      # ✅ 4) 라벨도 review.md가 있을 때만 추가
+      - name: Add risk label (only if review exists)
+        if: ${{ success() && hashFiles('review.md') != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
