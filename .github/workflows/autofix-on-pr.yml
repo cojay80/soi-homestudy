@@ -2,64 +2,39 @@ name: autofix-on-pr
 
 on:
   pull_request:
-    branches: ["main"]        # PR 열리면 자동 실행
-  workflow_dispatch:          # 수동 실행 시 헤드 브랜치 입력
-    inputs:
-      branch:
-        description: "PR head branch (e.g. cojay80-patch-4 or feature/foo)"
-        required: false
-        type: string
+    branches: ["main"]   # PR 열리면 자동 실행
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: "autofix-on-pr-${{ github.event_name }}-${{ github.head_ref || inputs.branch || github.ref_name }}"
+  group: "autofix-on-pr-${{ github.event.pull_request.head.ref }}"
   cancel-in-progress: true
 
 jobs:
   autofix:
     runs-on: ubuntu-latest
-    env:
-      HEAD_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || inputs.branch }}
-      HEAD_REPO:   ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
     steps:
-      - name: Resolve head branch
-        run: |
-          echo "event=${{ github.event_name }}"
-          echo "HEAD_REPO=${HEAD_REPO}"
-          echo "HEAD_BRANCH=${HEAD_BRANCH}"
-          if [ "${{ github.event_name }}" != "pull_request" ] && [ -z "${HEAD_BRANCH}" ]; then
-            echo "::error::Manual run: please provide 'branch' input (e.g. cojay80-patch-4)"
-            exit 1
-          fi
-
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:
-          repository: ${{ env.HEAD_REPO }}
-          ref: ${{ env.HEAD_BRANCH }}
+          # 포크/같은 저장소 모두 커버
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Verify branch exists (defensive)
-        run: |
-          git ls-remote --heads origin "${HEAD_BRANCH}" || true
-
-      - name: Configure Git (safe)
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
 
       - name: Install deps (never fail)
-        shell: bash
         run: |
           if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i || true
           elif [ -f yarn.lock ]; then corepack enable && yarn i || true
@@ -68,7 +43,6 @@ jobs:
           else echo "no deps"; fi
 
       - name: Auto-fix (Prettier/ESLint — safe)
-        shell: bash
         run: |
           npx --yes prettier . --write || true
           npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
@@ -78,7 +52,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore(autofix): apply automatic code fixes"
-          branch: ${{ env.HEAD_BRANCH }}
+          branch: ${{ github.event.pull_request.head.ref }}
           commit_user_name: github-actions[bot]
           commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
 
