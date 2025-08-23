@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: "20"
 
-      # 의존성 설치 (실패해도 계속)
+      # 의존성 설치 (실패해도 계속 진행)
       - name: Install deps (never fail)
         shell: bash
         run: |
@@ -44,7 +44,7 @@ jobs:
           elif [ -f package.json ]; then npm i || true
           else echo "No package.json"; fi
 
-      # 자동 포맷/린트 (실패해도 계속)
+      # 자동 포맷/린트 (실패해도 계속 진행)
       - name: Auto-fix (Prettier/ESLint — safe)
         shell: bash
         run: |
@@ -74,7 +74,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
           branch: bot/autofix          # 고정 → PR 1개만 유지
-          branch-suffix: timestamp
           commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
