@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
-
+  issues: write   # ← 추가
 jobs:
   autofix:
     runs-on: ubuntu-latest
