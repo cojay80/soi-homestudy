@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -25,11 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run formatter (safe)
-        run: npx --yes prettier . --write || true
+      - name: Run formatter
+        run: npx --yes prettier . --write
 
       - name: Run tests
-        run: npm test
+        run: npm test --if-present
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
