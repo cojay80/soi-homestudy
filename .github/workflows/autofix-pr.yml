@@ -21,7 +21,7 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-          token: ${{ secrets.AUTOFIX_PAT }}   # PAT 사용(권한 이슈 원천 차단)
+          token: ${{ secrets.AUTOFIX_PAT }}
 
       - name: Configure Git (safe)
         run: |
@@ -29,12 +29,10 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      # 의존성 설치 (실패해도 계속)
       - name: Install deps (never fail)
         shell: bash
         run: |
@@ -44,14 +42,12 @@ jobs:
           elif [ -f package.json ]; then npm i || true
           else echo "No package.json"; fi
 
-      # 자동 포맷/린트 (실패해도 계속)
       - name: Auto-fix (Prettier/ESLint — safe)
         shell: bash
         run: |
           npx --yes prettier . --write || true
           npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
 
-      # 변경 있을 때만 PR 생성
       - name: Detect changes (never fail)
         id: detect
         shell: bash
@@ -67,26 +63,20 @@ jobs:
           fi
           exit 0
 
-      # 디버그(충돌/원격 상태 확인용)
-      - name: Debug git state
-        run: |
-          git rev-parse --abbrev-ref HEAD
-          git status --porcelain || true
-          git ls-remote --heads origin bot/autofix || true
-
-      - name: Create Pull Request (single rolling PR)
+      # ✅ 항상 “새 브랜치”로 PR 생성 → 브랜치/태그 미존재 에러 방지
+      - name: Create Pull Request (always new branch)
         if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.AUTOFIX_PAT }}     # PR 생성도 PAT로
+          token: ${{ secrets.AUTOFIX_PAT }}
           base: main
-          branch: bot/autofix                   # 기본 롤링 브랜치
-          branch-suffix: timestamp              # ✅ 1회 우회용(성공 확인 후 제거하세요)
+          branch: bot/autofix
+          branch-suffix: timestamp     # ← 매번 고유 브랜치 생성 (중요)
           commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
           delete-branch: true
-          signoff: true                         # DCO 등 사인오프 요구 충족
+          signoff: true
 
       - name: Nothing to commit
         if: steps.detect.outputs.changed != 'true'
