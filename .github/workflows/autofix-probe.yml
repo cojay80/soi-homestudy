@@ -1,68 +1,26 @@
 name: autofix-probe
 
 on:
-  workflow_dispatch: {}     # 수동 실행 버튼
+  workflow_dispatch: {}
 
 permissions:
   contents: write
   pull-requests: write
+  issues: write   # ← 추가
 
 jobs:
   probe:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Git (safe)
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      # ✅ 강제로 변경파일 하나 생성 (포맷/린트 없이, git 에러만 진단)
-      - name: Create a dummy change
-        run: |
-          echo "probe $(date +%s)" >> __autofix_probe__.txt
-
-      # 🔧 변경 유무 확인 + 절대 실패하지 않도록 보호
-      - name: Detect changes
-        id: detect
-        shell: bash
-        run: |
-          set +e
-          git add -A
-          if git diff --staged --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Has changes"
-          fi
-          exit 0
-
-      # ✅ peter-evans 액션으로 새 브랜치 + PR 생성 (항상 유니크)
-      - name: Create Pull Request
-        if: steps.detect.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          branch: bot/autofix-probe
-          branch-suffix: timestamp
-          commit-message: "chore(probe): dummy change"
-          title: "chore(probe): dummy change"
-          body: "자동 진단용 PR"
-          labels: autofix, bot
-          delete-branch: true
-          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-
-      - name: Nothing to commit
-        if: steps.detect.outputs.changed != 'true'
-        run: echo "No changes to commit."
+    ...
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        base: main
+        branch: bot/autofix-probe
+        branch-suffix: timestamp
+        commit-message: "chore(probe): dummy change"
+        title: "chore(probe): dummy change"
+        body: "자동 진단용 PR"
+        labels: autofix, bot    # ← 이 라벨 그대로 사용 가능(이제 권한 OK)
+        delete-branch: true
