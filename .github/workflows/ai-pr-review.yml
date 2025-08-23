@@ -1,8 +1,17 @@
-name: AI PR Review
+name: AI PR Review (OpenAI)
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    # 큰 파일/자산 변경만 있을 때는 불필요한 호출을 피합니다
+    paths-ignore:
+      - 'node_modules/**'
+      - 'sound/**'
+      - '*.wav'
+      - '*.mp3'
+      - '*.png'
+      - '*.jpg'
+      - '*.svg'
 
 permissions:
   contents: read
@@ -18,82 +27,68 @@ jobs:
       - name: Collect PR diff
         id: diff
         run: |
-          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
           git fetch origin ${{ github.event.pull_request.head.ref }} --depth=1
           git diff --unified=0 origin/${{ github.event.pull_request.base.ref }}...origin/${{ github.event.pull_request.head.ref }} > pr.diff
           echo "size=$(wc -c < pr.diff)" >> $GITHUB_OUTPUT
 
-      - name: Summarize and review with OpenAI
+      - name: Review with OpenAI (Korean)
         id: ai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python - << 'PY'
-import os, json, textwrap
-# 1) diff 읽기 (너무 크면 잘라내기)
-diff = open('pr.diff','r',encoding='utf-8',errors='ignore').read()
+import os, requests, textwrap
+api_key = os.environ["OPENAI_API_KEY"]
+diff = open("pr.diff","r",encoding="utf-8",errors="ignore").read()
 MAX = 120000
 if len(diff) > MAX:
-    head = diff[:MAX//2]
-    tail = diff[-MAX//2:]
-    diff = head + "\n...\n# (diff truncated)\n...\n" + tail
+    diff = diff[:MAX//2] + "\n...\n# (diff truncated)\n...\n" + diff[-MAX//2:]
 
-# 2) 시스템/유저 프롬프트
-system = "You are an expert senior engineer and security reviewer. Output in Korean with concise bullets and code blocks when proposing patches."
+system = "You are a senior full-stack engineer and security reviewer. Reply in Korean, concise bullets; include a '제안 패치' section with unified diff examples."
 user = f"""
-다음은 GitHub PR diff입니다.
-- 목적: 코드 품질/버그/보안/성능/스타일/테스트 커버리지 관점 리뷰
-- 한국어로 핵심만 간결히 bullet로, 마지막에 '제안 패치' 섹션에 unified diff 형식 예시 포함
-- 위험도(Low/Med/High) 라벨링 포함
-- 테스트 아이디어 3개 제시
+레포: coiay80/soi-homestudy 의 PR diff 입니다.
+목표: 버그/보안/성능/스타일/접근성/테스트 관점 리뷰.
+형식:
+- [요약] 변경 의도, 영향 범위, 위험도(Low/Med/High)
+- [발견 사항] 항목별 bullets
+- [제안 패치] unified diff 예시(code block)
+- [테스트 아이디어] 3개
+참고: HTML/JS 정적 사이트이며 Render로 배포됩니다. 로그인/리다이렉트, 로컬스토리지 등 일반적 취약점도 점검.
 PR Diff:
 {diff}
 """
 
-# 3) OpenAI API 호출 (Responses API/Chat Completions 중 편한 쪽 사용)
-import requests
 resp = requests.post(
     "https://api.openai.com/v1/chat/completions",
-    headers={"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
-             "Content-Type":"application/json"},
+    headers={"Authorization": f"Bearer {api_key}", "Content-Type":"application/json"},
     json={
-        "model": "gpt-4o-mini",
-        "messages": [{"role":"system","content":system},
-                     {"role":"user","content":user}],
-        "temperature": 0.2
+        "model":"gpt-4o-mini",
+        "temperature":0.2,
+        "messages":[{"role":"system","content":system},{"role":"user","content":user}]
     },
     timeout=120
 )
 resp.raise_for_status()
 review = resp.json()["choices"][0]["message"]["content"]
-# GitHub Actions step output
-print("REVIEW<<EOF")
+open("review.md","w",encoding="utf-8").write(review)
 print(review)
-print("EOF")
 PY
-          echo "review<<EOF" >> $GITHUB_OUTPUT
-          sed -n '/^REVIEW<<EOF$/,/^EOF$/p' $GITHUB_STEP_SUMMARY | sed '1d;$d' >> $GITHUB_OUTPUT || true
-          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Post review comment to PR
+      - name: Post review to PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          body="$(sed -n '/^REVIEW<<EOF$/,/^EOF$/p' $GITHUB_STEP_SUMMARY | sed '1d;$d' || true)"
-          if [ -z "$body" ]; then
-            body="(AI 리뷰 생성 실패. 로그 확인 바랍니다.)"
-          fi
-          gh pr comment ${{ github.event.pull_request.number }} --body "$body"
+          gh pr comment ${{ github.event.pull_request.number }} --body-file review.md
 
-      - name: Add labels by risk level
+      - name: Add risk label
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if grep -qi "High" $GITHUB_STEP_SUMMARY; then
+          if grep -qi "High" review.md; then
             gh pr edit ${{ github.event.pull_request.number }} --add-label "ai-review:high-risk"
-          elif grep -qi "Med" $GITHUB_STEP_SUMMARY; then
+          elif grep -qi "Med" review.md; then
             gh pr edit ${{ github.event.pull_request.number }} --add-label "ai-review:medium-risk"
           else
             gh pr edit ${{ github.event.pull_request.number }} --add-label "ai-review:low-risk"
