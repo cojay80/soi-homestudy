@@ -1,17 +1,17 @@
 name: AI PR Review (OpenAI)
 
 on:
+  workflow_dispatch:      # 수동 실행 버튼 허용 (Actions 탭에서 Run 가능)
   pull_request:
     types: [opened, synchronize, reopened]
-    # 큰 파일/자산 변경만 있을 때는 불필요한 호출을 피합니다
     paths-ignore:
-      - 'node_modules/**'
-      - 'sound/**'
-      - '*.wav'
-      - '*.mp3'
-      - '*.png'
-      - '*.jpg'
-      - '*.svg'
+      - "node_modules/**"
+      - "sound/**"
+      - "*.wav"
+      - "*.mp3"
+      - "*.png"
+      - "*.jpg"
+      - "*.svg"
 
 permissions:
   contents: read
@@ -26,71 +26,82 @@ jobs:
 
       - name: Collect PR diff
         id: diff
+        shell: bash
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-          git fetch origin ${{ github.event.pull_request.head.ref }} --depth=1
-          git diff --unified=0 origin/${{ github.event.pull_request.base.ref }}...origin/${{ github.event.pull_request.head.ref }} > pr.diff
-          echo "size=$(wc -c < pr.diff)" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          git fetch origin "${{ github.event.pull_request.head.ref }}" --depth=1
+          git diff --unified=0 "origin/${{ github.event.pull_request.base.ref }}"..."origin/${{ github.event.pull_request.head.ref }}" > pr.diff
+          wc -c pr.diff
 
       - name: Review with OpenAI (Korean)
         id: ai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
         run: |
-          python - << 'PY'
-import os, requests, textwrap
-api_key = os.environ["OPENAI_API_KEY"]
-diff = open("pr.diff","r",encoding="utf-8",errors="ignore").read()
-MAX = 120000
-if len(diff) > MAX:
-    diff = diff[:MAX//2] + "\n...\n# (diff truncated)\n...\n" + diff[-MAX//2:]
+          set -euo pipefail
+          python - <<'PY'
+          import os, json, sys
+          import urllib.request
 
-system = "You are a senior full-stack engineer and security reviewer. Reply in Korean, concise bullets; include a '제안 패치' section with unified diff examples."
-user = f"""
-레포: coiay80/soi-homestudy 의 PR diff 입니다.
-목표: 버그/보안/성능/스타일/접근성/테스트 관점 리뷰.
-형식:
-- [요약] 변경 의도, 영향 범위, 위험도(Low/Med/High)
-- [발견 사항] 항목별 bullets
-- [제안 패치] unified diff 예시(code block)
-- [테스트 아이디어] 3개
-참고: HTML/JS 정적 사이트이며 Render로 배포됩니다. 로그인/리다이렉트, 로컬스토리지 등 일반적 취약점도 점검.
-PR Diff:
-{diff}
-"""
+          api_key = os.environ["OPENAI_API_KEY"]
 
-resp = requests.post(
-    "https://api.openai.com/v1/chat/completions",
-    headers={"Authorization": f"Bearer {api_key}", "Content-Type":"application/json"},
-    json={
-        "model":"gpt-4o-mini",
-        "temperature":0.2,
-        "messages":[{"role":"system","content":system},{"role":"user","content":user}]
-    },
-    timeout=120
-)
-resp.raise_for_status()
-review = resp.json()["choices"][0]["message"]["content"]
-open("review.md","w",encoding="utf-8").write(review)
-print(review)
-PY
+          with open("pr.diff","r",encoding="utf-8",errors="ignore") as f:
+              diff = f.read()
+
+          MAX = 120000
+          if len(diff) > MAX:
+              diff = diff[:MAX//2] + "\n...\n# (diff truncated)\n...\n" + diff[-MAX//2:]
+
+          system = "You are a senior full-stack engineer and security reviewer. Reply in Korean with concise bullets. Include a '제안 패치' section with unified diff examples and 3 test ideas. Label risk (Low/Med/High)."
+          user = f"레포: cojay80/soi-homestudy 의 PR diff입니다.\n목표: 버그/보안/성능/스타일/접근성/테스트 관점 리뷰.\nPR Diff:\n{diff}"
+
+          payload = {
+              "model": "gpt-4o-mini",
+              "temperature": 0.2,
+              "messages": [
+                  {"role":"system","content": system},
+                  {"role":"user","content": user}
+              ]
+          }
+
+          req = urllib.request.Request(
+              "https://api.openai.com/v1/chat/completions",
+              data=json.dumps(payload).encode("utf-8"),
+              headers={
+                  "Authorization": f"Bearer {api_key}",
+                  "Content-Type": "application/json"
+              }
+          )
+          with urllib.request.urlopen(req, timeout=120) as r:
+              data = json.loads(r.read().decode("utf-8"))
+
+          review = data["choices"][0]["message"]["content"]
+          with open("review.md","w",encoding="utf-8") as f:
+              f.write(review)
+          print(review)
+          PY
 
       - name: Post review to PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
+          set -euo pipefail
           gh pr comment ${{ github.event.pull_request.number }} --body-file review.md
 
       - name: Add risk label
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
+          set -euo pipefail
+          label="ai-review:low-risk"
           if grep -qi "High" review.md; then
-            gh pr edit ${{ github.event.pull_request.number }} --add-label "ai-review:high-risk"
+            label="ai-review:high-risk"
           elif grep -qi "Med" review.md; then
-            gh pr edit ${{ github.event.pull_request.number }} --add-label "ai-review:medium-risk"
-          else
-            gh pr edit ${{ github.event.pull_request.number }} --add-label "ai-review:low-risk"
+            label="ai-review:medium-risk"
           fi
-          
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "$label"
