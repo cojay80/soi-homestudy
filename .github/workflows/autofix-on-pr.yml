@@ -19,7 +19,6 @@ jobs:
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:
-          # 포크/동일 리포 모두 지원
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
