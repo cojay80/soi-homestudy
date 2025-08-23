@@ -1,21 +1,19 @@
 name: AI PR Review (OpenAI)
 
 on:
-  workflow_dispatch:      # 수동 실행 버튼 허용 (Actions 탭에서 Run 가능)
   pull_request:
-    types: [opened, synchronize, reopened]
-    paths-ignore:
-      - "node_modules/**"
-      - "sound/**"
-      - "*.wav"
-      - "*.mp3"
-      - "*.png"
-      - "*.jpg"
-      - "*.svg"
+    types: [opened, synchronize, reopened, ready_for_review]
+    # 드래프트 PR은 건너뛰고 싶다면 아래 조건을 step에 추가할 수도 있음
+  workflow_dispatch:
+
+concurrency:
+  group: ai-pr-review-${{ github.ref }}
+  cancel-in-progress: true   # 같은 브랜치에서 새 실행이 오면 이전 실행 취소
 
 permissions:
   contents: read
   pull-requests: write
+
 
 jobs:
   review:
