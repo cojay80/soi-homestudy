@@ -20,6 +20,8 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git (safe)
         run: |
@@ -65,7 +67,7 @@ jobs:
           fi
           exit 0
 
-      - name: Create Pull Request (rolling one)
+      - name: Create Pull Request (single rolling PR)
         if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
@@ -76,6 +78,8 @@ jobs:
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
           delete-branch: true
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
 
       - name: Nothing to commit
         if: steps.detect.outputs.changed != 'true'
