@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main
+      - name: Checkout base branch (main)
         uses: actions/checkout@v4
         with:
           ref: main
@@ -20,7 +20,7 @@ jobs:
           persist-credentials: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure Git (avoid ownership/identity issues)
+      - name: Configure Git (safe)
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -32,45 +32,50 @@ jobs:
           node-version: "20"
 
       - name: Install deps if package.json exists
+        shell: bash
         run: |
           if [ -f package.json ]; then
             npm ci || npm i
           fi
 
       - name: Auto-fix (JS) — safe mode
+        shell: bash
         run: |
           npx --yes prettier . --write || true
           npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
 
-      # 🔧 'exit 1'로 실패하지 않도록 set +e 하고, 변경 유무를 status로만 판단
-      - name: Detect changes (do not fail on exit 1)
+      # 변경 유무만 확인 (반환코드 때문에 실패하지 않음)
+      - name: Detect changes (never fail)
         id: detect
         shell: bash
         run: |
           set +e
           git add -A
-          CHANGED=$(git status --porcelain)
-          if [ -z "$CHANGED" ]; then
+          if git diff --staged --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "No changes"
           else
             echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changed files:"
-            echo "$CHANGED"
+            echo "Has changes"
           fi
+          exit 0
 
+      # 고유 브랜치 이름 사용해 충돌 회피
       - name: Create Pull Request
         if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          branch: bot/autofix-${{ github.run_id }}
+          branch: bot/autofix
+          branch-suffix: timestamp
           commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
           body: "자동 포맷/린트 수정 PR입니다."
           labels: autofix, bot
           delete-branch: true
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
 
       - name: Nothing to commit
         if: steps.detect.outputs.changed != 'true'
