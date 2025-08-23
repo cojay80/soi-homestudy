@@ -33,8 +33,7 @@ jobs:
           gh pr diff ${{ github.event.pull_request.number }} > pr.diff
           echo "Diff size: $(wc -c < pr.diff) bytes"
 
-      # ✅ 2) OpenAI 호출 (성공 시 review.md 생성)
-      - name: Review with OpenAI (Korean)
+      - name: Review with OpenAI (Korean, retry on 429/5xx)
         id: ai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -42,18 +41,33 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import os, json, sys, urllib.request
+          import os, json, time, random, urllib.request, urllib.error
+
           api_key = os.environ["OPENAI_API_KEY"]
 
           with open("pr.diff","r",encoding="utf-8",errors="ignore") as f:
               diff = f.read()
 
+          # 0) 사소/빈 diff면 호출 자체를 안 하도록
+          if not diff.strip():
+              open("review.md","w",encoding="utf-8").write("변경된 코드가 없습니다. 리뷰를 생략합니다.")
+              print("NO DIFF -> WROTE review.md (skipped API)")
+              raise SystemExit(0)
+
           MAX = 120000
           if len(diff) > MAX:
               diff = diff[:MAX//2] + "\n...\n# (diff truncated)\n...\n" + diff[-MAX//2:]
 
-          system = "You are a senior full-stack engineer and security reviewer. Reply in Korean with concise bullets. Include a '제안 패치' (unified diff) and 3 test ideas. Label risk (Low/Med/High)."
-          user = f"레포: cojay80/soi-homestudy 의 PR diff입니다.\n목표: 버그/보안/성능/스타일/접근성/테스트 관점 리뷰.\nPR Diff:\n{diff}"
+          system = (
+              "You are a senior full-stack engineer and security reviewer. "
+              "Reply in Korean with concise bullets. Include a '제안 패치' (unified diff) and 3 test ideas. "
+              "Label risk (Low/Med/High)."
+          )
+          user = (
+              "레포: cojay80/soi-homestudy 의 PR diff입니다.\n"
+              "목표: 버그/보안/성능/스타일/접근성/테스트 관점 리뷰.\n"
+              "PR Diff:\n" + diff
+          )
 
           payload = {
               "model": "gpt-4o-mini",
@@ -64,42 +78,58 @@ jobs:
               ]
           }
 
-          req = urllib.request.Request(
-              "https://api.openai.com/v1/chat/completions",
-              data=json.dumps(payload).encode("utf-8"),
-              headers={"Authorization": f"Bearer {api_key}", "Content-Type":"application/json"}
-          )
-          with urllib.request.urlopen(req, timeout=120) as r:
-              data = json.loads(r.read().decode("utf-8"))
+          url = "https://api.openai.com/v1/chat/completions"
+          headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
-          review = data["choices"][0]["message"]["content"]
-          with open("review.md","w",encoding="utf-8") as f:
-              f.write(review)
-          print("WROTE review.md")
+          max_attempts = 6
+          attempt_logs = []
+          for attempt in range(1, max_attempts+1):
+              try:
+                  req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
+                  with urllib.request.urlopen(req, timeout=120) as r:
+                      data = json.loads(r.read().decode("utf-8"))
+                  review = data["choices"][0]["message"]["content"]
+                  with open("review.md","w",encoding="utf-8") as f:
+                      f.write(review)
+                  print(f"SUCCESS on attempt {attempt} -> WROTE review.md")
+                  break
+              except urllib.error.HTTPError as e:
+                  # 429/5xx만 재시도, 나머지는 즉시 실패
+                  status = e.code
+                  body = e.read().decode("utf-8", "ignore")
+                  attempt_logs.append(f"[{attempt}] HTTP {status}: {body[:500]}")
+                  if status == 429 or 500 <= status < 600:
+                      retry_after = 0
+                      # Retry-After 헤더가 있으면 우선
+                      if e.headers and e.headers.get("Retry-After"):
+                          try:
+                              retry_after = int(e.headers.get("Retry-After"))
+                          except:
+                              retry_after = 0
+                      # 지수 백오프 + 지터 (최대 60초)
+                      base = min(60, (2 ** attempt))
+                      sleep_s = max(retry_after, base + random.uniform(0, 1))
+                      print(f"RETRY {attempt}/{max_attempts} in {sleep_s:.1f}s (status={status})")
+                      time.sleep(sleep_s)
+                      continue
+                  else:
+                      # 4xx 등은 즉시 실패
+                      err = f"OpenAI 호출 실패 (HTTP {status})."
+                      open("review.md","w",encoding="utf-8").write(err + "\n\n" + body[:2000])
+                      print("WROTE review.md (non-retriable)")
+                      raise
+              except Exception as e:
+                  attempt_logs.append(f"[{attempt}] EXC: {e}")
+                  # 네트워크 일시 장애로 간주해 몇 번 재시도
+                  base = min(60, (2 ** attempt))
+                  sleep_s = base + random.uniform(0, 1)
+                  print(f"RETRY {attempt}/{max_attempts} in {sleep_s:.1f}s (exception)")
+                  time.sleep(sleep_s)
+                  continue
+          else:
+              # 전부 실패하면 요약 리포트라도 남김
+              msg = "OpenAI 호출이 여러 차례(429/5xx 등) 실패했습니다. 나중에 다시 시도해 주세요.\n\n" + "\n".join(attempt_logs)
+              with open("review.md","w",encoding="utf-8") as f:
+                  f.write(msg)
+              print("WROTE review.md (all attempts failed)")
           PY
-
-      # ✅ 3) review.md가 있을 때만 PR 코멘트 달기
-      - name: Post review to PR (only if review exists)
-        if: ${{ success() && hashFiles('review.md') != '' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh pr comment ${{ github.event.pull_request.number }} --body-file review.md
-
-      # ✅ 4) 라벨도 review.md가 있을 때만 추가
-      - name: Add risk label (only if review exists)
-        if: ${{ success() && hashFiles('review.md') != '' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          label="ai-review:low-risk"
-          if grep -qi "High" review.md; then
-            label="ai-review:high-risk"
-          elif grep -qi "Med" review.md; then
-            label="ai-review:medium-risk"
-          fi
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "$label"
