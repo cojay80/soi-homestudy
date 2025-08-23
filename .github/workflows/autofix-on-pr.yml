@@ -2,7 +2,7 @@ name: autofix-on-pr
 
 on:
   pull_request:
-    branches: ["main"]   # PR 열리면 자동 실행
+    branches: ["main"]   # PR 열리거나 업데이트될 때 자동 실행
 
 permissions:
   contents: write
@@ -19,20 +19,21 @@ jobs:
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:
-          # 포크/같은 저장소 모두 커버
+          # 포크/동일 리포 모두 지원
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Configure Git
+      - name: Configure Git (safe)
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - uses: actions/setup-node@v4
-        with: { node-version: "20" }
+        with:
+          node-version: "20"
 
       - name: Install deps (never fail)
         run: |
