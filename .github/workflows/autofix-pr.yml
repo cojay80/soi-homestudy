@@ -1,7 +1,7 @@
 name: autofix-pr
 
 on:
-  workflow_dispatch: {}   # 수동 실행 버튼
+  workflow_dispatch: {}   # 수동 실행
 
 permissions:
   contents: write
@@ -12,12 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node (for prettier/eslint)
+      - name: Configure Git (avoid ownership/identity issues)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -33,14 +42,36 @@ jobs:
           npx --yes prettier . --write || true
           npx --yes eslint . --ext .js,.jsx,.ts,.tsx --fix || true
 
+      # 🔧 'exit 1'로 실패하지 않도록 set +e 하고, 변경 유무를 status로만 판단
+      - name: Detect changes (do not fail on exit 1)
+        id: detect
+        shell: bash
+        run: |
+          set +e
+          git add -A
+          CHANGED=$(git status --porcelain)
+          if [ -z "$CHANGED" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changed files:"
+            echo "$CHANGED"
+          fi
+
       - name: Create Pull Request
+        if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          commit-message: "chore(autofix): apply automatic code fixes"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
           branch: bot/autofix-${{ github.run_id }}
+          commit-message: "chore(autofix): apply automatic code fixes"
           title: "chore(autofix): automatic code fixes"
-          body: |
-            자동 포맷/린트 수정 PR입니다.
-            - 워크플로: autofix-pr
+          body: "자동 포맷/린트 수정 PR입니다."
           labels: autofix, bot
           delete-branch: true
+
+      - name: Nothing to commit
+        if: steps.detect.outputs.changed != 'true'
+        run: echo "No changes to commit."
