@@ -1,4 +1,3 @@
-// /js/header.js
 (function () {
   const BREAKPOINT = 860;
   const STORAGE = { USER: 'currentUser', POINTS: 'soi:points' };
@@ -93,10 +92,13 @@
       if (e.key === STORAGE.USER || e.key === STORAGE.POINTS) paintHeader();
     });
 
+    // DOM 변경 시 모바일 메뉴 재바인딩
     const mo = new MutationObserver(() => setupMobileMenu());
     mo.observe(document.documentElement, { childList: true, subtree: true });
 
+    // 외부 호출 가능하도록 노출
     window.updateHeaderUI = paintHeader;
+    window.setupMobileMenu = setupMobileMenu;
   }
 
   if (document.readyState === 'loading') {
