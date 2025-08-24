@@ -23,28 +23,23 @@
 </head>
 <body>
   <!-- 헤더 -->
-  <header class="main-header">
-    <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
+<div id="header-placeholder"></div>
+<script>
+  fetch('/header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header-placeholder').innerHTML = html;
 
-    <nav class="main-nav" aria-label="주 메뉴">
-      <ul>
-        <li><a href="index.html">오늘의 학습</a></li>
-        <li class="active"><a href="report.html">학습 보고서</a></li>
-        <li><a href="goal.html">나의 목표</a></li>
-        <li><a href="record.html">상세 기록</a></li>
-        <li><a href="notes.html">오답 노트</a></li>
-        <li><a href="shop.html">상점</a></li>
-        <li><span class="badge">포인트: <b data-soi-points>0</b>p</span></li>
-      </ul>
-    </nav>
+      // 헤더 로드 후 햄버거 토글 이벤트 연결
+      const toggleBtn = document.getElementById('menu-toggle');
+      const menu = document.getElementById('main-menu');
+      toggleBtn?.addEventListener('click', () => {
+        menu?.classList.toggle('active');
+      });
+    })
+    .catch(err => console.error('헤더 로드 실패:', err));
+</script>
 
-    <div class="user-info">
-      <span id="welcome-message"></span>
-      <button id="logout-button" type="button" aria-label="로그아웃" style="display:none">로그아웃</button>
-    </div>
-
-    <button class="mobile-menu-button" aria-label="메뉴 열기">☰</button>
-  </header>
 
   <!-- 본문 -->
   <main class="container">
