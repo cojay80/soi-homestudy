@@ -368,3 +368,14 @@ button:active {
 .answer-options .option:hover {
   color: #222;
 }
+/* 로그아웃 버튼 글자색 수정 */
+#logout-button {
+  color: #3E2C28; /* 진한 브라운 텍스트 */
+  background: #FFF3EC; /* 연한 배경 */
+  border: 1px solid var(--line);
+}
+
+#logout-button:hover {
+  background: #FFE7DC;
+  color: var(--brand); /* 코랄 오렌지 */
+}
