@@ -296,8 +296,42 @@ button:active {
   transform: translateY(0);
   box-shadow: 0 3px 6px rgba(0,0,0,0.12);
 }
-/* 로그아웃 버튼만 글자색 검정 */
-#btn-logout {
-  color: #000 !important;
-}
+/* 모바일 전용 (860px 이하) */
+@media (max-width: 860px) {
+  /* 햄버거 버튼 보이게 */
+  .mobile-menu-button {
+    display: inline-block;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
 
+  /* 기본 메뉴 숨기기 */
+  .main-nav {
+    display: none;
+    position: absolute;
+    top: 60px; /* 헤더 아래 */
+    right: 0;
+    background: #FFEBDD;
+    width: 200px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  /* 햄버거 클릭 시 열림 */
+  .main-nav.active {
+    display: block;
+  }
+  /* 세로 메뉴 */
+  .main-nav ul {
+    flex-direction: column;
+    padding: 10px 0;
+  }
+
+  /* 우측 로그인+햄버거 정렬 */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
