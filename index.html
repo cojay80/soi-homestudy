@@ -23,7 +23,7 @@
   <header class="main-header">
     <div class="logo"><a href="index.html">소이의 공부방 🎨</a></div>
 
-    <nav class="main-nav" aria-label="주 메뉴">
+    <nav class="main-nav" id="main-menu" aria-label="주 메뉴">
       <ul>
         <li class="active"><a href="index.html">오늘의 학습</a></li>
         <li><a href="report.html">학습 보고서</a></li>
@@ -43,7 +43,8 @@
     </div>
 
     <!-- 햄버거: 토글은 /js/header.js 가 처리 -->
-    <button class="mobile-menu-button" aria-label="메뉴 열기" type="button" aria-expanded="false">☰</button>
+    <button class="mobile-menu-button" id="menu-toggle"
+        aria-label="메뉴 열기" type="button" aria-expanded="false">☰</button>
   </header>
 
   <!-- 본문 -->
@@ -239,6 +240,5 @@ document.getElementById('menu-toggle').addEventListener('click', () => {
   document.getElementById('main-menu').classList.toggle('active');
 });
 </script>
-
 </body>
 </html>
