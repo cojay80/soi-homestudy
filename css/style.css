@@ -335,3 +335,36 @@ button:active {
     gap: 8px;
   }
 }
+/* 보기 버튼 터치·클릭 편의성 개선 */
+.answer-options .option {
+  display: block;
+  width: 100%;              /* 한 줄 가득 */
+  padding: 16px 20px;        /* 높이 확보 */
+  font-size: 18px;           /* 글자 크게 */
+  border-radius: 8px;
+  border: 2px solid var(--line, #ccc);
+  background: #fff;
+  text-align: left;          /* 번호와 내용 왼쪽 정렬 */
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+/* 마우스 오버/터치 피드백 */
+.answer-options .option:hover {
+  background: #FFE7DC;
+  border-color: var(--brand, #ff6600);
+}
+
+.answer-options .option:active {
+  transform: scale(0.98);    /* 클릭 시 살짝 눌림 */
+}
+.answer-options .option {
+  color: #222; /* 진한 글자색 */
+  background: #fff; /* 버튼 배경 */
+}
+
+/* 호버 상태에서도 글자색 유지 */
+.answer-options .option:hover {
+  color: #222;
+}
