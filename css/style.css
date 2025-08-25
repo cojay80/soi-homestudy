@@ -319,7 +319,7 @@ button:active {
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
   /* 햄버거 클릭 시 열림 */
-  .main-nav.active {
+  .main-nav.is-open {
     display: block;
   }
   /* 세로 메뉴 */
