@@ -1,381 +1,509 @@
-/* ========== Base / Tokens ========== */
+/* ========== Toca World Design System (v4) ========== */
 :root {
-  --page-width:980px;
-  --pad-x:16px; --pad-y:12px;
-  --line:#f2e8df; /* 부드러운 베이지 경계 */
-  --bg:#F7F1E3;     /* 부드러운 베이지 */
-  --card:#FFF1E6; /* 카드 배경: 연베이지 */
-  --text:#3E2C28; /* 진한 브라운 텍스트 */
-  --muted:#8B6F66; /* 서브 텍스트 */
-  --brand:#FF8552; /* 코랄 오렌지 */
-  --brand-2:#E46A38; /* 테라코타 오렌지 */
+  /* Toca World Style Color Palette */
+  --bg: #fcf9dc;
+  /* Warm Cream Background */
+  --white: #ffffff;
+  --text: #2d3436;
+  /* Bold Dark for Outlines */
+  --text-light: #636e72;
+  --brand: #ff85a2;
+  /* Sweet Pink */
+  --brand-2: #85ebff;
+  /* Sky Blue */
+  --brand-3: #ffef62;
+  /* Sunny Yellow */
+  --brand-4: #a0ff9b;
+  /* Mint Green */
+  --brand-5: #b19dff;
+  /* Lavender */
+  --accent: #ff9f43;
+  /* Orange */
+
+  /* Layout */
+  --page-width: 1040px;
+  --header-height: 80px;
+  --radius-lg: 40px;
+  --radius-md: 26px;
+  --radius-sm: 18px;
+
+  /* Toca Shadows (Bold Offset) */
+  --shadow-sm: 4px 4px 0px rgba(0, 0, 0, 0.1);
+  --shadow-md: 7px 7px 0px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 12px 12px 0px rgba(0, 0, 0, 0.15);
+  --border-bold: 4px solid var(--text);
 }
 
-* { box-sizing:border-box; }
-html,body { margin:0; padding:0; }
-img,video { max-width:100%; height:auto; display:block; }
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
 
 body {
-  min-width:320px;
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Noto Sans KR', system-ui, Segoe UI, Roboto, Arial, sans-serif;
-  line-height:1.5;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255, 133, 162, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(133, 235, 255, 0.05) 0%, transparent 40%);
+  color: var(--text);
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-/* ========== Common ========== */
+h1,
+h2,
+h3,
+.logo,
+.jua {
+  font-family: 'Jua', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Flat Style Utility */
+.glass {
+  background: var(--white);
+  border: var(--border-bold);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: none;
+}
+
 .container {
-  max-width:var(--page-width);
-  margin:0 auto;
-  padding:16px;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
-.card {
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:12px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.04);
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-.card:hover {
-  transform:translateY(-2px);
-  box-shadow:0 6px 16px rgba(0,0,0,0.07);
-}
-
-.btn {
-  display:inline-block;
-  padding:8px 12px;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:#FFF3EC;
-  color:var(--text);
-  cursor:pointer;
-  transition:all .15s ease;
-  text-decoration:none;
-}
-.btn:hover {
-  background:#FFE7DC;
-  border-color:var(--brand);
-  color:var(--brand);
-}
-.btn-primary {
-  background:var(--brand);
-  color:#fff;
-  border-color:var(--brand);
-}
-.btn-primary:hover {
-  background:var(--brand-2);
-  border-color:var(--brand-2);
-  color:#fff;
-}
-
-.mini { color:var(--muted); font-size:13px; }
-.badge {
-  padding:.2rem .5rem;
-  border:1px solid var(--line);
-  border-radius:999px;
-  font-weight:600;
-  background:#fff;
-}
-.barwrap {
-  background:#f3f3f3;
-  border-radius:8px;
-  overflow:hidden;
-  height:12px;
-}
-.bar { height:100%; background:var(--brand); }
-
-/* ========== Header (Desktop) ========== */
+/* Toca Floating Header */
 .main-header {
-  position:sticky;
-  top:0;
-  z-index:1000;
-  background:#FFF5EF;
-  border-bottom:1px solid var(--line);
-  padding:var(--pad-y) var(--pad-x);
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-  box-shadow:0 2px 6px rgba(0,0,0,0.04);
-}
-.main-header .logo { font-weight:800; flex:0 0 auto; }
-.main-header .logo a {
-  display:inline-block;
-  padding:4px 0;
-  font-size:22px;
-  text-decoration:none;
-  color:inherit;
+  position: sticky;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: var(--header-height);
+  margin: 16px auto;
+  width: calc(100% - 32px);
+  max-width: var(--page-width);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-radius: var(--radius-md);
+  background: white;
+  border: var(--border-bold);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.main-nav { flex:1 1 auto; }
+.main-header:hover {
+  transform: scale(1.01);
+}
+
+.main-header .logo a {
+  font-size: 22px;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
 .main-nav ul {
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  list-style:none;
-  margin:0;
-  padding:0;
-  flex-wrap:wrap;
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
+
 .main-nav a {
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:10px;
-  font-size:14px;
-  text-decoration:none;
-  color:var(--text);
-  transition:background-color 0.15s ease, color 0.15s ease;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  white-space: nowrap;
 }
-.main-nav li.active a,
-.main-nav a:hover {
-  background:#FFE7DC;
-  color:var(--brand-2);
+
+.main-nav a:hover,
+.main-nav li.active a {
+  background: var(--brand-3);
+  border-color: var(--text);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 .user-info {
-  margin-left:auto;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:var(--muted);
-  font-size:12px;
-  white-space:nowrap;
-}
-#welcome-message { font-size:12px; color:var(--muted); }
-#logout-button {
-  padding:4px 8px;
-  border:1px solid var(--line);
-  border-radius:8px;
-  background:#FFF3EC;
-  cursor:pointer;
-  font-size:12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.mobile-menu-button {
-  display:none;
-  border:1px solid var(--line);
-  border-radius:8px;
-  background:#fff;
-  padding:6px 10px;
-  cursor:pointer;
-  font-size:20px;
-  line-height:1;
+.user-pill {
+  padding: 6px 14px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: var(--border-bold);
+  font-weight: 900;
+  font-size: 14px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
 }
 
-/* ========== Responsive (Mobile ≤860px) ========== */
-@media (max-width:860px){
-  .container { padding:12px; }
-  .main-header { flex-direction:row; flex-wrap:wrap; }
-  .main-nav ul { flex-direction:column; align-items:flex-start; }
-  .main-nav a { padding:8px 10px; font-size:15px; }
-}
-/* ====== 따뜻한 톤으로 색상 오버라이드 ====== */
-
-/* 전체 배경 */
-body {
-  background: #FFF8F3; /* 크림톤 */
-  color: #3E2C28;      /* 진한 브라운 텍스트 */
-}
-
-/* 카드 박스 */
-.card {
-  background: #FFF1E6; /* 연베이지 */
-  border-color: #f2e8df; /* 부드러운 경계선 */
-}
-
-/* 헤더 영역 */
-.main-header {
-  background: #FFEBDD; /* 살구 베이지 */
-}
-.main-header .logo a {
-  color: #3E2C28; /* 진한 브라운 */
-}
-
-/* 메뉴 hover */
-.main-nav li.active a,
-.main-nav a:hover {
-  background: #FFD9C2; /* 연한 살구 */
-  color: #E46A38;      /* 테라코타 오렌지 */
-}
-
-/* 버튼 */
-.btn {
-  background: #FFF3EC;
-  color: #3E2C28;
-}
-.btn:hover {
-  background: #FFE7DC;
-  border-color: #FF8552;
-  color: #FF8552;
-}
-.btn-primary {
-  background: #FF8552;
-  border-color: #FF8552;
-  color: #fff;
-}
-.btn-primary:hover {
-  background: #E46A38;
-  border-color: #E46A38;
-}
-/* 카드 그림자 강화 */
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid #f5d9c7;
-  box-shadow: 
-    0 6px 16px rgba(0, 0, 0, 0.08), /* 메인 그림자 */
-    0 2px 6px rgba(0, 0, 0, 0.04);   /* 부드러운 보조 그림자 */
-}
-
-/* 헤더 그림자 */
-header {
-  background: rgba(253, 233, 217, 0.9);
-  border-bottom: 2px solid #f3cbb2;
-  padding: 1rem 2rem;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-}
-
-/* 버튼 그림자 및 눌림 효과 */
-button {
-  background: linear-gradient(90deg, #f7c6a3, #f3a87c);
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
+.btn-icon-round {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: var(--border-bold);
+  background: white;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform 0.2s;
 }
 
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+.btn-icon-round:hover {
+  transform: scale(1.1) rotate(5deg);
 }
 
-button:active {
-  transform: translateY(0);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+/* Toca Hero Section */
+.welcome-hero-v3 {
+  padding: 80px 0 40px;
 }
-.card {
-  background: linear-gradient(180deg, #FFFDF8 0%, #FFF7EF 100%);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid #f5d9c7;
-  box-shadow: 
-    0 6px 16px rgba(0, 0, 0, 0.08),
-    0 2px 6px rgba(0, 0, 0, 0.04);
+
+.hero-main-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 60px;
 }
-/* 공통 버튼 스타일 (시작하기, 오답 복습, 상점 가기 전부 적용) */
-.btn {
-  display: inline-block;
-  background: linear-gradient(90deg, #f7c6a3, #f3a87c);
-  color: #fff;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  text-align: center;
+
+.hero-title {
+  font-size: 64px;
+  margin: 0;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.hero-subtitle {
+  font-size: 22px;
+  color: var(--text-light);
+  margin-top: 16px;
+  font-weight: 700;
+}
+
+.hero-visual {
+  flex: 0 0 340px;
+  height: 340px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 6px solid var(--text);
+  background: var(--brand-2);
+  box-shadow: var(--shadow-lg);
+}
+
+.hero-img-v3 {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.premium-stat-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+}
+
+.stat-pill {
+  padding: 24px 34px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 260px;
+  background: white;
+  border: var(--border-bold);
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stat-pill:hover {
+  transform: scale(1.05) rotate(-1deg);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-pill .icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.stat-pill .val {
+  font-size: 38px;
+  font-weight: 900;
+  display: block;
+  font-family: 'Jua';
+}
+
+.stat-pill .lab {
+  font-size: 15px;
+  color: var(--text-light);
+  font-weight: 800;
+}
+
+.glass-brand {
+  background: var(--brand-3);
+}
+
+/* Workspace Grid */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 28px;
+  margin-bottom: 60px;
+}
+
+.launcher-card {
+  padding: 48px;
+  border-radius: var(--radius-lg);
+}
+
+.launcher-form {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.input-set {
+  display: flex;
+  gap: 24px;
+}
+
+.v3-select {
+  padding: 18px 24px;
+  border-radius: var(--radius-sm);
+  border: var(--border-bold);
+  background: white;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 20px center;
+  background-size: 22px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.v3-select:focus {
+  transform: scale(1.02);
+  outline: none;
+  border-color: var(--brand);
+}
+
+.btn-v3-primary {
+  flex: 2;
+  background: var(--brand);
+  color: white;
+  border: var(--border-bold);
+  padding: 22px;
+  border-radius: var(--radius-sm);
+  font-size: 22px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  box-shadow: 6px 6px 0 rgba(255, 133, 162, 0.3);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-v3-primary:hover {
+  transform: scale(1.03) translateY(-4px);
+  box-shadow: 8px 8px 0 rgba(255, 133, 162, 0.4);
+}
+
+.btn-v3-secondary {
+  flex: 1;
+  background: white;
+  border: var(--border-bold);
+  padding: 22px;
+  border-radius: var(--radius-sm);
+  font-weight: 900;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-v3-secondary:hover {
+  background: var(--brand-2);
+}
+
+/* Progress Card */
+.progress-card-v3 {
+  padding: 48px;
+  border-radius: var(--radius-lg);
+}
+
+.circle-progress-v3 {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.circle-progress-v3 svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.circle-progress-v3 .bg {
+  fill: none;
+  stroke: var(--text);
+  stroke-opacity: 0.1;
+  stroke-width: 14;
+}
+
+.circle-progress-v3 .fg {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.center-text .percent {
+  font-size: 44px;
+  font-weight: 900;
+}
+
+/* Toca Drawer Nav */
+.premium-drawer-nav {
+  margin-bottom: 100px;
+}
+
+.drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 24px;
+}
+
+.drawer-item {
+  padding: 36px 24px;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  border: var(--border-bold);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* hover 시 살짝 떠오르기 */
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+.drawer-item:hover {
+  transform: scale(1.08) rotate(3deg);
+  box-shadow: var(--shadow-lg);
 }
 
-/* active(눌렀을 때) */
-.btn:active {
-  transform: translateY(0);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+.drawer-item .icon {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
 }
-/* 모바일 전용 (860px 이하) */
+
+.drawer-item strong {
+  display: block;
+  font-size: 24px;
+  color: var(--text);
+  font-family: 'Jua';
+  margin-bottom: 4px;
+}
+
+.drawer-item small {
+  font-size: 14px;
+  color: var(--text-light);
+  font-weight: 800;
+}
+
+.color-1 {
+  background: #ffdeeb;
+}
+
+.color-2 {
+  background: #def7ff;
+}
+
+.color-3 {
+  background: #fff8de;
+}
+
+.color-4 {
+  background: #deffdf;
+}
+
+.color-5 {
+  background: #e8deff;
+}
+
+.color-6 {
+  background: #ffeede;
+}
+
+/* Mobile */
 @media (max-width: 860px) {
-  /* 햄버거 버튼 보이게 */
-  .mobile-menu-button {
-    display: inline-block;
-    font-size: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-
-  /* 기본 메뉴 숨기기 */
   .main-nav {
     display: none;
-    position: absolute;
-    top: 60px; /* 헤더 아래 */
-    right: 0;
-    background: #FFEBDD;
-    width: 200px;
-    border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
-  /* 햄버거 클릭 시 열림 */
-  .main-nav.is-open {
-    display: block;
+
+  .main-header {
+    padding: 0 16px;
+    width: calc(100% - 16px);
   }
-  /* 세로 메뉴 */
-  .main-nav ul {
+
+  .hero-main-flex {
     flex-direction: column;
-    padding: 10px 0;
+    text-align: center;
   }
 
-  /* 우측 로그인+햄버거 정렬 */
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .hero-title {
+    font-size: 42px;
+  }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-pill {
+    min-width: 100%;
   }
 }
-/* 보기 버튼 터치·클릭 편의성 개선 */
-.answer-options .option {
-  display: block;
-  width: 100%;              /* 한 줄 가득 */
-  padding: 16px 20px;        /* 높이 확보 */
-  font-size: 18px;           /* 글자 크게 */
-  border-radius: 8px;
-  border: 2px solid var(--line, #ccc);
-  background: #fff;
-  text-align: left;          /* 번호와 내용 왼쪽 정렬 */
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-sizing: border-box;
-}
 
-/* 마우스 오버/터치 피드백 */
-.answer-options .option:hover {
-  background: #FFE7DC;
-  border-color: var(--brand, #ff6600);
-}
-
-.answer-options .option:active {
-  transform: scale(0.98);    /* 클릭 시 살짝 눌림 */
-}
-.answer-options .option {
-  color: #222; /* 진한 글자색 */
-  background: #fff; /* 버튼 배경 */
-}
-
-/* 호버 상태에서도 글자색 유지 */
-.answer-options .option:hover {
-  color: #222;
-}
-/* 로그아웃 버튼 글자색 수정 */
-#logout-button {
-  color: #3E2C28; /* 진한 브라운 텍스트 */
-  background: #FFF3EC; /* 연한 배경 */
-  border: 1px solid var(--line);
-}
-
-#logout-button:hover {
-  background: #FFE7DC;
-  color: var(--brand); /* 코랄 오렌지 */
+.premium-footer {
+  margin: 40px auto 120px;
+  padding: 40px;
+  text-align: center;
+  color: var(--text);
+  font-weight: 900;
+  font-size: 18px;
 }

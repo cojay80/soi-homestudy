@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
@@ -7,6 +8,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/quiz-enhanced.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 (순서 + defer) -->
@@ -25,46 +27,35 @@
 
   <!-- 퀴즈 로직 (맨 뒤) -->
   <script src="/js/quiz.js?v=QZ1" defer></script>
+  <script src="/js/quiz-ui.js" defer></script>
 </head>
+
 <body>
-  <!-- 공통 헤더 -->
-<div id="header-placeholder"></div>
-
-<script>
-  fetch('/header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-
-      // 헤더 삽입 후 토글 이벤트 연결
-      const toggleBtn = document.getElementById('menu-toggle');
-      const menu = document.getElementById('main-menu');
-      toggleBtn?.addEventListener('click', () => {
-        menu?.classList.toggle('active');
-      });
-    })
-    .catch(err => console.error('헤더 로드 실패:', err));
-</script>
-
+  <!-- 헤더 -->
+  <div id="header-placeholder"></div>
 
   <!-- 본문 -->
-  <main class="container">
-    <header class="quiz-header" style="display:flex;justify-content:space-between;align-items:center">
-      <h1>문제 쑥쑥! 🧠</h1>
-      <div id="timer-display" class="mini"></div>
+  <main class="container quiz-container">
+    <header class="quiz-header">
+      <h1>🧠 문제 쑥쑥!</h1>
+      <div id="timer-display" class="mini">∞</div>
     </header>
 
-    <section class="quiz-layout" style="display:flex;gap:12px">
+    <section class="quiz-layout">
       <!-- 지문 영역(지문형일 때만 JS가 표시) -->
-      <aside class="passage-area card" style="display:none;flex:1;min-width:0">
-        <h2 style="margin-top:0">📜 지문</h2>
+      <aside class="passage-area" style="display:none">
+        <h2>📜 지문</h2>
         <div id="passage-content"></div>
       </aside>
 
       <!-- 문제 영역 -->
-      <section class="problem-area" style="flex:1.4;min-width:0">
-        <div class="progress-bar" aria-hidden="true"><div class="progress" style="width:0%"></div></div>
-        <p class="question-number mini" style="margin:8px 0 12px">1 / 10</p>
+      <section class="problem-area">
+        <div class="progress-bar" aria-hidden="true">
+          <div class="progress" style="width:0%"></div>
+        </div>
+        <div class="question-number">
+          <span id="current-question">1</span> / <span id="total-questions">10</span>
+        </div>
 
         <div class="question-box card">
           <img id="question-image" alt="문제 이미지" style="display:none" />
@@ -72,22 +63,42 @@
         </div>
 
         <div class="answer-options" role="group" aria-label="선택지">
-          <button class="option btn" data-idx="1">1)</button>
-          <button class="option btn" data-idx="2">2)</button>
-          <button class="option btn" data-idx="3">3)</button>
-          <button class="option btn" data-idx="4">4)</button>
+          <button class="option" data-idx="1">1) 선택지를 불러오는 중입니다...</button>
+          <button class="option" data-idx="2">2) 선택지를 불러오는 중입니다...</button>
+          <button class="option" data-idx="3">3) 선택지를 불러오는 중입니다...</button>
+          <button class="option" data-idx="4">4) 선택지를 불러오는 중입니다...</button>
         </div>
       </section>
     </section>
 
-    <!-- 결과 -->
-    <section id="results-container" class="card" style="display:none">
-      <h2 style="margin-top:0">✨ 퀴즈 결과 ✨</h2>
-      <p id="score-text"></p>
-      <p id="message-text" class="mini"></p>
-      <div class="result-buttons" style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="review-button" class="btn" disabled>저장 중...</button>
-        <a href="index.html" id="main-menu-button" class="btn">메인으로 돌아가기</a>
+    <!-- 결과 화면 -->
+    <section id="results-container" class="results-card" style="display:none">
+      <div class="results-header">
+        <div class="results-icon">✨</div>
+        <h2>퀴즈 완료!</h2>
+        <div class="results-subtitle">수고하셨어요!</div>
+      </div>
+
+      <div class="results-content">
+        <div class="score-display">
+          <div class="score-circle">
+            <div class="score-number" id="score-text">0/10</div>
+            <div class="score-label">정답</div>
+          </div>
+        </div>
+
+        <div class="result-message" id="message-text"></div>
+
+        <div class="result-buttons">
+          <button id="review-button" class="btn btn-primary" disabled>
+            <span class="btn-icon">📚</span>
+            오답 복습하기
+          </button>
+          <a href="index.html" id="main-menu-button" class="btn btn-secondary">
+            <span class="btn-icon">🏠</span>
+            메인으로
+          </a>
+        </div>
       </div>
     </section>
 
@@ -100,5 +111,5 @@
   </footer>
 
 </body>
-</html>
 
+</html>

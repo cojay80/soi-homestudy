@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>나의 목표 - 소이의 공부방</title>
 
   <!-- 폰트 / 공통 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
@@ -16,61 +17,107 @@
   <script src="/js/api-shim.js" defer></script>
   <script src="/js/soi-store.js" defer></script>
   <script src="/js/header.js" defer></script>
-  <script src="/js/load-header.js" defer></script>
-  <script src="/js/logout.js" defer></script>
-</head>
-<body>
   <!-- 헤더 -->
-<div id="header-placeholder"></div>
-
-<script>
-  fetch('/header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-
-      // 헤더 삽입 후 토글 이벤트 연결
-      const toggleBtn = document.getElementById('menu-toggle');
-      const menu = document.getElementById('main-menu');
-      toggleBtn?.addEventListener('click', () => {
-        menu?.classList.toggle('active');
-      });
-    })
-    .catch(err => console.error('헤더 로드 실패:', err));
-</script>
-
+  <div id="header-placeholder"></div>
 
   <!-- 본문 -->
-  <main class="container">
-    <h1>나의 목표 🎯</h1>
-    <p class="mini">목표를 정하고 달성하면 보상을 받아요. (퀴즈 종료 시 저장된 기록 기준)</p>
+  <main class="container goal-container">
+    <!-- 페이지 헤더 -->
+    <section class="page-header">
+      <div class="page-title">
+        <h1 class="title">
+          <span class="icon">🎯</span>
+          나의 목표
+        </h1>
+        <p class="subtitle">목표를 세우고 달성하여 성취감을 느껴보세요</p>
+      </div>
+    </section>
 
     <!-- 설정 -->
-    <section class="card">
-      <h2>목표 설정</h2>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
-        <div>
-          <h3>일일 목표</h3>
-          <label class="inline mini">문항 수
-            <input type="number" id="goal-daily-questions" min="0" step="1" value="20">
-          </label>
-          <label class="inline mini">포인트
-            <input type="number" id="goal-daily-points" min="0" step="1" value="10">
-          </label>
+    <!-- 목표 설정 섹션 -->
+    <section class="goal-settings-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon">⚙️</span>
+          목표 설정
+        </h2>
+      </div>
+
+      <div class="goals-grid">
+        <div class="goal-category daily">
+          <div class="category-header">
+            <h3 class="category-title">
+              <span class="category-icon">🌅</span>
+              일일 목표
+            </h3>
+            <p class="category-desc">매일 달성할 목표를 세워보세요</p>
+          </div>
+
+          <div class="goal-inputs">
+            <div class="input-group">
+              <label class="input-label">
+                <span class="label-icon">📚</span>
+                문제 수
+              </label>
+              <input type="number" id="goal-daily-questions" class="goal-input" min="1" step="1" value="20"
+                placeholder="20">
+              <span class="input-unit">문제</span>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">
+                <span class="label-icon">⭐</span>
+                포인트
+              </label>
+              <input type="number" id="goal-daily-points" class="goal-input" min="1" step="1" value="10"
+                placeholder="10">
+              <span class="input-unit">포인트</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3>주간 목표</h3>
-          <label class="inline mini">세션 수
-            <input type="number" id="goal-weekly-sessions" min="0" step="1" value="7">
-          </label>
-          <label class="inline mini">정답률(%)
-            <input type="number" id="goal-weekly-acc" min="0" max="100" step="1" value="70">
-          </label>
+
+        <div class="goal-category weekly">
+          <div class="category-header">
+            <h3 class="category-title">
+              <span class="category-icon">📅</span>
+              주간 목표
+            </h3>
+            <p class="category-desc">일주일 동안 달성할 목표입니다</p>
+          </div>
+
+          <div class="goal-inputs">
+            <div class="input-group">
+              <label class="input-label">
+                <span class="label-icon">🎯</span>
+                세션 수
+              </label>
+              <input type="number" id="goal-weekly-sessions" class="goal-input" min="1" step="1" value="7"
+                placeholder="7">
+              <span class="input-unit">세션</span>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">
+                <span class="label-icon">📈</span>
+                정답률
+              </label>
+              <input type="number" id="goal-weekly-acc" class="goal-input" min="10" max="100" step="5" value="70"
+                placeholder="70">
+              <span class="input-unit">%</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="btn-goal-save">저장</button>
-        <button class="btn" id="btn-goal-reset">초기화</button>
+
+      <div class="goal-actions">
+        <button type="button" class="btn btn-primary" id="btn-goal-save">
+          <span class="btn-icon">💾</span>
+          목표 저장
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-goal-reset">
+          <span class="btn-icon">🔄</span>
+          기본값으로
+        </button>
         <span id="goal-save-state" class="mini"></span>
       </div>
     </section>
@@ -80,22 +127,30 @@
       <article class="card">
         <div class="mini">오늘 푼 문항</div>
         <div class="kpi"><span id="today-questions">0</span> / <span id="today-questions-goal">0</span></div>
-        <div class="barwrap"><div id="bar-today-questions" class="bar"></div></div>
+        <div class="barwrap">
+          <div id="bar-today-questions" class="bar"></div>
+        </div>
       </article>
       <article class="card">
         <div class="mini">오늘 획득 포인트(정답 기준)</div>
         <div class="kpi"><span id="today-points">0</span> / <span id="today-points-goal">0</span></div>
-        <div class="barwrap"><div id="bar-today-points" class="bar"></div></div>
+        <div class="barwrap">
+          <div id="bar-today-points" class="bar"></div>
+        </div>
       </article>
       <article class="card">
         <div class="mini">이번 주 세션 수</div>
         <div class="kpi"><span id="week-sessions">0</span> / <span id="week-sessions-goal">0</span></div>
-        <div class="barwrap"><div id="bar-week-sessions" class="bar"></div></div>
+        <div class="barwrap">
+          <div id="bar-week-sessions" class="bar"></div>
+        </div>
       </article>
       <article class="card">
         <div class="mini">이번 주 평균 정답률</div>
         <div class="kpi"><span id="week-acc">0%</span> / <span id="week-acc-goal">0%</span></div>
-        <div class="barwrap"><div id="bar-week-acc" class="bar"></div></div>
+        <div class="barwrap">
+          <div id="bar-week-acc" class="bar"></div>
+        </div>
       </article>
     </section>
 
@@ -117,137 +172,11 @@
     <p>&copy; 2025 소이를 위한 아빠의 선물</p>
   </footer>
 
-  <!-- 목표 로직 (이전 버전 그대로) -->
-  <script>
-  // ========= 간단 전역 설정 =========
-  const GOAL_KEYS = { dQ:'goal:daily:questions', dP:'goal:daily:points', wS:'goal:weekly:sessions', wA:'goal:weekly:acc' };
-  const REWARD = { POINTS_PER_CORRECT:1, DAILY_QUESTIONS:5, DAILY_POINTS:5, WEEKLY_SESSIONS:20, WEEKLY_ACC:20 };
-
-  // ========= 유저/포인트 =========
-  function ensureUser(){ let u = localStorage.getItem('currentUser'); if(!u){ u='soi'; localStorage.setItem('currentUser',u);} return u; }
-  function pointsGet(){ return Number(localStorage.getItem('soi:points')||'0'); }
-  function pointsAdd(delta){ const v = pointsGet()+Number(delta||0); localStorage.setItem('soi:points',String(v));
-    document.querySelectorAll('[data-soi-points]').forEach(el=>el.textContent=v); window.dispatchEvent(new Event('points:changed')); return v; }
-
-  // ========= 날짜/주 =========
-  function todayStr(){ const d=new Date(),m2=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${m2(d.getMonth()+1)}-${m2(d.getDate())}`; }
-  function weekKeyFromDate(dateStr){ const d=new Date(dateStr+'T00:00:00'); const day=(d.getDay()+6)%7; const monday=new Date(d); monday.setDate(d.getDate()-day);
-    const year=monday.getFullYear(); const first=new Date(year,0,1); const diff=Math.floor((monday-first)/86400000); const ww=Math.floor(diff/7)+1;
-    return `${year}-W${String(ww).padStart(2,'0')}`; }
-  function thisWeekKey(){ return weekKeyFromDate(todayStr()); }
-
-  // ========= header 표시/로그아웃 =========
-  function paintHeader(){
-    const u = ensureUser();
-    const w = document.getElementById('welcome-message');
-    const lb = document.getElementById('logout-button');
-    if (w) w.innerHTML = `<small>${u}님 환영해요!</small>`;
-    if (lb && !lb.dataset.bound){
-      lb.dataset.bound = '1';
-      lb.style.display = 'inline';
-      lb.addEventListener('click', (e) => {
-        e.preventDefault();
-        ['currentUser','studyData','selectedGrade','selectedSubject','selectedCount','selectedTimer','isReviewMode','reviewProblems','soi:points','soi:inventory']
-          .forEach(k=>localStorage.removeItem(k));
-        location.href = 'index.html?ts=' + Date.now();
-      });
-    }
-    document.querySelectorAll('[data-soi-points]').forEach(el => el.textContent = pointsGet());
-  }
-
-  // ========= 목표 저장/복구 =========
-  function goalLoad(){ return {
-    dQ:Number(localStorage.getItem(GOAL_KEYS.dQ)||'20'),
-    dP:Number(localStorage.getItem(GOAL_KEYS.dP)||'10'),
-    wS:Number(localStorage.getItem(GOAL_KEYS.wS)||'7'),
-    wA:Number(localStorage.getItem(GOAL_KEYS.wA)||'70'),
-  }; }
-  function goalSave(g){ localStorage.setItem(GOAL_KEYS.dQ,String(g.dQ)); localStorage.setItem(GOAL_KEYS.dP,String(g.dP));
-    localStorage.setItem(GOAL_KEYS.wS,String(g.wS)); localStorage.setItem(GOAL_KEYS.wA,String(g.wA)); }
-  function bindGoalForm(){
-    const f = goalLoad(); const $=id=>document.getElementById(id);
-    $('goal-daily-questions').value=f.dQ; $('goal-daily-points').value=f.dP; $('goal-weekly-sessions').value=f.wS; $('goal-weekly-acc').value=f.wA;
-    $('btn-goal-save').addEventListener('click',()=>{ const g={
-      dQ:Number($('goal-daily-questions').value||'0'),
-      dP:Number($('goal-daily-points').value||'0'),
-      wS:Number($('goal-weekly-sessions').value||'0'),
-      wA:Number($('goal-weekly-acc').value||'0'),
-    }; goalSave(g); $('goal-save-state').textContent='저장 완료!'; setTimeout(()=>$('goal-save-state').textContent='',1200); render(); });
-    $('btn-goal-reset').addEventListener('click',()=>{ Object.values(GOAL_KEYS).forEach(k=>localStorage.removeItem(k)); bindGoalForm(); render(); });
-  }
-
-  // ========= 데이터 집계 =========
-  function parseScore(scoreStr){ const m=String(scoreStr||'').match(/(\d+)\s*\/\s*(\d+)/); return m?{c:Number(m[1]),t:Number(m[2])}:{c:0,t:0}; }
-  function loadRecordsTodayWeek(){
-    const u=ensureUser(); const sd=JSON.parse(localStorage.getItem('studyData')||'{}'); const recs=sd?.[u]?.records||[];
-    const today=todayStr(); const wk=thisWeekKey();
-    const todayRecs=recs.filter(r=>r.date===today); const weekRecs=recs.filter(r=>weekKeyFromDate(r.date)===wk);
-    let tQ=0,tC=0; todayRecs.forEach(r=>{ const {c,t}=parseScore(r.score); tQ+=t; tC+=c; });
-    let wSess=weekRecs.length,wC=0,wT=0; weekRecs.forEach(r=>{ const {c,t}=parseScore(r.score); wC+=c; wT+=t; });
-    const wAcc=wT>0?Math.round((wC/wT)*100):0;
-    return { todayQuestions:tQ, todayCorrect:tC, weekSessions:wSess, weekAcc:wAcc };
-  }
-
-  // ========= 보상 =========
-  function claimKeyDaily(kind){ return `reward:daily:${kind}:${todayStr()}`; }
-  function claimKeyWeekly(kind){ return `reward:weekly:${kind}:${thisWeekKey()}`; }
-  function isClaimed(k){ return localStorage.getItem(k)==='1'; }
-  function setClaimed(k){ localStorage.setItem(k,'1'); }
-  function checkAndReward(progress, goals){
-    const $=id=>document.getElementById(id);
-    // 일일 문항
-    const dQKey=claimKeyDaily('questions');
-    if(goals.dQ>0 && progress.todayQuestions>=goals.dQ){
-      if(!isClaimed(dQKey)){ pointsAdd(REWARD.DAILY_QUESTIONS); setClaimed(dQKey);
-        $('state-daily-questions').innerHTML=`일일 문항: <span class="ok">달성! +${REWARD.DAILY_QUESTIONS}p</span>`;
-      }else $('state-daily-questions').textContent='일일 문항: 달성(보상 수령 완료)';
-    }else $('state-daily-questions').textContent='일일 문항: 미달성';
-    // 일일 포인트
-    const todayPts=progress.todayCorrect*REWARD.POINTS_PER_CORRECT; const dPKey=claimKeyDaily('points');
-    if(goals.dP>0 && todayPts>=goals.dP){
-      if(!isClaimed(dPKey)){ pointsAdd(REWARD.DAILY_POINTS); setClaimed(dPKey);
-        $('state-daily-points').innerHTML=`일일 포인트: <span class="ok">달성! +${REWARD.DAILY_POINTS}p</span>`;
-      }else $('state-daily-points').textContent='일일 포인트: 달성(보상 수령 완료)';
-    }else $('state-daily-points').textContent='일일 포인트: 미달성';
-    // 주간 세션
-    const wSKey=claimKeyWeekly('sessions');
-    if(goals.wS>0 && progress.weekSessions>=goals.wS){
-      if(!isClaimed(wSKey)){ pointsAdd(REWARD.WEEKLY_SESSIONS); setClaimed(wSKey);
-        $('state-week-sessions').innerHTML=`주간 세션: <span class="ok">달성! +${REWARD.WEEKLY_SESSIONS}p</span>`;
-      }else $('state-week-sessions').textContent='주간 세션: 달성(보상 수령 완료)';
-    }else $('state-week-sessions').textContent='주간 세션: 미달성';
-    // 주간 정답률
-    const wAKey=claimKeyWeekly('acc');
-    if(goals.wA>0 && progress.weekAcc>=goals.wA){
-      if(!isClaimed(wAKey)){ pointsAdd(REWARD.WEEKLY_ACC); setClaimed(wAKey);
-        $('state-week-acc').innerHTML=`주간 정답률: <span class="ok">달성! +${REWARD.WEEKLY_ACC}p</span>`;
-      }else $('state-week-acc').textContent='주간 정답률: 달성(보상 수령 완료)';
-    }else $('state-week-acc').textContent='주간 정답률: 미달성';
-  }
-
-  // ========= 렌더 =========
-  function pct(cur, goal){ return (goal>0)? Math.max(0,Math.min(100,Math.round((cur/goal)*100))) : 0; }
-  function render(){
-    const goals=goalLoad(); const prog=loadRecordsTodayWeek();
-    document.getElementById('today-questions-goal').textContent=goals.dQ;
-    document.getElementById('today-points-goal').textContent=goals.dP;
-    document.getElementById('week-sessions-goal').textContent=goals.wS;
-    document.getElementById('week-acc-goal').textContent=goals.wA+'%';
-    document.getElementById('today-questions').textContent=prog.todayQuestions;
-    const todayPts=prog.todayCorrect*REWARD.POINTS_PER_CORRECT;
-    document.getElementById('today-points').textContent=todayPts;
-    document.getElementById('week-sessions').textContent=prog.weekSessions;
-    document.getElementById('week-acc').textContent=prog.weekAcc+'%';
-    document.getElementById('bar-today-questions').style.width=pct(prog.todayQuestions,goals.dQ)+'%';
-    document.getElementById('bar-today-points').style.width=pct(todayPts,goals.dP)+'%';
-    document.getElementById('bar-week-sessions').style.width=pct(prog.weekSessions,goals.wS)+'%';
-    document.getElementById('bar-week-acc').style.width=pct(prog.weekAcc,goals.wA)+'%';
-    checkAndReward(prog, goals);
-  }
-  function boot(){ paintHeader(); bindGoalForm(); render(); }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-  </script>
+  <!-- 공통 스크립트 연결 -->
+  <script src="/js/load-header.js" defer></script>
+  <script src="/js/goal.js" defer></script>
 
 
-</body>
+  </body>
+
 </html>

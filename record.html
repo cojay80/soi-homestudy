@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>상세 기록 - 소이의 공부방</title>
 
   <!-- 폰트 / 공통 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 -->
   <script src="/js/config.js" defer></script>
@@ -22,25 +23,10 @@
   <!-- 기록 전용 -->
   <script src="/js/record.js?v=RECORD_FINAL" defer></script>
 </head>
+
 <body>
   <!-- 헤더 -->
-<div id="header-placeholder"></div>
-<script>
-  fetch('/header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-
-      // 헤더 로드 후 햄버거 토글 이벤트 연결
-      const toggleBtn = document.getElementById('menu-toggle');
-      const menu = document.getElementById('main-menu');
-      toggleBtn?.addEventListener('click', () => {
-        menu?.classList.toggle('active');
-      });
-    })
-    .catch(err => console.error('헤더 로드 실패:', err));
-</script>
-
+  <div id="header-placeholder"></div>
 
   <!-- 본문 -->
   <main class="container">
@@ -52,10 +38,14 @@
       <label class="mini">시작일 <input type="date" id="f-start"></label>
       <label class="mini">종료일 <input type="date" id="f-end"></label>
       <label class="mini">학년
-        <select id="f-grade"><option value="">전체</option></select>
+        <select id="f-grade">
+          <option value="">전체</option>
+        </select>
       </label>
       <label class="mini">과목
-        <select id="f-subject"><option value="">전체</option></select>
+        <select id="f-subject">
+          <option value="">전체</option>
+        </select>
       </label>
       <span style="flex:1"></span>
       <button id="btn-export">CSV 내보내기</button>
@@ -86,7 +76,9 @@
           </tr>
         </thead>
         <tbody id="rec-body">
-          <tr><td colspan="7" class="mini">기록이 없습니다.</td></tr>
+          <tr>
+            <td colspan="7" class="mini">기록이 없습니다.</td>
+          </tr>
         </tbody>
       </table>
 
@@ -95,7 +87,11 @@
         <span class="mini" id="p-info">1 / 1</span>
         <button id="p-next">다음</button>
         <label class="mini">페이지당
-          <select id="p-size"><option>10</option><option selected>20</option><option>50</option></select>
+          <select id="p-size">
+            <option>10</option>
+            <option selected>20</option>
+            <option>50</option>
+          </select>
         </label>
       </div>
     </section>
@@ -107,5 +103,5 @@
   </footer>
 
 </body>
-</html>
 
+</html>

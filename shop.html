@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>상점 - 소이의 공부방</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 (모두 defer) -->
   <script src="/js/config.js" defer></script>
@@ -21,26 +22,10 @@
   <!-- 상점 전용 -->
   <script src="/js/shop.js?v=SHOP_1" defer></script>
 </head>
+
 <body>
-  <!-- 공통 헤더 -->
-<div id="header-placeholder"></div>
-
-<script>
-  fetch('/header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-
-      // 헤더 삽입 후 토글 이벤트 연결
-      const toggleBtn = document.getElementById('menu-toggle');
-      const menu = document.getElementById('main-menu');
-      toggleBtn?.addEventListener('click', () => {
-        menu?.classList.toggle('active');
-      });
-    })
-    .catch(err => console.error('헤더 로드 실패:', err));
-</script>
-
+  <!-- 헤더 -->
+  <div id="header-placeholder"></div>
 
   <!-- 본문 -->
   <main class="container">
@@ -63,4 +48,5 @@
   </footer>
 
 </body>
+
 </html>

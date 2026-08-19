@@ -1,148 +1,232 @@
-// js/home.js — 홈(빠른 시작/오늘 진행/복습 버튼) 최종본(하드닝)
-// 사용 로컬키: selectedGrade, selectedSubject, selectedCount, selectedTimer, studyData[currentUser].records
-
+// js/home.js — 홈(빠른 시작/오늘 진행/복습 버튼) 최종본(v3)
 (function () {
-  const $  = (id) => document.getElementById(id);
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   function getLSJSON(key, def) {
-    try { const s = localStorage.getItem(key); return s == null ? def : JSON.parse(s); }
-    catch { return def; }
+    try {
+      const s = localStorage.getItem(key);
+      return s == null ? def : JSON.parse(s);
+    } catch {
+      return def;
+    }
   }
+
   function todayStr(dt = new Date()) {
-    const y = dt.getFullYear(), m = String(dt.getMonth() + 1).padStart(2, '0'), d = String(dt.getDate()).padStart(2, '0');
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   }
+
   function parseScore(s) {
     const m = String(s || '').match(/(\d+)\s*\/\s*(\d+)/);
     return m ? { correct: +m[1], total: +m[2] } : { correct: 0, total: 0 };
   }
+
   function safeInt(v, def = 0) {
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? n : def;
   }
 
-  function initQuickStart() {
+  // 메시지 표시 함수
+  function showMessage(text, type = 'info') {
+    const msgEl = $('home-msg');
+    if (!msgEl) return;
+    msgEl.textContent = text;
+    msgEl.className = `message-area ${type}`;
+    setTimeout(() => {
+      if (msgEl.textContent === text) {
+        msgEl.textContent = '';
+        msgEl.className = 'message-area';
+      }
+    }, 3000);
+  }
+
+  // 애니메이션 초기화
+  function initAnimations() {
+    // Stat pills pop animation
+    const popItems = $$('.stat-pill, .drawer-item');
+    popItems.forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        el.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, i * 100);
+    });
+
+    if (window.initAnimations) {
+      window.initAnimations();
+    }
+  }
+
+  async function initQuickStart() {
     const gSel = $('sel-grade');
     const sSel = $('sel-subject');
-    const cnt  = $('sel-count');
-    const tmr  = $('sel-timer');
-    const msg  = $('home-msg');
+    const cnt = $('sel-count');
+    const tmr = $('sel-timer');
 
-    // 필수 요소 없으면 조용히 종료 (다른 페이지 재사용 대비)
-    if (!gSel || !sSel || !cnt || !tmr) return;
+    if (!gSel || !sSel) return;
 
-    // 이전 설정 복원
-    const g = localStorage.getItem('selectedGrade')   || '';
-    const s = localStorage.getItem('selectedSubject') || '';
-    const c = localStorage.getItem('selectedCount')   || '10';
-    const t = localStorage.getItem('selectedTimer')   || '0';
-    if (g) gSel.value = g;
-    if (s) sSel.value = s;
-    cnt.value = c;
-    tmr.value = t;
+    try {
+      if (!window.API || !window.API.problems) throw new Error('API ready check failed');
+      const text = await window.API.problems();
+      const raw = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const lines = raw.split('\n').filter(l => l.trim().length > 0);
 
-    const showMsg = (text) => {
-      if (!msg) return;
-      msg.textContent = text || '';
-      if (text) setTimeout(() => { if (msg.textContent === text) msg.textContent = ''; }, 1800);
-    };
+      if (lines.length > 0) {
+        const head = lines[0];
+        const delim = (head.match(/\t/g) || []).length >= (head.match(/,/g) || []).length ? '\t' : ',';
+        const H = head.split(delim).map(h => h.trim());
+        const norm = s => (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const gi = H.findIndex(h => ['학년', 'grade'].includes(norm(h)));
+        const si = H.findIndex(h => ['과목', 'subject'].includes(norm(h)));
 
-    const btnStart  = $('btn-start');
-    const btnReview = $('btn-review');
+        if (gi >= 0 && si >= 0) {
+          const grades = new Set();
+          const subjectsByGrade = new Map();
 
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(delim);
+            const g = (cols[gi] || '').trim();
+            const s = (cols[si] || '').trim();
+            if (!g || !s) continue;
+            grades.add(g);
+            if (!subjectsByGrade.has(g)) subjectsByGrade.set(g, new Set());
+            subjectsByGrade.get(g).add(s);
+          }
+
+          const gradeList = [...grades].sort((a, b) => a.localeCompare(b, 'ko'));
+          gSel.innerHTML = ['<option value="">학년 선택</option>']
+            .concat(gradeList.map(g => `<option value="${g}">${g}</option>`)).join('');
+
+          const fillSubjects = (grade) => {
+            const subs = subjectsByGrade.get(grade) ? [...subjectsByGrade.get(grade)] : [];
+            subs.sort((a, b) => a.localeCompare(b, 'ko'));
+            sSel.innerHTML = ['<option value="">과목 선택</option>']
+              .concat(subs.map(s => `<option value="${s}">${s}</option>`)).join('');
+          };
+
+          gSel.addEventListener('change', () => {
+            fillSubjects(gSel.value);
+            localStorage.setItem('selectedGrade', gSel.value || '');
+            localStorage.setItem('selectedSubject', '');
+          });
+
+          sSel.addEventListener('change', () => {
+            localStorage.setItem('selectedSubject', sSel.value || '');
+          });
+
+          // 복원
+          const prevG = localStorage.getItem('selectedGrade') || '';
+          const prevS = localStorage.getItem('selectedSubject') || '';
+          if (prevG && gradeList.includes(prevG)) {
+            gSel.value = prevG;
+            fillSubjects(prevG);
+            if (prevS) sSel.value = prevS;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[home] Init error:', e);
+      showMessage('데이터를 불러오지 못했습니다.', 'error');
+    }
+
+    const btnStart = $('btn-start');
     if (btnStart) {
       btnStart.addEventListener('click', () => {
-        const grade  = (gSel.value || '').trim();
-        const subject= (sSel.value || '').trim();
-        const count  = Math.max(1, safeInt(cnt.value || '10', 10));
-        const timer  = Math.max(0, safeInt(tmr.value || '0', 0));
-
+        const grade = gSel.value;
+        const subject = sSel.value;
         if (!grade || !subject) {
-          showMsg('학년과 과목을 먼저 선택해 주세요.');
+          showMessage('학년과 과목을 선택해 주세요.', 'warning');
           return;
         }
-        // 저장
         localStorage.setItem('selectedGrade', grade);
         localStorage.setItem('selectedSubject', subject);
-        localStorage.setItem('selectedCount', String(count));
-        localStorage.setItem('selectedTimer', String(timer));
-        // 리뷰 모드 흔적 정리
+        localStorage.setItem('selectedCount', cnt ? cnt.value : '10');
+        localStorage.setItem('selectedTimer', tmr ? tmr.value : '0');
         localStorage.removeItem('isReviewMode');
-        localStorage.removeItem('reviewProblems');
-
-        // 시작
         location.href = 'quiz.html';
       });
     }
 
+    const btnReview = $('btn-review');
     if (btnReview) {
       btnReview.addEventListener('click', () => {
-        const u  = localStorage.getItem('currentUser');
+        const u = localStorage.getItem('currentUser') || 'soi';
         const sd = getLSJSON('studyData', {});
-        const wrongs = (u && sd[u] && Array.isArray(sd[u].incorrect)) ? sd[u].incorrect : [];
+        const wrongs = (sd[u] && sd[u].incorrect) || [];
         if (!wrongs.length) {
-          showMsg('복습할 오답이 없습니다.');
+          showMessage('복습할 오답이 없습니다.', 'info');
           return;
         }
         localStorage.setItem('isReviewMode', 'true');
-        localStorage.setItem('reviewProblems', JSON.stringify(wrongs));
         location.href = 'quiz.html';
       });
     }
   }
 
-  function renderToday() {
-    // 포인트 뱃지 즉시 반영 (없어도 조용히)
-    const pts = localStorage.getItem('soi:points') || '0';
-    $$('[data-soi-points]').forEach((el) => (el.textContent = pts));
-
-    const u  = localStorage.getItem('currentUser');
-    const sd = getLSJSON('studyData', {});
-    const recs = (u && sd[u] && Array.isArray(sd[u].records)) ? sd[u].records : [];
-
+  function renderStats() {
+    const user = localStorage.getItem('currentUser') || 'soi';
+    const studyData = getLSJSON('studyData', {});
+    const userData = studyData[user] || {};
     const today = todayStr();
+    const recs = userData.records || [];
+
     let tTotal = 0, tCorrect = 0;
-    let recentText = '—';
-
-    if (recs.length) {
-      const last = recs[recs.length - 1];
-      const s = parseScore(last.score);
-      recentText = `${last.date} · ${last.grade || '-'} ${last.subject || '-'} · ${s.correct}/${s.total} (${Math.round(s.total ? (s.correct / s.total) * 100 : 0)}%)`;
-    }
-
-    recs.forEach((r) => {
+    recs.forEach(r => {
       if (r.date === today) {
         const s = parseScore(r.score);
-        tTotal   += s.total;
-        tCorrect += s.correct; // 정책상 정답=+1p → 오늘 포인트 근사치
+        tTotal += s.total;
+        tCorrect += s.correct;
       }
     });
 
-    const elTotal   = $('today-total');
-    const elCorrect = $('today-correct');
-    const elRecent  = $('recent-session');
-    if (elTotal)   elTotal.textContent = tTotal;
-    if (elCorrect) elCorrect.textContent = tCorrect;
-    if (elRecent)  elRecent.textContent = recentText;
+    if ($('today-total')) $('today-total').textContent = tTotal;
+    if ($('today-correct')) $('today-correct').textContent = tCorrect;
 
-    // 진행률 바(오늘 문항 / 일일목표)
-    const goals = (function () {
-      try {
-        const all = JSON.parse(localStorage.getItem('soi:goals') || '{}');
-        const key = localStorage.getItem('currentUser') || '_anonymous';
-        const g   = all[key] && all[key].daily ? all[key].daily : { questions: 20 };
-        return g;
-      } catch { return { questions: 20 }; }
-    })();
+    const pts = userData.totalPoints || localStorage.getItem('soi:points') || '0';
+    if ($('total-points')) $('total-points').textContent = Number(pts).toLocaleString();
 
-    const dq = Math.max(1, safeInt(goals.questions || '20', 20));
-    const bar = $('bar-today');
-    if (bar) bar.style.width = Math.min(100, Math.round((tTotal / dq) * 100)) + '%';
+    // Progress
+    const goal = safeInt(localStorage.getItem('dailyGoal') || '10', 10);
+    const progress = Math.min(100, (tTotal / goal) * 100);
+    if ($('today-progress')) $('today-progress').textContent = Math.round(progress) + '%';
+    if ($('goal-progress')) $('goal-progress').textContent = `${tTotal}/${goal}`;
+
+    const circle = $('progress-circle');
+    if (circle) {
+      const radius = 45;
+      const circumference = 2 * Math.PI * radius;
+      circle.style.strokeDasharray = circumference;
+      circle.style.strokeDashoffset = circumference * (1 - progress / 100);
+    }
+
+    // Recent
+    const elRecent = $('recent-session');
+    if (elRecent) {
+      if (recs.length > 0) {
+        const last = recs[recs.length - 1];
+        elRecent.textContent = `${last.grade} ${last.subject}`;
+      } else {
+        elRecent.textContent = '아직 기록이 없어요';
+      }
+    }
+
+    // Display Name
+    const displayName = $('user-display-name');
+    if (displayName) {
+      displayName.textContent = user === 'soi' ? '소이' : user;
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    initAnimations();
     initQuickStart();
-    renderToday();
+    renderStats();
   });
 })();

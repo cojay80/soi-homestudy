@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>오답 노트 - 소이의 공부방</title>
 
   <!-- 폰트 / 공통 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
@@ -22,44 +23,116 @@
   <!-- 오답 전용 -->
   <script src="/js/notes.js?v=NOTES_FINAL" defer></script>
 </head>
+
 <body>
   <!-- 헤더 -->
   <div id="header-placeholder"></div>
 
-  <script>
-    fetch('/header.html')
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById('header-placeholder').innerHTML = html;
-
-        // 헤더 로드 후 햄버거 토글 이벤트 연결
-        const toggleBtn = document.getElementById('menu-toggle');
-        const menu = document.getElementById('main-menu');
-        toggleBtn?.addEventListener('click', () => {
-          menu?.classList.toggle('active');
-        });
-      })
-      .catch(err => console.error('헤더 로드 실패:', err));
-  </script>
-
   <!-- 본문 -->
-  <main class="container">
-    <h1>오답 노트 📝</h1>
+  <main class="container notes-container">
+    <!-- 페이지 헤더 -->
+    <section class="page-header">
+      <div class="page-title">
+        <h1 class="title">
+          <span class="icon">📝</span>
+          오답 노트
+        </h1>
+        <p class="subtitle">틀린 문제들을 다시 풀어보며 실력을 향상시켜보세요</p>
+      </div>
 
-    <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0">
-      <label class="mini"><input type="checkbox" id="cb-all"> 전체선택</label>
-      <button class="btn" id="btn-review-selected">선택 복습하기</button>
-      <button class="btn" id="btn-review-all">전체 복습하기</button>
-      <span style="flex:1"></span>
-      <button class="btn danger" id="btn-delete-selected">선택 삭제</button>
-      <button class="btn danger" id="btn-delete-all">전체 삭제</button>
-    </div>
+      <!-- 통계 정보 -->
+      <div class="notes-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="total-wrongs">0</span>
+          <span class="stat-label">총 오답 수</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="review-progress">0%</span>
+          <span class="stat-label">복습 진도</span>
+        </div>
+      </div>
+    </section>
 
-    <div class="mini" id="count-label">총 0문항</div>
+    <!-- 도구모음 -->
+    <section class="notes-toolbar">
+      <div class="toolbar-left">
+        <div class="select-controls">
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-all" class="select-all-checkbox">
+            <span class="checkmark"></span>
+            전체선택
+          </label>
+          <span class="selected-count" id="selected-count">0개 선택됨</span>
+        </div>
+      </div>
 
-    <section id="wrongs-box" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-      <div class="card empty" style="border-style:dashed;color:#888;text-align:center">
-        오답이 없습니다. 퀴즈를 풀고 다시 와주세요.
+      <div class="toolbar-right">
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="btn-review-selected" disabled>
+            <span class="btn-icon">📚</span>
+            선택 복습
+          </button>
+          <button class="btn btn-secondary" id="btn-review-all">
+            <span class="btn-icon">💯</span>
+            전체 복습
+          </button>
+          <div class="divider"></div>
+          <button class="btn btn-danger" id="btn-delete-selected" disabled>
+            <span class="btn-icon">🗑️</span>
+            선택 삭제
+          </button>
+          <button class="btn btn-danger-outline" id="btn-delete-all">
+            <span class="btn-icon">♻️</span>
+            전체 삭제
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 필터 및 정렬 -->
+    <section class="filter-section">
+      <div class="filter-controls">
+        <div class="filter-group">
+          <label class="filter-label">과목</label>
+          <select id="subject-filter" class="filter-select">
+            <option value="">모든 과목</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">학년</label>
+          <select id="grade-filter" class="filter-select">
+            <option value="">모든 학년</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">정렬</label>
+          <select id="sort-order" class="filter-select">
+            <option value="recent">최신순</option>
+            <option value="oldest">오래된순</option>
+            <option value="subject">과목별</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="count-info">
+        <span class="count-label" id="count-label">총 0문항</span>
+      </div>
+    </section>
+
+    <!-- 오답 문제 목록 -->
+    <section class="notes-content">
+      <div id="wrongs-box" class="notes-grid">
+        <div class="empty-state">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">아직 오답이 없어요</div>
+          <div class="empty-desc">퀴즈를 풀고 다시 와주세요!</div>
+          <a href="index.html" class="empty-action">
+            <span class="btn-icon">🚀</span>
+            퀴즈 시작하기
+          </a>
+        </div>
       </div>
     </section>
   </main>
@@ -70,4 +143,5 @@
   </footer>
 
 </body>
+
 </html>

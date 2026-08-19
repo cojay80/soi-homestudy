@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>소이의 공부방</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>소이의 공부방 v3 Premium</title>
 
   <!-- 폰트 / 공통 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/ui-enhanced.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <!-- 프리미엄 레이아웃 전용 폰트 (Pretendard) -->
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
@@ -19,219 +26,168 @@
   <script src="/js/load-header.js" defer></script>
   <script src="/js/logout.js" defer></script>
 </head>
+
 <body>
-  <!-- 헤더 -->
-<div id="header-placeholder"></div>
+  <!-- 헤더 (동적 로드) -->
+  <div id="header-placeholder"></div>
 
-<script>
-  fetch('/header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-
-      // 헤더 삽입 후 토글 이벤트 연결
-      const toggleBtn = document.getElementById('menu-toggle');
-      const menu = document.getElementById('main-menu');
-      toggleBtn?.addEventListener('click', () => {
-        menu?.classList.toggle('active');
-      });
-    })
-    .catch(err => console.error('헤더 로드 실패:', err));
-</script>
-
-
-  <!-- 본문 -->
   <main class="container">
-    <h1>오늘의 학습 ✨</h1>
-    <p class="mini">학년/과목을 고르고 바로 시작! 정답을 맞히면 포인트와 보상을 얻을 수 있어요.</p>
-
-    <!-- 빠른 시작 -->
-    <section class="card">
-      <h2>빠른 시작</h2>
-
-      <div>
-        <label>학년
-          <select id="sel-grade">
-            <option value="">학년 선택</option>
-          </select>
-        </label>
+    <!-- Premium Hero Section (v3) -->
+    <section class="welcome-hero-v3">
+      <div class="hero-main-flex">
+        <div class="hero-text-wrap">
+          <h1 class="hero-title">안녕, <span id="user-display-name">소이</span>야! ✨</h1>
+          <p class="hero-subtitle">오늘도 너의 꿈을 향해 즐겁게 달려볼까?</p>
+        </div>
+        <div class="hero-visual glass">
+          <img src="assets/toca/hero.png" alt="Toca Soi" class="hero-img-v3">
+        </div>
       </div>
 
-      <div>
-        <label>과목
-          <select id="sel-subject">
-            <option value="">과목 선택</option>
-          </select>
-        </label>
-      </div>
-
-      <div>
-        <label>세트 수(지문/단일 묶음)
-          <input type="number" id="sel-count" min="1" step="1" value="10"/>
-        </label>
-      </div>
-
-      <div>
-        <label>문항 타이머(초, 0=무제한)
-          <input type="number" id="sel-timer" min="0" step="10" value="0"/>
-        </label>
-      </div>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="btn-start">시작하기 ▶</button>
-        <button class="btn" id="btn-review" title="오답이 있으면 복습 모드로 이동">오답 복습</button>
-        <a class="btn" href="shop.html">상점 가기</a>
-      </div>
-
-      <div id="home-msg" class="mini"></div>
+      <article class="stat-pill glass" data-hover="magnetic">
+        <img src="assets/toca/icon-study.png" class="icon" alt="study">
+        <div class="content">
+          <span class="val" id="today-total">0</span>
+          <span class="lab">푼 문제</span>
+        </div>
+      </article>
+      <article class="stat-pill glass" data-hover="magnetic">
+        <img src="assets/toca/icon-goal.png" class="icon" alt="goal">
+        <div class="content">
+          <span class="val" id="today-correct">0</span>
+          <span class="lab">정답 수</span>
+        </div>
+      </article>
+      <article class="stat-pill glass-brand" data-hover="magnetic">
+        <img src="assets/toca/icon-shop.png" class="icon" alt="shop">
+        <div class="content">
+          <span class="val" id="total-points">0</span>
+          <span class="lab">보유 포인트</span>
+        </div>
+      </article>
     </section>
 
-    <!-- 오늘 진행 -->
-    <section class="card">
-      <div class="mini">오늘 푼 문항</div>
-      <div class="kpi"><span id="today-total">0</span></div>
-      <div class="barwrap"><div id="bar-today" class="bar" style="width:0%"></div></div>
-      <div class="mini">* 목표 대비 진행률은 <a href="goal.html">나의 목표</a>에서 확인/설정</div>
+    <!-- Workspace Grid -->
+    <section class="workspace-grid">
+      <!-- Quick Launcher -->
+      <div class="launcher-card glass">
+        <div class="workspace-header">
+          <h2 class="jua">🚀 학습 런처</h2>
+          <p class="mini">학년과 과목을 골라 바로 시작해요</p>
+        </div>
+
+        <div class="launcher-form">
+          <div class="input-set">
+            <div class="field">
+              <label>GRADE</label>
+              <select id="sel-grade" class="v3-select">
+                <option value="">학년 선택</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>SUBJECT</label>
+              <select id="sel-subject" class="v3-select">
+                <option value="">과목 선택</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:none">
+            <input type="number" id="sel-count" value="10">
+            <input type="number" id="sel-timer" value="0">
+          </div>
+
+          <div class="btn-group-v3">
+            <button id="btn-start" class="btn-v3-primary">
+              <span>학습 시작</span>
+              <span class="arrow">→</span>
+            </button>
+            <button id="btn-review" class="btn-v3-secondary">오답 복습</button>
+          </div>
+        </div>
+        <div id="home-msg" class="message-area"></div>
+      </div>
+
+      <!-- Live Dashboard (Progress Ring) -->
+      <div class="progress-card-v3 glass">
+        <div class="workspace-header">
+          <h2 class="jua">📈 오늘의 진행률</h2>
+        </div>
+
+        <div class="v3-progress-wrap">
+          <div class="circle-progress-v3">
+            <svg viewBox="0 0 100 100">
+              <circle class="bg" cx="50" cy="50" r="45"></circle>
+              <circle class="fg" cx="50" cy="50" r="45" id="progress-circle"></circle>
+            </svg>
+            <div class="center-text">
+              <span class="percent" id="today-progress">0%</span>
+              <span class="count" id="goal-progress">0/10</span>
+            </div>
+          </div>
+          <div class="recent-tag glass">
+            <span class="tag-title">최근 학습</span>
+            <span id="recent-session" class="tag-val">기록 없음</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="card">
-      <div class="mini">오늘 정답 수(=획득 포인트)</div>
-      <div class="kpi"><span id="today-correct">0</span>p</div>
-    </section>
-
-    <section class="card">
-      <div class="mini">최근 세션</div>
-      <div id="recent-session" class="mini">—</div>
-    </section>
-
-    <!-- 바로가기 -->
-    <section class="card">
-      <h2>바로가기</h2>
-      <p class="mini">필요한 곳으로 바로 이동해요.</p>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <a class="btn" href="report.html">학습 보고서</a>
-        <a class="btn" href="notes.html">오답 노트</a>
-        <a class="btn" href="record.html">상세 기록</a>
-        <a class="btn" href="shop.html">상점</a>
+    <section class="premium-drawer-nav">
+      <h2 class="jua">🌈 토카 월드 보물 상자</h2>
+      <div class="drawer-grid">
+        <a href="quiz.html" class="drawer-item color-1 glass">
+          <img src="assets/toca/icon-study.png" class="icon" alt="study">
+          <div class="text">
+            <strong>공부하기</strong>
+            <small>문제를 풀어요</small>
+          </div>
+        </a>
+        <a href="report.html" class="drawer-item color-2 glass">
+          <img src="assets/toca/icon-report.png" class="icon" alt="report">
+          <div class="text">
+            <strong>학습 분석</strong>
+            <small>나의 실력은?</small>
+          </div>
+        </a>
+        <a href="goal.html" class="drawer-item color-3 glass">
+          <img src="assets/toca/icon-goal.png" class="icon" alt="goal">
+          <div class="text">
+            <strong>나의 약속</strong>
+            <small>목표 달성하기</small>
+          </div>
+        </a>
+        <a href="shop.html" class="drawer-item color-4 glass">
+          <img src="assets/toca/icon-shop.png" class="icon" alt="shop">
+          <div class="text">
+            <strong>포인트 상점</strong>
+            <small>보상 받기</small>
+          </div>
+        </a>
+        <a href="notes.html" class="drawer-item color-5 glass">
+          <img src="assets/toca/icon-notes.png" class="icon" alt="notes">
+          <div class="text">
+            <strong>오답 백과</strong>
+            <small>다시 공부하기</small>
+          </div>
+        </a>
+        <a href="record.html" class="drawer-item color-6 glass">
+          <img src="assets/toca/icon-record.png" class="icon" alt="record">
+          <div class="text">
+            <strong>발자취</strong>
+            <small>전체 기록 보기</small>
+          </div>
+        </a>
       </div>
     </section>
   </main>
 
-  <!-- 푸터 -->
-  <footer class="main-footer">
-    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+  <footer class="premium-footer glass">
+    <p>&copy; 2026 소이를 위한 세상에서 가장 특별한 공부방 💖</p>
   </footer>
 
-  <!-- 홈 전용 스크립트: 시트에서 학년/과목 채우기 & 시작/복습 -->
-  <script>
-  document.addEventListener('DOMContentLoaded', async () => {
-    const gradeSel = document.getElementById('sel-grade');
-    const subjSel  = document.getElementById('sel-subject');
-    const msgEl    = document.getElementById('home-msg');
-
-    let text = '';
-    try {
-      if (!window.API || !window.API.problems) throw new Error('API.problems 미탑재');
-      text = await window.API.problems();
-    } catch (e) {
-      console.error('문제 로드 실패:', e);
-      msgEl.textContent = '문제 목록을 불러오지 못했습니다. 인터넷/시트 공개 상태를 확인해주세요.';
-      return;
-    }
-
-    const raw = String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-    const lines = raw.split('\n').filter(l=>l.trim().length>0);
-    if (!lines.length) { msgEl.textContent='시트가 비어 있습니다.'; return; }
-
-    const head  = lines[0];
-    const delim = (head.match(/\t/g)||[]).length >= (head.match(/,/g)||[]).length ? '\t' : ',';
-    const H = head.split(delim).map(h=>h.trim());
-    const norm = s => (s||'').toLowerCase().replace(/\s+/g,' ').trim();
-    const gi = H.findIndex(h => ['학년','grade'].includes(norm(h)));
-    const si = H.findIndex(h => ['과목','subject'].includes(norm(h)));
-    if (gi < 0 || si < 0) { msgEl.textContent='헤더에 "학년/과목" 열이 필요합니다.'; return; }
-
-    const grades = new Set();
-    const subjectsByGrade = new Map();
-
-    for (let i=1;i<lines.length;i++){
-      const cols = lines[i].split(delim);
-      const g = (cols[gi]||'').trim();
-      const s = (cols[si]||'').trim();
-      if(!g || !s) continue;
-      grades.add(g);
-      if(!subjectsByGrade.has(g)) subjectsByGrade.set(g, new Set());
-      subjectsByGrade.get(g).add(s);
-    }
-
-    const gradeList = [...grades].sort((a,b)=>a.localeCompare(b,'ko'));
-    gradeSel.innerHTML = ['<option value="">학년 선택</option>']
-      .concat(gradeList.map(g=>`<option value="${g}">${g}</option>`)).join('');
-
-    function fillSubjects(grade){
-      const subs = subjectsByGrade.get(grade) ? [...subjectsByGrade.get(grade)] : [];
-      subs.sort((a,b)=>a.localeCompare(b,'ko'));
-      subjSel.innerHTML = ['<option value="">과목 선택</option>']
-        .concat(subs.map(s=>`<option value="${s}">${s}</option>`)).join('');
-    }
-
-    gradeSel.addEventListener('change', ()=>{
-      fillSubjects(gradeSel.value);
-      localStorage.setItem('selectedGrade', gradeSel.value || '');
-      localStorage.setItem('selectedSubject','');
-    });
-    subjSel.addEventListener('change', ()=>{
-      localStorage.setItem('selectedSubject', subjSel.value || '');
-    });
-
-    const prevG = localStorage.getItem('selectedGrade');
-    const prevS = localStorage.getItem('selectedSubject');
-    if (prevG && gradeList.includes(prevG)) {
-      gradeSel.value = prevG; fillSubjects(prevG);
-      if (prevS) subjSel.value = prevS;
-    } else {
-      fillSubjects(gradeSel.value);
-    }
-
-    document.getElementById('btn-start').addEventListener('click', () => {
-      const g = (gradeSel.value || '').trim();
-      const s = (subjSel.value  || '').trim();
-      const cnt = parseInt(document.getElementById('sel-count').value || '10', 10);
-      const tmr = parseInt(document.getElementById('sel-timer').value || '0', 10);
-
-      if (!g) { msgEl.textContent='학년을 선택해주세요.'; return; }
-      if (!s) { msgEl.textContent='과목을 선택해주세요.'; return; }
-
-      localStorage.setItem('selectedGrade', g);
-      localStorage.setItem('selectedSubject', s);
-      localStorage.setItem('selectedCount', String(Math.max(1, cnt)));
-      localStorage.setItem('selectedTimer', String(Math.max(0, tmr)));
-
-      localStorage.removeItem('isReviewMode');
-      localStorage.removeItem('reviewProblems');
-
-      location.href = 'quiz.html';
-    });
-
-    document.getElementById('btn-review').addEventListener('click', () => {
-      const user = localStorage.getItem('currentUser') || 'soi';
-      try {
-        const sd = JSON.parse(localStorage.getItem('studyData') || '{}');
-        const wrongs = sd?.[user]?.incorrect || [];
-        if (!wrongs.length) { msgEl.textContent = '오답이 아직 없어요! 먼저 문제를 풀어보세요.'; return; }
-        localStorage.setItem('isReviewMode', 'true');
-        localStorage.setItem('reviewProblems', JSON.stringify(wrongs));
-        location.href = 'quiz.html';
-      } catch {
-        msgEl.textContent = '오답 데이터를 불러오지 못했습니다.';
-      }
-    });
-  });
-  </script>
-<script>
-document.getElementById('menu-toggle').addEventListener('click', () => {
-  document.getElementById('main-menu').classList.toggle('active');
-});
-</script>
+  <!-- 홈 전용 스크립트 -->
+  <script src="/js/home.js" defer></script>
 </body>
+
 </html>

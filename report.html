@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>학습 보고서 - 소이의 공부방</title>
 
   <!-- 폰트 / 공통 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/ui-enhanced.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
@@ -18,92 +21,333 @@
   <script src="/js/header.js" defer></script>
   <script src="/js/load-header.js" defer></script>
   <script src="/js/logout.js" defer></script>
+  <script src="/js/ui-animations.js" defer></script>
 
   <!-- 리포트 전용 로직 -->
   <script src="/js/report.js?v=REPORT_FINAL" defer></script>
 </head>
+
 <body>
   <!-- 헤더 -->
-<div id="header-placeholder"></div>
-<script>
-  fetch('/header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-
-      // 헤더 로드 후 햄버거 토글 이벤트 연결
-      const toggleBtn = document.getElementById('menu-toggle');
-      const menu = document.getElementById('main-menu');
-      toggleBtn?.addEventListener('click', () => {
-        menu?.classList.toggle('active');
-      });
-    })
-    .catch(err => console.error('헤더 로드 실패:', err));
-</script>
-
+  <div id="header-placeholder"></div>
 
   <!-- 본문 -->
-  <main class="container">
-    <h1>학습 보고서 📊</h1>
-    <p class="mini">최근 <b>7일</b> 기준 요약입니다. (퀴즈 종료 시 저장된 기록 기준)</p>
+  <main class="container report-container">
+    <!-- 페이지 헤더 -->
+    <section class="page-header">
+      <div class="page-title">
+        <h1 class="title">
+          <span class="icon">📊</span>
+          학습 보고서
+        </h1>
+        <p class="subtitle">소이의 학습 성과를 한눈에 확인해보세요</p>
+      </div>
 
-    <!-- KPI -->
-    <section class="card">
-      <div class="mini">총 푼 문항(7일)</div>
-      <div id="kpi-total" class="kpi">0</div>
-    </section>
-    <section class="card">
-      <div class="mini">정답률(7일)</div>
-      <div id="kpi-acc" class="kpi">0%</div>
-    </section>
-    <section class="card">
-      <div class="mini">획득 포인트(누적)</div>
-      <div id="kpi-points" class="kpi">0p</div>
-    </section>
-    <section class="card">
-      <div class="mini">학습 세션 수(7일)</div>
-      <div id="kpi-sessions" class="kpi">0</div>
-    </section>
-
-    <!-- 과목/학년 분포 -->
-    <section class="card">
-      <h2>과목별 정답률</h2>
-      <div id="subject-bars" class="mini">데이터 없음</div>
-    </section>
-    <section class="card">
-      <h2>학년별 풀이 수</h2>
-      <div id="grade-bars" class="mini">데이터 없음</div>
+      <!-- 기간 선택 -->
+      <div class="period-selector">
+        <label class="period-label">분석 기간</label>
+        <div class="period-buttons">
+          <button class="period-btn active" data-period="7">최근 7일</button>
+          <button class="period-btn" data-period="30">최근 30일</button>
+          <button class="period-btn" data-period="all">전체</button>
+        </div>
+      </div>
     </section>
 
-    <!-- 최근 세션 목록 -->
-    <section class="card">
-      <h2>최근 세션 기록</h2>
-      <div class="mini" id="range-label">기간: -</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>학년</th>
-              <th>과목</th>
-              <th>점수</th>
-              <th>정답수/총문항</th>
-              <th>정답률</th>
-            </tr>
-          </thead>
-          <tbody id="session-body">
-            <tr><td colspan="6" class="mini">기록이 없습니다.</td></tr>
-          </tbody>
-        </table>
+    <!-- 메인 통계 대시보드 -->
+    <section class="stats-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card primary">
+          <div class="stat-icon">📚</div>
+          <div class="stat-content">
+            <div class="stat-number" id="kpi-total">0</div>
+            <div class="stat-label">총 문제 수</div>
+            <div class="stat-change positive" id="total-change">+0</div>
+          </div>
+        </div>
+
+        <div class="stat-card success">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-number" id="kpi-correct">0</div>
+            <div class="stat-label">정답 수</div>
+            <div class="stat-change positive" id="correct-change">+0</div>
+          </div>
+        </div>
+
+        <div class="stat-card warning">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <div class="stat-number" id="kpi-accuracy">0%</div>
+            <div class="stat-label">정답률</div>
+            <div class="stat-change positive" id="accuracy-change">+0%</div>
+          </div>
+        </div>
+
+        <div class="stat-card info">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-content">
+            <div class="stat-number" id="kpi-points">0p</div>
+            <div class="stat-label">획득 포인트</div>
+            <div class="stat-change positive" id="points-change">+0p</div>
+          </div>
+        </div>
+
+        <div class="stat-card purple">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-content">
+            <div class="stat-number" id="kpi-sessions">0</div>
+            <div class="stat-label">학습 세션</div>
+            <div class="stat-change positive" id="sessions-change">+0</div>
+          </div>
+        </div>
+
+        <div class="stat-card orange">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-content">
+            <div class="stat-number" id="kpi-streak">0일</div>
+            <div class="stat-label">연속 학습</div>
+            <div class="stat-change positive" id="streak-change">+0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 차트 섹션 -->
+    <section class="charts-section">
+      <div class="charts-grid">
+        <!-- 학습 진행도 차트 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              <span class="chart-icon">📈</span>
+              학습 진행도
+            </h3>
+            <div class="chart-controls">
+              <button class="chart-btn active" data-chart="daily">일별</button>
+              <button class="chart-btn" data-chart="weekly">주별</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="progress-chart" width="400" height="200"></canvas>
+            <div class="chart-placeholder" id="progress-placeholder">
+              <div class="placeholder-icon">📊</div>
+              <div class="placeholder-text">데이터를 불러오는 중...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 과목별 정답률 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              <span class="chart-icon">📚</span>
+              과목별 정답률
+            </h3>
+          </div>
+          <div class="chart-container">
+            <div id="subject-bars" class="bars-container">
+              <div class="no-data">아직 학습 데이터가 없어요</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 학년별 분포 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              <span class="chart-icon">🎓</span>
+              학년별 풀이 수
+            </h3>
+          </div>
+          <div class="chart-container">
+            <div id="grade-bars" class="bars-container">
+              <div class="no-data">아직 학습 데이터가 없어요</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 시간대별 활동 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              <span class="chart-icon">🕐</span>
+              시간대별 학습 활동
+            </h3>
+          </div>
+          <div class="chart-container">
+            <div id="time-bars" class="bars-container">
+              <div class="time-grid">
+                <!-- 시간대별 바 차트가 여기에 생성됨 -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 성취도 및 배지 -->
+    <section class="achievements-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon">🏆</span>
+          성취도 & 배지
+        </h2>
+      </div>
+
+      <div class="achievements-grid">
+        <!-- 성취 배지들 -->
+        <div class="achievement-card" id="first-quiz-badge">
+          <div class="badge-icon">🌟</div>
+          <div class="badge-info">
+            <div class="badge-name">첫 퀴즈 도전</div>
+            <div class="badge-desc">첫 번째 퀴즈를 완료했어요</div>
+          </div>
+          <div class="badge-status locked">🔒</div>
+        </div>
+
+        <div class="achievement-card" id="streak-3-badge">
+          <div class="badge-icon">🔥</div>
+          <div class="badge-info">
+            <div class="badge-name">3일 연속 학습</div>
+            <div class="badge-desc">3일 연속으로 학습했어요</div>
+          </div>
+          <div class="badge-status locked">🔒</div>
+        </div>
+
+        <div class="achievement-card" id="perfect-score-badge">
+          <div class="badge-icon">💯</div>
+          <div class="badge-info">
+            <div class="badge-name">완벽한 점수</div>
+            <div class="badge-desc">100점 만점을 달성했어요</div>
+          </div>
+          <div class="badge-status locked">🔒</div>
+        </div>
+
+        <div class="achievement-card" id="speed-demon-badge">
+          <div class="badge-icon">⚡</div>
+          <div class="badge-info">
+            <div class="badge-name">스피드 러너</div>
+            <div class="badge-desc">빠른 시간 내에 문제를 풀었어요</div>
+          </div>
+          <div class="badge-status locked">🔒</div>
+        </div>
+
+        <div class="achievement-card" id="problem-solver-badge">
+          <div class="badge-icon">🧠</div>
+          <div class="badge-info">
+            <div class="badge-name">문제 해결사</div>
+            <div class="badge-desc">총 100문제를 풀었어요</div>
+          </div>
+          <div class="badge-status locked">🔒</div>
+        </div>
+
+        <div class="achievement-card" id="scholar-badge">
+          <div class="badge-icon">🎓</div>
+          <div class="badge-info">
+            <div class="badge-name">열심히 공부하는 학자</div>
+            <div class="badge-desc">한 달 동안 꾸준히 학습했어요</div>
+          </div>
+          <div class="badge-status locked">🔒</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 최근 세션 기록 -->
+    <section class="sessions-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon">📝</span>
+          최근 학습 기록
+        </h2>
+        <div class="range-info">
+          <span class="range-label" id="range-label">기간: 최근 7일</span>
+        </div>
+      </div>
+
+      <div class="sessions-table-container">
+        <div class="table-wrapper">
+          <table class="sessions-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>학년</th>
+                <th>과목</th>
+                <th>점수</th>
+                <th>정답수/총문항</th>
+                <th>정답률</th>
+                <th>소요시간</th>
+              </tr>
+            </thead>
+            <tbody id="session-body">
+              <tr class="no-data-row">
+                <td colspan="7">
+                  <div class="no-data-content">
+                    <div class="no-data-icon">📋</div>
+                    <div class="no-data-text">아직 학습 기록이 없어요</div>
+                    <div class="no-data-hint">퀴즈를 시작해보세요!</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 학습 추천 -->
+    <section class="recommendations-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon">💡</span>
+          맞춤 학습 추천
+        </h2>
+      </div>
+
+      <div class="recommendations-grid">
+        <div class="recommendation-card">
+          <div class="rec-icon">🎯</div>
+          <div class="rec-content">
+            <h4 class="rec-title">약한 과목 집중 학습</h4>
+            <p class="rec-desc">정답률이 낮은 과목을 중심으로 학습해보세요</p>
+            <div class="rec-subject" id="weak-subject">-</div>
+          </div>
+        </div>
+
+        <div class="recommendation-card">
+          <div class="rec-icon">📅</div>
+          <div class="rec-content">
+            <h4 class="rec-title">규칙적인 학습 습관</h4>
+            <p class="rec-desc">매일 조금씩 꾸준히 학습하는 것이 중요해요</p>
+            <div class="rec-goal">하루 10문제 목표</div>
+          </div>
+        </div>
+
+        <div class="recommendation-card">
+          <div class="rec-icon">🔄</div>
+          <div class="rec-content">
+            <h4 class="rec-title">오답 복습</h4>
+            <p class="rec-desc">틀린 문제들을 다시 풀어보세요</p>
+            <div class="rec-action">
+              <a href="notes.html" class="rec-link">오답노트 보러가기</a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
   <!-- 푸터 -->
   <footer class="main-footer">
-    <p>&copy; 2025 소이를 위한 아빠의 선물</p>
+    <div class="footer-content">
+      <p class="footer-text">
+        <span class="heart">💝</span>
+        소이를 위한 아빠의 선물
+        <span class="year">&copy; 2025</span>
+      </p>
+    </div>
   </footer>
 
 </body>
-</html>
 
+</html>

@@ -1,52 +1,140 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>로그인 - 소이의 공부방</title>
 
   <!-- 폰트 / 기본 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
   <style>
-    :root { --line:#e5e5e5; --muted:#666; --card:#fff; --bg:#f7f8fb; }
-    * { box-sizing:border-box; }
-    html, body { margin:0; padding:0; }
+    :root {
+      --line: #eee;
+      --muted: #888;
+      --card: #fff;
+      --bg: #fdfbff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
-      font-family:'Noto Sans KR', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-      background:var(--bg); color:#111;
-      min-height:100vh; display:flex; align-items:center; justify-content:center;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      margin: 0;
+      padding: 0;
     }
-    .wrap { width:100%; max-width:440px; padding:20px; }
+
+    body {
+      font-family: 'Noto Sans KR', 'Jua', sans-serif;
+      background: var(--bg);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+    }
+
     .logo {
-      display:flex; align-items:center; justify-content:flex-start; gap:8px; margin-bottom:12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
     }
-    .logo a { font-weight:800; font-size:22px; color:#111; text-decoration:none; }
+
+    .logo a {
+      font-weight: 800;
+      font-size: 26px;
+      color: #4f46e5;
+      text-decoration: none;
+    }
+
     .card {
-      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px;
-      box-shadow:0 1px 0 rgba(0,0,0,.02);
+      background: var(--card);
+      border: none;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .05);
     }
-    .mini { color:var(--muted); font-size:13px; }
-    .row { display:flex; align-items:center; gap:10px; }
-    .row + .row { margin-top:10px; }
-    label { font-size:14px; color:#333; }
+
+    .mini {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .row+.row {
+      margin-top: 10px;
+    }
+
+    label {
+      font-size: 14px;
+      color: #333;
+    }
+
     input[type=text] {
-      flex:1; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff;
-      font-size:16px;
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      font-size: 16px;
     }
+
     .btn {
-      padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:#fafafa;
-      cursor:pointer; transition:.15s;
+      padding: 11px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fafafa;
+      cursor: pointer;
+      transition: .15s;
     }
-    .btn:hover { background:#f3f4f6; transform:translateY(-1px); }
-    .btn-primary { background:#4f46e5; color:#fff; border-color:transparent; }
-    .btn-primary:hover { background:#4338ca; }
-    .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
-    footer { text-align:center; margin-top:14px; }
+
+    .btn:hover {
+      background: #f3f4f6;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      background: #4338ca;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 14px;
+    }
   </style>
 </head>
+
 <body>
   <main class="wrap" role="main">
     <!-- 좌측 고정 대제목 스타일과 톤을 맞춘 로고 -->
@@ -62,16 +150,8 @@
 
       <div class="row" style="width:100%;">
         <label for="login-name">이름</label>
-        <input
-          id="login-name"
-          type="text"
-          placeholder="예: 소이"
-          inputmode="text"
-          autocomplete="username"
-          aria-label="사용자 이름"
-          maxlength="20"
-          required
-        />
+        <input id="login-name" type="text" placeholder="예: 소이" inputmode="text" autocomplete="username"
+          aria-label="사용자 이름" maxlength="20" required />
       </div>
 
       <div class="actions">
@@ -85,61 +165,62 @@
   </main>
 
   <script>
-  (function(){
-    const params = new URLSearchParams(location.search);
-    const next = params.get('next') || 'index.html';
-    const input = document.getElementById('login-name');
-    const btn = document.getElementById('btn-login');
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const next = params.get('next') || 'index.html';
+      const input = document.getElementById('login-name');
+      const btn = document.getElementById('btn-login');
 
-    // 이미 로그인 상태면 바로 이동
-    try {
-      const u = (localStorage.getItem('currentUser') || '').trim();
-      if (u) {
-        location.replace(next);
-        return;
+      // 이미 로그인 상태면 바로 이동
+      try {
+        const u = (localStorage.getItem('currentUser') || '').trim();
+        if (u) {
+          location.replace(next);
+          return;
+        }
+      } catch (_) { }
+
+      // 자동 포커스
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => input && input.focus(), { once: true });
+      } else if (input) {
+        input.focus();
       }
-    } catch (_) {}
 
-    // 자동 포커스
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => input && input.focus(), { once:true });
-    } else if (input) {
-      input.focus();
-    }
-
-    // 허용 문자: 한글/영문/숫자/공백
-    function normalizeName(raw){
-      const cleaned = String(raw).replace(/[^0-9A-Za-z가-힣\s]/g, '');
-      return cleaned.replace(/\s+/g, ' ').trim().slice(0, 20);
-    }
-
-    function ensureStudyDataFor(name){
-      let sd = {};
-      try { sd = JSON.parse(localStorage.getItem('studyData') || '{}') || {}; } catch {}
-      if (!sd[name]) sd[name] = { incorrect: [], records: [] };
-      localStorage.setItem('studyData', JSON.stringify(sd));
-    }
-
-    function saveAndGo(name){
-      localStorage.setItem('currentUser', name);
-      ensureStudyDataFor(name);
-      window.dispatchEvent(new Event('user:changed')); // 헤더/뱃지 동기화 신호
-      location.href = next;
-    }
-
-    btn.addEventListener('click', () => {
-      const norm = normalizeName(input.value);
-      if (!norm) { alert('이름을 입력해주세요.'); input.focus(); return; }
-      saveAndGo(norm);
-    });
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        btn.click();
+      // 허용 문자: 한글/영문/숫자/공백
+      function normalizeName(raw) {
+        const cleaned = String(raw).replace(/[^0-9A-Za-z가-힣\s]/g, '');
+        return cleaned.replace(/\s+/g, ' ').trim().slice(0, 20);
       }
-    });
-  })();
+
+      function ensureStudyDataFor(name) {
+        let sd = {};
+        try { sd = JSON.parse(localStorage.getItem('studyData') || '{}') || {}; } catch { }
+        if (!sd[name]) sd[name] = { incorrect: [], records: [] };
+        localStorage.setItem('studyData', JSON.stringify(sd));
+      }
+
+      function saveAndGo(name) {
+        localStorage.setItem('currentUser', name);
+        ensureStudyDataFor(name);
+        window.dispatchEvent(new Event('user:changed')); // 헤더/뱃지 동기화 신호
+        location.href = next;
+      }
+
+      btn.addEventListener('click', () => {
+        const norm = normalizeName(input.value);
+        if (!norm) { alert('이름을 입력해주세요.'); input.focus(); return; }
+        saveAndGo(norm);
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+    })();
   </script>
 </body>
+
 </html>

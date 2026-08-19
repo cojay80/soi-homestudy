@@ -22,15 +22,15 @@
 
   // ---------- 아이템 ----------
   const SHOP_ITEMS = [
-    { id:'coupon_snack',   title:'간식 쿠폰',            cost: 8,  consumable:true,  qty:1, detail:'과자/아이스크림 1개' },
-    { id:'coupon_play30',  title:'자유시간 30분',        cost: 12, consumable:true,  qty:1, detail:'게임/유튜브/그림 30분' },
-    { id:'coupon_play60',  title:'자유시간 1시간',       cost: 20, consumable:true,  qty:1, detail:'게임/유튜브/그림 60분' },
-    { id:'coupon_movie',   title:'영화의 밤',            cost: 25, consumable:true,  qty:1, detail:'가족과 팝콘 영화 타임' },
-    { id:'coupon_pick',    title:'오늘 메뉴 내가 고른다', cost: 15, consumable:true,  qty:1, detail:'저녁 메뉴 결정권' },
-    { id:'sticker_star5',  title:'별 스티커 ×5',         cost: 10, consumable:true,  qty:5, detail:'칭찬 스티커 5장' },
-    { id:'sticker_heart5', title:'하트 스티커 ×5',       cost: 10, consumable:true,  qty:5, detail:'응원 스티커 5장' },
-    { id:'theme_pink',     title:'핑크 테마',            cost: 20, consumable:false,      detail:'사이트 색상 핑크' },
-    { id:'theme_blue',     title:'블루 테마',            cost: 20, consumable:false,      detail:'사이트 색상 블루' },
+    { id:'coupon_snack',   title:'간식 쿠폰',            cost: 24,  consumable:true,  qty:1, detail:'과자/아이스크림 1개' },
+    { id:'coupon_play30',  title:'자유시간 30분',        cost: 36, consumable:true,  qty:1, detail:'게임/유튜브/그림 30분' },
+    { id:'coupon_play60',  title:'자유시간 1시간',       cost: 60, consumable:true,  qty:1, detail:'게임/유튜브/그림 60분' },
+    { id:'coupon_movie',   title:'영화의 밤',            cost: 75, consumable:true,  qty:1, detail:'가족과 팝콘 영화 타임' },
+    { id:'coupon_pick',    title:'오늘 메뉴 내가 고른다', cost: 45, consumable:true,  qty:1, detail:'저녁 메뉴 결정권' },
+    { id:'sticker_star5',  title:'별 스티커 ×5',         cost: 30, consumable:true,  qty:5, detail:'칭찬 스티커 5장' },
+    { id:'sticker_heart5', title:'하트 스티커 ×5',       cost: 30, consumable:true,  qty:5, detail:'응원 스티커 5장' },
+    { id:'theme_pink',     title:'핑크 테마',            cost: 60, consumable:false,      detail:'사이트 색상 핑크' },
+    { id:'theme_blue',     title:'블루 테마',            cost: 60, consumable:false,      detail:'사이트 색상 블루' },
   ];
 
   const DISPLAY = {

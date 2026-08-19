@@ -1,49 +1,22 @@
-// /js/load-header.js
-function ensureHeaderScript(cb) {
-  // 이미 전역에 함수가 있으면 즉시 진행
-  if (typeof window.setupMobileMenu === 'function' && typeof window.updateHeaderUI === 'function') {
-    cb && cb();
-    return;
-  }
-  // 중복 로드 방지
-  const existing = document.querySelector('script[data-headerjs]');
-  if (existing) {
-    existing.addEventListener('load', () => cb && cb());
-    return;
-  }
-  // 동적 로드
-  const s = document.createElement('script');
-  s.src = '/js/header.js';
-  s.defer = true;                 // DOM 준비 후 실행
-  s.dataset.headerjs = '1';
-  s.onload = () => cb && cb();
-  s.onerror = () => console.error('[load-header] header.js 로드 실패');
-  document.head.appendChild(s);
-}
+/**
+ * /js/load-header.js
+ * 모든 페이지에서 공통으로 사용되며, #header-placeholder에 /header.html을 로드합니다.
+ */
+(function () {
+    document.addEventListener('DOMContentLoaded', () => {
+        const placeholder = document.getElementById('header-placeholder');
+        if (!placeholder) return;
 
-fetch('/header.html')
-  .then(res => {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.text();
-  })
-  .then(html => {
-    const placeholder = document.getElementById('header-placeholder');
-    if (!placeholder) {
-      console.warn('[load-header] header-placeholder 요소 없음');
-      return;
-    }
-
-    placeholder.innerHTML = html;
-
-    // header.js가 로드되어 있지 않은 경우를 대비해 보장 로드
-    ensureHeaderScript(() => {
-      try {
-        // 헤더 UI 업데이트 및 모바일 메뉴 바인딩
-        if (typeof window.updateHeaderUI === 'function') window.updateHeaderUI();
-        if (typeof window.setupMobileMenu === 'function') window.setupMobileMenu();
-      } catch (e) {
-        console.error('[load-header] 헤더 초기화 실패:', e);
-      }
+        fetch('/header.html')
+            .then(res => {
+                if (!res.ok) throw new Error('Header load failed');
+                return res.text();
+            })
+            .then(html => {
+                placeholder.innerHTML = html;
+                // 헤더 로드 완료 이벤트 발생 (필요한 경우 다른 스크립트에서 수신)
+                window.dispatchEvent(new CustomEvent('header:loaded'));
+            })
+            .catch(err => console.error('[load-header] error:', err));
     });
-  })
-  .catch(err => console.error('[load-header] 헤더 로드 실패:', err));
+})();
