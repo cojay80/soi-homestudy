@@ -1,13 +1,16 @@
-// server.cjs — Render 배포용 확정본 (CommonJS)
+// server.cjs — 로컬 개발용 서버 (CommonJS)
 // - 정적파일 정확히 서빙 → "<" 에러 차단
 // - /api/problems: 구글시트 TSV 프록시
-// - /api/data/:user: 학습데이터 저장/조회 (MongoDB)
+// - /api/data/:user: 학습데이터 저장/조회 (Vercel Redis 통합과 동일한 REST API 사용)
 // - index.html은 no-store로 내려 캐시 꼬임 방지
+// - 실제 배포(Vercel)는 이 파일이 아니라 api/ 폴더의 서버리스 함수를 사용합니다.
+
+require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
-const mongoose = require('mongoose');
 const morgan = require('morgan');
+const { Redis } = require('@upstash/redis');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 10000;
@@ -17,9 +20,10 @@ const GOOGLE_SHEET_TSV =
   process.env.GOOGLE_SHEET_TSV ||
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdAWwA057OOm6VpUKTACcNzXnBc7XJ0JTIu1ZYYxKQRs1Fmo5UvabUx09Md39WHxHVVZlQ_F0Rw1zr/pub?output=tsv';
 
-const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://soiuser:162wn4331@cluster0.dmtk0ea.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const KV_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const redis = KV_URL && KV_TOKEN ? new Redis({ url: KV_URL, token: KV_TOKEN }) : null;
+if (!redis) console.warn('[kv] Redis 환경변수 없음 → 로컬은 no-db 모드로 동작 (localStorage만 사용됨)');
 
 // ===== 미들웨어 =====
 app.use(morgan('tiny'));
@@ -51,34 +55,13 @@ app.get('/api/problems', async (_req, res) => {
   }
 });
 
-// ===== Mongo 연결 및 모델 =====
-let UserData;
-async function connectDB() {
-  if (!MONGODB_URI) {
-    console.warn('[mongo] MONGODB_URI not set (no-db mode)');
-    return;
-  }
-  await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-  const schema = new mongoose.Schema(
-    {
-      user: { type: String, index: true },
-      blob: { type: Object, default: {} },
-      updatedAt: { type: Date, default: Date.now },
-    },
-    { collection: 'user_data' }
-  );
-  UserData = mongoose.models.UserData || mongoose.model('UserData', schema);
-  console.log('✅ Mongo connected');
-}
-connectDB().catch(err => console.error('❌ Mongo error:', err.message));
-
 // 조회
 app.get('/api/data/:user', async (req, res) => {
   try {
     const user = String(req.params.user || '');
-    if (!UserData || !user) return res.json({});
-    const doc = await UserData.findOne({ user }).lean();
-    res.json(doc?.blob || {});
+    if (!redis || !user) return res.json({});
+    const blob = await redis.get(`soi:user:${user}`);
+    res.json(blob || {});
   } catch (e) {
     console.error('[data:get]', e.message);
     res.json({});
@@ -89,12 +72,8 @@ app.get('/api/data/:user', async (req, res) => {
 app.post('/api/data/:user', async (req, res) => {
   try {
     const user = String(req.params.user || '');
-    if (!UserData || !user) return res.status(200).json({ ok: true, memo: 'no-db-mode' });
-    await UserData.findOneAndUpdate(
-      { user },
-      { $set: { blob: req.body || {}, updatedAt: new Date() } },
-      { upsert: true }
-    );
+    if (!redis || !user) return res.status(200).json({ ok: true, memo: 'no-db-mode' });
+    await redis.set(`soi:user:${user}`, req.body || {});
     res.json({ ok: true });
   } catch (e) {
     console.error('[data:post]', e.message);

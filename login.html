@@ -7,41 +7,32 @@
   <title>로그인 - 소이의 공부방</title>
 
   <!-- 폰트 / 기본 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/pages-v4.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff85a2" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="소이의 공부방" />
+  <script src="/js/pwa.js" defer></script>
+
   <style>
-    :root {
-      --line: #eee;
-      --muted: #888;
-      --card: #fff;
-      --bg: #fdfbff;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
     body {
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Noto Sans KR', 'Jua', sans-serif;
-      background: var(--bg);
-      color: #333;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      -webkit-font-smoothing: antialiased;
     }
 
     .wrap {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       padding: 24px;
     }
 
@@ -54,23 +45,29 @@
     }
 
     .logo a {
-      font-weight: 800;
-      font-size: 26px;
-      color: #4f46e5;
+      font-family: 'Jua', sans-serif;
+      font-size: 28px;
+      color: var(--text);
       text-decoration: none;
     }
 
-    .card {
-      background: var(--card);
-      border: none;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, .05);
+    .login-title {
+      text-align: center;
+      font-size: 22px;
+      margin: 0 0 4px;
     }
 
-    .mini {
-      color: var(--muted);
-      font-size: 13px;
+    .login-sub {
+      text-align: center;
+      margin: 0 0 20px;
+    }
+
+    .card {
+      background: var(--white);
+      border: var(--border-bold);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
     }
 
     .row {
@@ -79,58 +76,30 @@
       gap: 10px;
     }
 
-    .row+.row {
-      margin-top: 10px;
-    }
-
     label {
+      font-weight: 800;
       font-size: 14px;
-      color: #333;
+      color: var(--text);
     }
 
     input[type=text] {
       flex: 1;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fff;
-      font-size: 16px;
-    }
-
-    .btn {
-      padding: 11px 14px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fafafa;
-      cursor: pointer;
-      transition: .15s;
-    }
-
-    .btn:hover {
-      background: #f3f4f6;
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: #4f46e5;
-      color: #fff;
-      border-color: transparent;
-    }
-
-    .btn-primary:hover {
-      background: #4338ca;
     }
 
     .actions {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin-top: 12px;
+      margin-top: 16px;
     }
 
-    footer {
+    .actions .btn {
+      flex: 1;
+    }
+
+    footer.mini {
       text-align: center;
-      margin-top: 14px;
+      margin-top: 16px;
     }
   </style>
 </head>
@@ -139,14 +108,14 @@
   <main class="wrap" role="main">
     <!-- 좌측 고정 대제목 스타일과 톤을 맞춘 로고 -->
     <div class="logo">
-      <a href="index.html" aria-label="메인으로">소이의 공부방 🎨</a>
+      <a href="index.html" aria-label="메인으로">🎨 소이의 공부방</a>
     </div>
 
-    <h1 style="font-size:20px; margin:0 0 4px;">로그인</h1>
-    <p class="mini" style="margin:0 0 12px;">이름을 입력하고 시작하세요.</p>
+    <h1 class="login-title jua">로그인</h1>
+    <p class="mini login-sub">이름을 입력하고 시작하세요.</p>
 
     <section class="card" aria-labelledby="login-title">
-      <h2 id="login-title" class="mini" style="margin:0 0 8px;">사용자 정보</h2>
+      <h2 id="login-title" class="mini" style="margin:0 0 12px;">사용자 정보</h2>
 
       <div class="row" style="width:100%;">
         <label for="login-name">이름</label>
@@ -155,13 +124,13 @@
       </div>
 
       <div class="actions">
-        <button id="btn-login" class="btn btn-primary">시작하기</button>
+        <button id="btn-login" class="btn btn-primary">시작하기 →</button>
       </div>
 
-      <p class="mini" style="margin-top:10px;">* 한글/영문/숫자/공백만 허용, 최대 20자</p>
+      <p class="mini" style="margin-top:12px;">* 한글/영문/숫자/공백만 허용, 최대 20자</p>
     </section>
 
-    <footer class="mini">&copy; 2025 소이를 위한 아빠의 선물</footer>
+    <footer class="mini">&copy; 2026 소이를 위한 세상에서 가장 특별한 공부방 💖</footer>
   </main>
 
   <script>

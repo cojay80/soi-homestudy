@@ -7,9 +7,20 @@
   <title>오답 노트 - 소이의 공부방</title>
 
   <!-- 폰트 / 공통 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/ui-enhanced.css" />
+  <link rel="stylesheet" href="css/pages-v4.css" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ff85a2" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="소이의 공부방" />
 
   <!-- 공통 스크립트 (defer 순서 고정) -->
   <script src="/js/config.js" defer></script>
@@ -19,6 +30,7 @@
   <script src="/js/header.js" defer></script>
   <script src="/js/load-header.js" defer></script>
   <script src="/js/logout.js" defer></script>
+  <script src="/js/pwa.js" defer></script>
 
   <!-- 오답 전용 -->
   <script src="/js/notes.js?v=NOTES_FINAL" defer></script>
